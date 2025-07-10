@@ -232,6 +232,7 @@
                     renderProductModels();
                     break;
                 case 'inventory': 
+                    renderHeader(false); // No search/add button in header for inventory
                     renderInventory(); 
                     break;
                 case 'bookings':
@@ -321,8 +322,18 @@
                         </a>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                        <div style="animation-delay: 0.4s" class="dashboard-card lg:col-span-3 bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl"><h3 class="text-lg font-semibold text-gray-800 mb-4">Doanh thu 7 ngày gần nhất</h3><canvas id="revenueChart"></canvas></div>
-                        <div style="animation-delay: 0.5s" class="dashboard-card lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl"><h3 class="text-lg font-semibold text-gray-800 mb-4">Tình trạng thiết bị</h3><div class="max-h-64 mx-auto"><canvas id="equipmentStatusChart"></canvas></div></div>
+                        <div style="animation-delay: 0.4s" class="dashboard-card lg:col-span-3 bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Doanh thu 7 ngày gần nhất</h3>
+                            <div class="relative h-80">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                        <div style="animation-delay: 0.5s" class="dashboard-card lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Tình trạng thiết bị</h3>
+                            <div class="relative h-80 flex items-center justify-center">
+                                <canvas id="equipmentStatusChart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
              `;
@@ -351,6 +362,7 @@
         };
 
         const renderInventory = () => {
+            renderHeader(false); // No header for inventory view
             let items = state.inventoryItems;
             if (state.activeFilter && state.activeFilter.type === 'status') {
                 items = items.filter(item => item.status === state.activeFilter.value);
@@ -360,7 +372,7 @@
             listContainer.className = 'space-y-4';
             listContainer.innerHTML = state.productModels.map(model => {
                 const itemsForModel = items.filter(item => item.productModelId === model.id);
-                if (itemsForModel.length === 0) return ''; // Hide model if no items match filter
+                if (state.activeFilter && itemsForModel.length === 0) return ''; // Hide model if no items match filter
                 
                 const allItemsForModel = state.inventoryItems.filter(item => item.productModelId === model.id);
                 const availableItems = allItemsForModel.filter(item => item.status === 'Sẵn sàng').length;
@@ -376,7 +388,7 @@
                                 <svg class="w-6 h-6 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
                         </div>
-                        <div class="border-t border-gray-200 p-4">
+                        <div class="border-t border-gray-200 p-4 hidden">
                             ${itemsForModel.length > 0 ? `<ul class="space-y-2">${itemsForModel.map(item => `<li class="flex justify-between items-center p-2 rounded-md hover:bg-gray-50"><div><p class="font-mono text-sm text-gray-800">S/N: ${item.serial}</p></div><div class="flex items-center space-x-4"><span class="px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusClass(item.status)}">${item.status}</span><button data-action="open-inventory-item-modal" data-id="${item.id}" class="text-xs text-indigo-600">Sửa</button><button data-action="delete-inventory-item" data-id="${item.id}" class="text-xs text-red-600">Xóa</button></div></li>`).join('')}</ul>` : `<p class="text-sm text-gray-400">Không có thiết bị nào cho mẫu này.</p>`}
                         </div>
                     </div>`;
@@ -406,7 +418,7 @@
             }
 
             container.className = "space-y-6";
-            container.innerHTML = filteredBookings.map(booking => `
+            container.innerHTML = filteredBookings.length > 0 ? filteredBookings.map(booking => `
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div class="p-5">
                         <div class="flex justify-between items-start">
@@ -425,7 +437,7 @@
                         ${booking.status === 'Đang thuê' ? `<button data-action="update-booking-status" data-id="${booking.id}" data-status="Đã trả" class="text-sm font-medium text-green-600 hover:text-green-800">Xác nhận đã trả</button>` : ''}
                         ${(booking.status === 'Chờ lấy máy' || booking.status === 'Đang thuê') ? `<button data-action="update-booking-status" data-id="${booking.id}" data-status="Đã hủy" class="text-sm font-medium text-pink-600 hover:text-pink-800">Hủy đơn</button>` : ''}
                     </div>
-                </div>`).join('');
+                </div>`).join('') : '<p class="text-center text-gray-500">Không tìm thấy đơn thuê nào.</p>';
         };
 
         const renderCustomers = () => {
