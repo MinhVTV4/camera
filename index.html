@@ -170,8 +170,9 @@
             customers: [],
             isDataLoading: true,
             searchTerm: '',
+            activeFilter: null, // Holds filter info e.g. {type: 'status', value: 'Đang thuê'}
             calendar: null,
-            charts: {}, // To hold chart instances
+            charts: {},
             newBooking: {
                 customerId: '', customerName: '', customerPhone: '',
                 startDate: '', endDate: '', items: [], totalPrice: 0,
@@ -212,53 +213,34 @@
             viewTitle.textContent = viewTitles[state.currentView];
 
             mainContent.innerHTML = '';
-            Object.values(state.charts).forEach(chart => chart.destroy()); // Destroy old charts
+            Object.values(state.charts).forEach(chart => chart.destroy());
             state.charts = {};
             if (state.calendar) { state.calendar.destroy(); state.calendar = null; }
 
-            const headerButtonContainer = document.createElement('div');
-            headerButtonContainer.className = "mb-6 flex flex-col sm:flex-row justify-between items-center gap-4";
-            
-            // This container will hold the dynamic list for searchable views
+            const headerContainer = document.createElement('div');
+            headerContainer.id = 'view-header';
+            mainContent.appendChild(headerContainer);
+
             const listContainer = document.createElement('div');
             listContainer.id = 'list-container';
+            mainContent.appendChild(listContainer);
 
             switch(state.currentView) {
-                case 'dashboard': 
-                    renderDashboard(); 
-                    break;
+                case 'dashboard': renderDashboard(); break;
                 case 'productModels':
-                    headerButtonContainer.innerHTML = `<input type="text" id="search-input" placeholder="Tìm kiếm mẫu sản phẩm..." class="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm" value="${state.searchTerm}"/><button data-action="open-product-model-modal" class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">+ Thêm Mẫu Mới</button>`;
-                    mainContent.appendChild(headerButtonContainer);
-                    mainContent.appendChild(listContainer);
-                    renderProductModels(); // Initial render
-                    document.getElementById('search-input').addEventListener('input', (e) => {
-                        state.searchTerm = e.target.value;
-                        renderProductModels(); // Only re-render the list
-                    });
+                    renderHeader(true, "Tìm kiếm mẫu sản phẩm...", "open-product-model-modal", "+ Thêm Mẫu Mới");
+                    renderProductModels();
                     break;
                 case 'inventory': 
                     renderInventory(); 
                     break;
                 case 'bookings':
-                    headerButtonContainer.innerHTML = `<input type="text" id="search-input" placeholder="Tìm kiếm theo tên khách hàng..." class="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm" value="${state.searchTerm}"/><button data-action="open-booking-modal" class="w-full sm:w-auto bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-cyan-700 transition duration-300">+ Tạo Đơn Thuê</button>`;
-                    mainContent.appendChild(headerButtonContainer);
-                    mainContent.appendChild(listContainer);
-                    renderBookings(); // Initial render
-                    document.getElementById('search-input').addEventListener('input', (e) => {
-                        state.searchTerm = e.target.value;
-                        renderBookings(); // Only re-render the list
-                    });
+                    renderHeader(true, "Tìm kiếm theo tên khách hàng...", "open-booking-modal", "+ Tạo Đơn Thuê");
+                    renderBookings();
                     break;
                 case 'customers':
-                     headerButtonContainer.innerHTML = `<input type="text" id="search-input" placeholder="Tìm kiếm theo tên hoặc SĐT..." class="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm" value="${state.searchTerm}"/><button data-action="open-customer-modal" class="w-full sm:w-auto bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition duration-300">+ Thêm Khách Hàng</button>`;
-                    mainContent.appendChild(headerButtonContainer);
-                    mainContent.appendChild(listContainer);
-                    renderCustomers(); // Initial render
-                    document.getElementById('search-input').addEventListener('input', (e) => {
-                        state.searchTerm = e.target.value;
-                        renderCustomers(); // Only re-render the list
-                    });
+                    renderHeader(true, "Tìm kiếm theo tên hoặc SĐT...", "open-customer-modal", "+ Thêm Khách Hàng");
+                    renderCustomers();
                     break;
                 case 'calendar': 
                     renderCalendar(); 
@@ -266,64 +248,84 @@
             }
         };
 
+        const renderHeader = (showSearch, searchPlaceholder, buttonAction, buttonText) => {
+            const headerContainer = document.getElementById('view-header');
+            if (!headerContainer) return;
+
+            let filterBadgeHTML = '';
+            if (state.activeFilter) {
+                const filterText = state.activeFilter.value === 'overdue' ? 'Quá hạn' : state.activeFilter.value;
+                filterBadgeHTML = `
+                    <span class="inline-flex items-center gap-x-2 rounded-md bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-700">
+                        Lọc: ${filterText}
+                        <button data-action="clear-filter" type="button" class="group relative -mr-1 h-3.5 w-3.5 rounded-sm hover:bg-gray-500/20">
+                            <span class="sr-only">Remove</span>
+                            <svg viewBox="0 0 14 14" class="h-3.5 w-3.5 stroke-gray-600/50 group-hover:stroke-gray-600/75">
+                                <path d="M4 4l6 6m0-6l-6 6" />
+                            </svg>
+                            <span class="absolute -inset-1"></span>
+                        </button>
+                    </span>
+                `;
+            }
+
+            headerContainer.innerHTML = `
+                <div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="w-full sm:w-1/2 flex items-center gap-4">
+                        ${showSearch ? `<input type="text" id="search-input" placeholder="${searchPlaceholder}" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm" value="${state.searchTerm}"/>` : '<div></div>'}
+                        ${filterBadgeHTML}
+                    </div>
+                    ${buttonAction ? `<button data-action="${buttonAction}" class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">${buttonText}</button>` : ''}
+                </div>
+            `;
+
+            if (showSearch) {
+                document.getElementById('search-input').addEventListener('input', (e) => {
+                    state.searchTerm = e.target.value;
+                    // Re-render only the list part
+                    switch(state.currentView) {
+                        case 'productModels': renderProductModels(); break;
+                        case 'bookings': renderBookings(); break;
+                        case 'customers': renderCustomers(); break;
+                    }
+                });
+            }
+        };
+
         const renderDashboard = () => {
-             // --- Data Calculation ---
              const totalRevenue = state.bookings.filter(b => b.status === 'Đã trả').reduce((acc, b) => acc + b.totalPrice, 0);
              const itemsRented = state.inventoryItems.filter(item => item.status === 'Đang thuê').length;
              const pendingBookingsCount = state.bookings.filter(b => b.status === 'Chờ lấy máy').length;
              const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-             const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
              const overdueBookings = state.bookings.filter(b => b.status === 'Đang thuê' && b.endDate < todayStart);
-             const pickupTodayBookings = state.bookings.filter(b => b.status === 'Chờ lấy máy' && b.startDate >= todayStart && b.startDate <= todayEnd);
-
-             // --- HTML Structure ---
-             mainContent.innerHTML = `
+             
+             const listContainer = document.getElementById('list-container');
+             listContainer.innerHTML = `
                 <div class="space-y-8">
-                    <!-- KPIs -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div style="animation-delay: 0s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                        <a href="#" data-action="navigate" data-view="bookings" data-filter-type="status" data-filter-value="Đã trả" style="animation-delay: 0s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
                             <div class="bg-green-100 p-3 rounded-full"><svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 10v-1m-6.364-3.636l.707-.707m11.314 0l-.707-.707M5 12H4m16 0h-1m-3.636 6.364l-.707.707M6.343 6.343l.707.707"></path></svg></div>
                             <div><p class="text-sm font-medium text-gray-500">Tổng Doanh Thu</p><p class="kpi-value text-3xl font-bold text-gray-800" data-target="${totalRevenue}">${formatCurrency(0)}</p></div>
-                        </div>
-                        <div style="animation-delay: 0.1s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                        </a>
+                        <a href="#" data-action="navigate" data-view="inventory" data-filter-type="status" data-filter-value="Đang thuê" style="animation-delay: 0.1s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
                             <div class="bg-yellow-100 p-3 rounded-full"><svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
                             <div><p class="text-sm font-medium text-gray-500">Đang Thuê</p><p class="kpi-value text-3xl font-bold text-gray-800" data-target="${itemsRented}">0</p></div>
-                        </div>
-                        <div style="animation-delay: 0.2s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                        </a>
+                        <a href="#" data-action="navigate" data-view="bookings" data-filter-type="status" data-filter-value="Chờ lấy máy" style="animation-delay: 0.2s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
                             <div class="bg-blue-100 p-3 rounded-full"><svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
                             <div><p class="text-sm font-medium text-gray-500">Chờ Lấy Máy</p><p class="kpi-value text-3xl font-bold text-gray-800" data-target="${pendingBookingsCount}">0</p></div>
-                        </div>
-                         <div style="animation-delay: 0.3s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                        </a>
+                         <a href="#" data-action="navigate" data-view="bookings" data-filter-type="status" data-filter-value="overdue" style="animation-delay: 0.3s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
                             <div class="bg-red-100 p-3 rounded-full"><svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
                             <div><p class="text-sm font-medium text-gray-500">Đơn Quá Hạn</p><p class="kpi-value text-3xl font-bold text-gray-800" data-target="${overdueBookings.length}">0</p></div>
-                        </div>
+                        </a>
                     </div>
-
-                    <!-- Charts & Action Items Grid -->
                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
                         <div style="animation-delay: 0.4s" class="dashboard-card lg:col-span-3 bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl"><h3 class="text-lg font-semibold text-gray-800 mb-4">Doanh thu 7 ngày gần nhất</h3><canvas id="revenueChart"></canvas></div>
                         <div style="animation-delay: 0.5s" class="dashboard-card lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl"><h3 class="text-lg font-semibold text-gray-800 mb-4">Tình trạng thiết bị</h3><div class="max-h-64 mx-auto"><canvas id="equipmentStatusChart"></canvas></div></div>
                     </div>
-                    
-                    <!-- Action Items Grid -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div style="animation-delay: 0.6s" class="dashboard-card">
-                            <h2 class="text-xl font-bold text-gray-800 mb-4">Cảnh báo: Đơn quá hạn trả</h2>
-                            <div class="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
-                                ${overdueBookings.length > 0 ? `<ul class="divide-y divide-gray-200">${overdueBookings.map(b => `<li class="p-4 flex justify-between items-center bg-red-50 hover:bg-red-100 transition"><div class="flex items-center space-x-3"><div><p class="font-semibold text-red-800">${b.customerName}</p><p class="text-sm text-red-600">${b.items.map(i => i.productName).join(', ')}</p></div></div><p class="text-sm text-red-700 font-medium">Hạn: ${formatDate(b.endDate)}</p></li>`).join('')}</ul>` : `<div class="p-4 text-center text-gray-500">Không có đơn nào quá hạn.</div>`}
-                            </div>
-                        </div>
-                        <div style="animation-delay: 0.7s" class="dashboard-card">
-                            <h2 class="text-xl font-bold text-gray-800 mb-4">Cần xử lý: Đơn lấy hôm nay</h2>
-                             <div class="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
-                                ${pickupTodayBookings.length > 0 ? `<ul class="divide-y divide-gray-200">${pickupTodayBookings.map(b => `<li class="p-4 flex justify-between items-center hover:bg-gray-50 transition"><div><p class="font-semibold text-gray-900">${b.customerName}</p><p class="text-sm text-gray-600">${b.items.map(i => i.productName).join(', ')}</p></div><button data-action="update-booking-status" data-id="${b.id}" data-status="Đang thuê" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg">Xác nhận</button></li>`).join('')}</ul>` : `<div class="p-4 text-center text-gray-500">Không có đơn nào cần lấy hôm nay.</div>`}
-                            </div>
-                        </div>
-                    </div>
                 </div>
              `;
-             
-             // --- Post-render initializations ---
              animateCounters();
              initRevenueChart();
              initEquipmentStatusChart();
@@ -349,24 +351,33 @@
         };
 
         const renderInventory = () => {
-            mainContent.className = 'space-y-4';
-            mainContent.innerHTML = state.productModels.map(model => {
-                const itemsForModel = state.inventoryItems.filter(item => item.productModelId === model.id);
-                const availableItems = itemsForModel.filter(item => item.status === 'Sẵn sàng').length;
+            let items = state.inventoryItems;
+            if (state.activeFilter && state.activeFilter.type === 'status') {
+                items = items.filter(item => item.status === state.activeFilter.value);
+            }
+            
+            const listContainer = document.getElementById('list-container');
+            listContainer.className = 'space-y-4';
+            listContainer.innerHTML = state.productModels.map(model => {
+                const itemsForModel = items.filter(item => item.productModelId === model.id);
+                if (itemsForModel.length === 0) return ''; // Hide model if no items match filter
+                
+                const allItemsForModel = state.inventoryItems.filter(item => item.productModelId === model.id);
+                const availableItems = allItemsForModel.filter(item => item.status === 'Sẵn sàng').length;
                 return `
                     <div class="bg-white rounded-lg shadow-md" data-model-id="${model.id}">
                         <div class="p-4 flex justify-between items-center cursor-pointer" data-action="toggle-inventory-model">
                             <div>
                                 <h3 class="text-lg font-bold text-gray-800">${model.name}</h3>
-                                <p class="text-sm text-gray-500">Sẵn sàng: <span class="font-semibold text-green-600">${availableItems}</span> / Tổng: ${itemsForModel.length}</p>
+                                <p class="text-sm text-gray-500">Sẵn sàng: <span class="font-semibold text-green-600">${availableItems}</span> / Tổng: ${allItemsForModel.length}</p>
                             </div>
                             <div class="flex items-center space-x-4">
                                 <button data-action="open-inventory-item-modal" data-model-id="${model.id}" data-model-name="${model.name}" class="text-sm bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600">+ Thêm S/N</button>
                                 <svg class="w-6 h-6 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
                         </div>
-                        <div class="border-t border-gray-200 p-4 hidden">
-                            ${itemsForModel.length > 0 ? `<ul class="space-y-2">${itemsForModel.map(item => `<li class="flex justify-between items-center p-2 rounded-md hover:bg-gray-50"><div><p class="font-mono text-sm text-gray-800">S/N: ${item.serial}</p></div><div class="flex items-center space-x-4"><span class="px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusClass(item.status)}">${item.status}</span><button data-action="open-inventory-item-modal" data-id="${item.id}" class="text-xs text-indigo-600">Sửa</button><button data-action="delete-inventory-item" data-id="${item.id}" class="text-xs text-red-600">Xóa</button></div></li>`).join('')}</ul>` : `<p class="text-sm text-gray-400">Chưa có thiết bị nào cho mẫu này.</p>`}
+                        <div class="border-t border-gray-200 p-4">
+                            ${itemsForModel.length > 0 ? `<ul class="space-y-2">${itemsForModel.map(item => `<li class="flex justify-between items-center p-2 rounded-md hover:bg-gray-50"><div><p class="font-mono text-sm text-gray-800">S/N: ${item.serial}</p></div><div class="flex items-center space-x-4"><span class="px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusClass(item.status)}">${item.status}</span><button data-action="open-inventory-item-modal" data-id="${item.id}" class="text-xs text-indigo-600">Sửa</button><button data-action="delete-inventory-item" data-id="${item.id}" class="text-xs text-red-600">Xóa</button></div></li>`).join('')}</ul>` : `<p class="text-sm text-gray-400">Không có thiết bị nào cho mẫu này.</p>`}
                         </div>
                     </div>`;
             }).join('');
@@ -375,8 +386,25 @@
         const renderBookings = () => {
             const container = document.getElementById('list-container');
             if (!container) return;
+            
+            let filteredBookings = state.bookings;
+
+            // Apply status filter first
+            if (state.activeFilter && state.activeFilter.type === 'status') {
+                if (state.activeFilter.value === 'overdue') {
+                    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+                    filteredBookings = filteredBookings.filter(b => b.status === 'Đang thuê' && b.endDate < todayStart);
+                } else {
+                    filteredBookings = filteredBookings.filter(b => b.status === state.activeFilter.value);
+                }
+            }
+            
+            // Then apply search term filter
             const searchTermLower = state.searchTerm.toLowerCase();
-            const filteredBookings = state.bookings.filter(b => b.customerName.toLowerCase().includes(searchTermLower) || (b.customerId && b.customerId === state.searchTerm));
+            if (searchTermLower) {
+                 filteredBookings = filteredBookings.filter(b => b.customerName.toLowerCase().includes(searchTermLower));
+            }
+
             container.className = "space-y-6";
             container.innerHTML = filteredBookings.map(booking => `
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -410,11 +438,10 @@
         };
 
         const renderCalendar = () => {
-            const calendarEl = document.createElement('div');
-            calendarEl.className = 'bg-white p-2 sm:p-4 rounded-lg shadow-lg h-[80vh]';
-            mainContent.appendChild(calendarEl);
+            const listContainer = document.getElementById('list-container');
+            listContainer.className = 'bg-white p-2 sm:p-4 rounded-lg shadow-lg h-[80vh]';
             const events = state.bookings.filter(b => b.status !== 'Đã hủy').map(booking => ({ title: `${booking.customerName} - ${booking.items.map(i => i.productName).join(', ')}`, start: booking.startDate, end: moment(booking.endDate).add(1, 'days').toDate(), allDay: true, backgroundColor: booking.status === 'Đang thuê' ? '#f6b93b' : (booking.status === 'Đã trả' ? '#6c757d' : '#3174ad'), borderColor: booking.status === 'Đang thuê' ? '#f6b93b' : (booking.status === 'Đã trả' ? '#6c757d' : '#3174ad')}));
-            state.calendar = new FullCalendar.Calendar(calendarEl, { locale: 'vi', headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' }, initialView: 'dayGridMonth', events: events, editable: false, selectable: false });
+            state.calendar = new FullCalendar.Calendar(listContainer, { locale: 'vi', headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' }, initialView: 'dayGridMonth', events: events, editable: false, selectable: false });
             state.calendar.render();
         };
         
@@ -762,12 +789,14 @@
         
         // --- Navigation & Sidebar ---
         document.querySelector('nav').addEventListener('click', (e) => {
-            if (e.target.matches('.nav-link')) {
+            const navLink = e.target.closest('.nav-link');
+            if (navLink) {
                 e.preventDefault();
                 document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('bg-gray-900'));
-                e.target.classList.add('bg-gray-900');
-                state.currentView = e.target.dataset.view;
+                navLink.classList.add('bg-gray-900');
+                state.currentView = navLink.dataset.view;
                 state.searchTerm = '';
+                state.activeFilter = null; // Reset filter on any navigation
                 render();
                 const sidebar = document.getElementById('sidebar');
                 if(!sidebar.classList.contains('md:relative')) {
@@ -793,6 +822,20 @@
             const action = target.dataset.action;
             const id = target.dataset.id;
             switch(action) {
+                case 'navigate':
+                    e.preventDefault();
+                    state.currentView = target.dataset.view;
+                    state.activeFilter = { type: target.dataset.filterType, value: target.dataset.filterValue };
+                    state.searchTerm = '';
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.toggle('bg-gray-900', link.dataset.view === state.currentView);
+                    });
+                    render();
+                    break;
+                case 'clear-filter':
+                    state.activeFilter = null;
+                    render();
+                    break;
                 case 'close-modal': closeModal(); break;
                 case 'open-product-model-modal':
                     const model = id ? state.productModels.find(m => m.id === id) : null;
