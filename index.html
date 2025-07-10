@@ -15,6 +15,9 @@
     <script src="https://unpkg.com/moment@2.29.4/min/moment.min.js"></script>
     <script src="https://unpkg.com/moment@2.29.4/locale/vi.js"></script>
 
+    <!-- Chart.js for beautiful charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
     <style>
         /* Custom styles for the application */
         body {
@@ -51,6 +54,15 @@
         /* Modal styles */
         .modal-backdrop {
             background-color: rgba(0, 0, 0, 0.5);
+        }
+        /* Animation for dashboard cards */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dashboard-card {
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0; /* Start hidden */
         }
     </style>
 </head>
@@ -159,15 +171,10 @@
             isDataLoading: true,
             searchTerm: '',
             calendar: null,
-            // State for new booking modal
+            charts: {}, // To hold chart instances
             newBooking: {
-                customerId: '',
-                customerName: '',
-                customerPhone: '',
-                startDate: '',
-                endDate: '',
-                items: [],
-                totalPrice: 0,
+                customerId: '', customerName: '', customerPhone: '',
+                startDate: '', endDate: '', items: [], totalPrice: 0,
             }
         };
         
@@ -180,30 +187,19 @@
 
         // --- Utility Functions ---
         const formatDate = (date) => date ? moment(date).format('L') : '';
-        const formatDateForInput = (date) => date ? moment(date).format('YYYY-MM-DD') : '';
         const formatCurrency = (number) => (typeof number === 'number' ? number : 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
         const getStatusClass = (status) => {
             const classes = {
-                'Sẵn sàng': 'bg-green-100 text-green-800',
-                'Đang thuê': 'bg-yellow-100 text-yellow-800',
-                'Bảo trì': 'bg-red-100 text-red-800',
-                'Chờ lấy máy': 'bg-blue-100 text-blue-800',
-                'Đã trả': 'bg-gray-200 text-gray-800',
-                'Đã hủy': 'bg-pink-100 text-pink-800',
+                'Sẵn sàng': 'bg-green-100 text-green-800', 'Đang thuê': 'bg-yellow-100 text-yellow-800',
+                'Bảo trì': 'bg-red-100 text-red-800', 'Chờ lấy máy': 'bg-blue-100 text-blue-800',
+                'Đã trả': 'bg-gray-200 text-gray-800', 'Đã hủy': 'bg-pink-100 text-pink-800',
             };
             return classes[status] || 'bg-gray-100 text-gray-800';
         };
 
         // --- Modal Management ---
-        const openModal = (modalHTML) => {
-            modalsContainer.innerHTML = modalHTML;
-            document.body.classList.add('overflow-hidden');
-        };
-
-        const closeModal = () => {
-            modalsContainer.innerHTML = '';
-            document.body.classList.remove('overflow-hidden');
-        };
+        const openModal = (modalHTML) => { modalsContainer.innerHTML = modalHTML; document.body.classList.add('overflow-hidden'); };
+        const closeModal = () => { modalsContainer.innerHTML = ''; document.body.classList.remove('overflow-hidden'); };
 
         // --- Render Functions (Main Views) ---
         const render = () => {
@@ -216,46 +212,62 @@
             viewTitle.textContent = viewTitles[state.currentView];
 
             mainContent.innerHTML = '';
-            if (state.calendar) {
-                state.calendar.destroy();
-                state.calendar = null;
-            }
+            Object.values(state.charts).forEach(chart => chart.destroy()); // Destroy old charts
+            state.charts = {};
+            if (state.calendar) { state.calendar.destroy(); state.calendar = null; }
 
             const headerButtonContainer = document.createElement('div');
             headerButtonContainer.className = "mb-6 flex flex-col sm:flex-row justify-between items-center gap-4";
             
+            // This container will hold the dynamic list for searchable views
+            const listContainer = document.createElement('div');
+            listContainer.id = 'list-container';
+
             switch(state.currentView) {
-                case 'dashboard': renderDashboard(); break;
-                case 'productModels':
-                    headerButtonContainer.innerHTML = `<input type="text" id="search-input" placeholder="Tìm kiếm mẫu sản phẩm..." class="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm"/><button data-action="open-product-model-modal" class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">+ Thêm Mẫu Mới</button>`;
-                    mainContent.appendChild(headerButtonContainer);
-                    renderProductModels();
+                case 'dashboard': 
+                    renderDashboard(); 
                     break;
-                case 'inventory': renderInventory(); break;
-                case 'bookings':
-                    headerButtonContainer.innerHTML = `<input type="text" id="search-input" placeholder="Tìm kiếm theo tên khách hàng..." class="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm"/><button data-action="open-booking-modal" class="w-full sm:w-auto bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-cyan-700 transition duration-300">+ Tạo Đơn Thuê</button>`;
+                case 'productModels':
+                    headerButtonContainer.innerHTML = `<input type="text" id="search-input" placeholder="Tìm kiếm mẫu sản phẩm..." class="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm" value="${state.searchTerm}"/><button data-action="open-product-model-modal" class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">+ Thêm Mẫu Mới</button>`;
                     mainContent.appendChild(headerButtonContainer);
-                    renderBookings();
+                    mainContent.appendChild(listContainer);
+                    renderProductModels(); // Initial render
+                    document.getElementById('search-input').addEventListener('input', (e) => {
+                        state.searchTerm = e.target.value;
+                        renderProductModels(); // Only re-render the list
+                    });
+                    break;
+                case 'inventory': 
+                    renderInventory(); 
+                    break;
+                case 'bookings':
+                    headerButtonContainer.innerHTML = `<input type="text" id="search-input" placeholder="Tìm kiếm theo tên khách hàng..." class="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm" value="${state.searchTerm}"/><button data-action="open-booking-modal" class="w-full sm:w-auto bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-cyan-700 transition duration-300">+ Tạo Đơn Thuê</button>`;
+                    mainContent.appendChild(headerButtonContainer);
+                    mainContent.appendChild(listContainer);
+                    renderBookings(); // Initial render
+                    document.getElementById('search-input').addEventListener('input', (e) => {
+                        state.searchTerm = e.target.value;
+                        renderBookings(); // Only re-render the list
+                    });
                     break;
                 case 'customers':
-                     headerButtonContainer.innerHTML = `<input type="text" id="search-input" placeholder="Tìm kiếm theo tên hoặc SĐT..." class="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm"/><button data-action="open-customer-modal" class="w-full sm:w-auto bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition duration-300">+ Thêm Khách Hàng</button>`;
+                     headerButtonContainer.innerHTML = `<input type="text" id="search-input" placeholder="Tìm kiếm theo tên hoặc SĐT..." class="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm" value="${state.searchTerm}"/><button data-action="open-customer-modal" class="w-full sm:w-auto bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition duration-300">+ Thêm Khách Hàng</button>`;
                     mainContent.appendChild(headerButtonContainer);
-                    renderCustomers();
+                    mainContent.appendChild(listContainer);
+                    renderCustomers(); // Initial render
+                    document.getElementById('search-input').addEventListener('input', (e) => {
+                        state.searchTerm = e.target.value;
+                        renderCustomers(); // Only re-render the list
+                    });
                     break;
-                case 'calendar': renderCalendar(); break;
-            }
-            
-            const searchInput = document.getElementById('search-input');
-            if(searchInput) {
-                searchInput.value = state.searchTerm;
-                searchInput.addEventListener('input', (e) => {
-                    state.searchTerm = e.target.value;
-                    render();
-                });
+                case 'calendar': 
+                    renderCalendar(); 
+                    break;
             }
         };
 
         const renderDashboard = () => {
+             // --- Data Calculation ---
              const totalRevenue = state.bookings.filter(b => b.status === 'Đã trả').reduce((acc, b) => acc + b.totalPrice, 0);
              const itemsRented = state.inventoryItems.filter(item => item.status === 'Đang thuê').length;
              const pendingBookingsCount = state.bookings.filter(b => b.status === 'Chờ lấy máy').length;
@@ -264,12 +276,63 @@
              const overdueBookings = state.bookings.filter(b => b.status === 'Đang thuê' && b.endDate < todayStart);
              const pickupTodayBookings = state.bookings.filter(b => b.status === 'Chờ lấy máy' && b.startDate >= todayStart && b.startDate <= todayEnd);
 
-             mainContent.innerHTML = `<div class="space-y-8"> <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> <div class="bg-white p-6 rounded-lg shadow-lg"><h3 class="text-lg font-medium text-gray-500">Tổng Doanh Thu</h3><p class="mt-2 text-3xl md:text-4xl font-bold text-green-600">${formatCurrency(totalRevenue)}</p></div> <div class="bg-white p-6 rounded-lg shadow-lg"><h3 class="text-lg font-medium text-gray-500">Thiết Bị Đang Thuê</h3><p class="mt-2 text-3xl md:text-4xl font-bold text-yellow-600">${itemsRented}</p></div> <div class="bg-white p-6 rounded-lg shadow-lg"><h3 class="text-lg font-medium text-gray-500">Đơn Chờ Lấy Máy</h3><p class="mt-2 text-3xl md:text-4xl font-bold text-blue-600">${pendingBookingsCount}</p></div> </div> <div class="grid grid-cols-1 lg:grid-cols-2 gap-8"> <div> <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Cảnh báo: Đơn quá hạn trả</h2> <div class="bg-white rounded-lg shadow-lg overflow-hidden"> ${overdueBookings.length > 0 ? `<ul class="divide-y divide-gray-200">${overdueBookings.map(booking => `<li class="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-red-50"><div><p class="font-semibold text-red-800">${booking.customerName}</p><p class="text-sm text-red-700">${booking.items.map(i => i.productName).join(', ')}</p></div><p class="text-sm text-red-600 font-medium mt-2 sm:mt-0">Quá hạn từ: ${formatDate(booking.endDate)}</p></li>`).join('')}</ul>` : `<p class="text-gray-500 p-4">Không có đơn nào quá hạn.</p>`} </div> </div> <div> <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Cần xử lý: Đơn lấy hôm nay</h2> <div class="bg-white rounded-lg shadow-lg overflow-hidden"> ${pickupTodayBookings.length > 0 ? `<ul class="divide-y divide-gray-200">${pickupTodayBookings.map(booking => `<li class="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center"><div><p class="font-semibold text-gray-900">${booking.customerName}</p><p class="text-sm text-gray-600">${booking.items.map(i => i.productName).join(', ')}</p></div><p class="text-sm text-blue-600 font-medium mt-2 sm:mt-0">Lấy máy hôm nay</p></li>`).join('')}</ul>` : `<p class="text-gray-500 p-4">Không có đơn nào cần lấy hôm nay.</p>`} </div> </div> </div></div>`;
+             // --- HTML Structure ---
+             mainContent.innerHTML = `
+                <div class="space-y-8">
+                    <!-- KPIs -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div style="animation-delay: 0s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                            <div class="bg-green-100 p-3 rounded-full"><svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 10v-1m-6.364-3.636l.707-.707m11.314 0l-.707-.707M5 12H4m16 0h-1m-3.636 6.364l-.707.707M6.343 6.343l.707.707"></path></svg></div>
+                            <div><p class="text-sm font-medium text-gray-500">Tổng Doanh Thu</p><p class="kpi-value text-3xl font-bold text-gray-800" data-target="${totalRevenue}">${formatCurrency(0)}</p></div>
+                        </div>
+                        <div style="animation-delay: 0.1s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                            <div class="bg-yellow-100 p-3 rounded-full"><svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                            <div><p class="text-sm font-medium text-gray-500">Đang Thuê</p><p class="kpi-value text-3xl font-bold text-gray-800" data-target="${itemsRented}">0</p></div>
+                        </div>
+                        <div style="animation-delay: 0.2s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                            <div class="bg-blue-100 p-3 rounded-full"><svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
+                            <div><p class="text-sm font-medium text-gray-500">Chờ Lấy Máy</p><p class="kpi-value text-3xl font-bold text-gray-800" data-target="${pendingBookingsCount}">0</p></div>
+                        </div>
+                         <div style="animation-delay: 0.3s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                            <div class="bg-red-100 p-3 rounded-full"><svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
+                            <div><p class="text-sm font-medium text-gray-500">Đơn Quá Hạn</p><p class="kpi-value text-3xl font-bold text-gray-800" data-target="${overdueBookings.length}">0</p></div>
+                        </div>
+                    </div>
+
+                    <!-- Charts & Action Items Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                        <div style="animation-delay: 0.4s" class="dashboard-card lg:col-span-3 bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl"><h3 class="text-lg font-semibold text-gray-800 mb-4">Doanh thu 7 ngày gần nhất</h3><canvas id="revenueChart"></canvas></div>
+                        <div style="animation-delay: 0.5s" class="dashboard-card lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl"><h3 class="text-lg font-semibold text-gray-800 mb-4">Tình trạng thiết bị</h3><div class="max-h-64 mx-auto"><canvas id="equipmentStatusChart"></canvas></div></div>
+                    </div>
+                    
+                    <!-- Action Items Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div style="animation-delay: 0.6s" class="dashboard-card">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4">Cảnh báo: Đơn quá hạn trả</h2>
+                            <div class="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
+                                ${overdueBookings.length > 0 ? `<ul class="divide-y divide-gray-200">${overdueBookings.map(b => `<li class="p-4 flex justify-between items-center bg-red-50 hover:bg-red-100 transition"><div class="flex items-center space-x-3"><div><p class="font-semibold text-red-800">${b.customerName}</p><p class="text-sm text-red-600">${b.items.map(i => i.productName).join(', ')}</p></div></div><p class="text-sm text-red-700 font-medium">Hạn: ${formatDate(b.endDate)}</p></li>`).join('')}</ul>` : `<div class="p-4 text-center text-gray-500">Không có đơn nào quá hạn.</div>`}
+                            </div>
+                        </div>
+                        <div style="animation-delay: 0.7s" class="dashboard-card">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4">Cần xử lý: Đơn lấy hôm nay</h2>
+                             <div class="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
+                                ${pickupTodayBookings.length > 0 ? `<ul class="divide-y divide-gray-200">${pickupTodayBookings.map(b => `<li class="p-4 flex justify-between items-center hover:bg-gray-50 transition"><div><p class="font-semibold text-gray-900">${b.customerName}</p><p class="text-sm text-gray-600">${b.items.map(i => i.productName).join(', ')}</p></div><button data-action="update-booking-status" data-id="${b.id}" data-status="Đang thuê" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg">Xác nhận</button></li>`).join('')}</ul>` : `<div class="p-4 text-center text-gray-500">Không có đơn nào cần lấy hôm nay.</div>`}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+             `;
+             
+             // --- Post-render initializations ---
+             animateCounters();
+             initRevenueChart();
+             initEquipmentStatusChart();
         };
         
         const renderProductModels = () => {
+            const container = document.getElementById('list-container');
+            if (!container) return;
             const filteredModels = state.productModels.filter(m => m.name.toLowerCase().includes(state.searchTerm.toLowerCase()));
-            const container = document.createElement('div');
             container.className = "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6";
             container.innerHTML = filteredModels.map(model => `
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -283,13 +346,11 @@
                         <button data-action="delete-product-model" data-id="${model.id}" class="text-sm font-medium text-red-600 hover:text-red-900">Xóa</button>
                     </div>
                 </div>`).join('');
-            mainContent.appendChild(container);
         };
 
         const renderInventory = () => {
-            const container = document.createElement('div');
-            container.className = 'space-y-4';
-            container.innerHTML = state.productModels.map(model => {
+            mainContent.className = 'space-y-4';
+            mainContent.innerHTML = state.productModels.map(model => {
                 const itemsForModel = state.inventoryItems.filter(item => item.productModelId === model.id);
                 const availableItems = itemsForModel.filter(item => item.status === 'Sẵn sàng').length;
                 return `
@@ -309,13 +370,13 @@
                         </div>
                     </div>`;
             }).join('');
-            mainContent.appendChild(container);
         };
         
         const renderBookings = () => {
+            const container = document.getElementById('list-container');
+            if (!container) return;
             const searchTermLower = state.searchTerm.toLowerCase();
             const filteredBookings = state.bookings.filter(b => b.customerName.toLowerCase().includes(searchTermLower) || (b.customerId && b.customerId === state.searchTerm));
-            const container = document.createElement('div');
             container.className = "space-y-6";
             container.innerHTML = filteredBookings.map(booking => `
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -337,16 +398,15 @@
                         ${(booking.status === 'Chờ lấy máy' || booking.status === 'Đang thuê') ? `<button data-action="update-booking-status" data-id="${booking.id}" data-status="Đã hủy" class="text-sm font-medium text-pink-600 hover:text-pink-800">Hủy đơn</button>` : ''}
                     </div>
                 </div>`).join('');
-            mainContent.appendChild(container);
         };
 
         const renderCustomers = () => {
+            const container = document.getElementById('list-container');
+            if (!container) return;
             const searchTermLower = state.searchTerm.toLowerCase();
             const filteredCustomers = state.customers.filter(c => c.name.toLowerCase().includes(searchTermLower) || c.phone.includes(searchTermLower));
-            const container = document.createElement('div');
             container.className = "bg-white rounded-lg shadow-lg overflow-hidden";
             container.innerHTML = `<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Khách Hàng</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Ghi Chú</th><th scope="col" class="relative px-6 py-3"><span class="sr-only">Hành động</span></th></tr></thead><tbody class="bg-white divide-y divide-gray-200">${filteredCustomers.map(customer => `<tr><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${customer.name}</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-500">${customer.phone}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">${customer.notes || ''}</td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4"><button data-action="view-customer-history" data-id="${customer.id}" class="text-cyan-600 hover:text-cyan-900">Xem Lịch sử</button><button data-action="open-customer-modal" data-id="${customer.id}" class="text-indigo-600 hover:text-indigo-900">Sửa</button><button data-action="delete-customer" data-id="${customer.id}" class="text-red-600 hover:text-red-900">Xóa</button></td></tr>`).join('')}</tbody></table>`;
-            mainContent.appendChild(container);
         };
 
         const renderCalendar = () => {
@@ -550,6 +610,117 @@
         };
 
 
+        // --- Dashboard Specific Functions ---
+        const animateCounters = () => {
+            const counters = document.querySelectorAll('.kpi-value');
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const isCurrency = counter.textContent.includes('₫');
+                
+                let current = 0;
+                const increment = target / 100; // Animate in 100 steps
+
+                const updateCounter = () => {
+                    if (current < target) {
+                        current += increment;
+                        if (isCurrency) {
+                            counter.textContent = formatCurrency(Math.ceil(current));
+                        } else {
+                            counter.textContent = Math.ceil(current);
+                        }
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                         if (isCurrency) {
+                            counter.textContent = formatCurrency(target);
+                        } else {
+                            counter.textContent = target;
+                        }
+                    }
+                };
+                updateCounter();
+            });
+        };
+
+        const initRevenueChart = () => {
+            const ctx = document.getElementById('revenueChart');
+            if (!ctx) return;
+
+            // Prepare data for the last 7 days
+            const labels = [];
+            const data = [];
+            for (let i = 6; i >= 0; i--) {
+                const day = moment().subtract(i, 'days');
+                labels.push(day.format('DD/MM'));
+                const revenueForDay = state.bookings
+                    .filter(b => b.status === 'Đã trả' && moment(b.endDate).isSame(day, 'day'))
+                    .reduce((sum, b) => sum + b.totalPrice, 0);
+                data.push(revenueForDay);
+            }
+
+            state.charts.revenue = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu',
+                        data: data,
+                        backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1,
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: value => formatCurrency(value) } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => formatCurrency(context.parsed.y) } } }
+                }
+            });
+        };
+
+        const initEquipmentStatusChart = () => {
+            const ctx = document.getElementById('equipmentStatusChart');
+            if (!ctx) return;
+            
+            const statusCounts = state.inventoryItems.reduce((acc, item) => {
+                acc[item.status] = (acc[item.status] || 0) + 1;
+                return acc;
+            }, {});
+
+            const labels = ['Sẵn sàng', 'Đang thuê', 'Bảo trì'];
+            const data = [
+                statusCounts['Sẵn sàng'] || 0,
+                statusCounts['Đang thuê'] || 0,
+                statusCounts['Bảo trì'] || 0,
+            ];
+
+            state.charts.equipmentStatus = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Số lượng',
+                        data: data,
+                        backgroundColor: ['rgba(34, 197, 94, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(239, 68, 68, 0.7)'],
+                        borderColor: ['rgba(34, 197, 94, 1)', 'rgba(245, 158, 11, 1)', 'rgba(239, 68, 68, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        };
+
+
         // --- Data Fetching ---
         const fetchData = () => {
             let loadingCounter = 4;
@@ -616,18 +787,13 @@
         });
 
         // --- GLOBAL EVENT LISTENERS (Delegation) ---
-
-        // Listener for Clicks (opening modals, deleting, etc.)
         document.body.addEventListener('click', async (e) => {
             const target = e.target.closest('[data-action]');
             if (!target) return;
-
             const action = target.dataset.action;
             const id = target.dataset.id;
-
             switch(action) {
                 case 'close-modal': closeModal(); break;
-                // Product Models
                 case 'open-product-model-modal':
                     const model = id ? state.productModels.find(m => m.id === id) : null;
                     renderProductModelModal(model);
@@ -637,27 +803,22 @@
                         await deleteDoc(doc(db, 'productModels', id));
                     }
                     break;
-                // Inventory
                 case 'toggle-inventory-model':
                     target.closest('[data-model-id]').querySelector('.border-t').classList.toggle('hidden');
                     target.closest('[data-model-id]').querySelector('svg').classList.toggle('rotate-180');
                     break;
                 case 'open-inventory-item-modal':
                     const item = id ? state.inventoryItems.find(i => i.id === id) : null;
-                    const modelId = target.dataset.modelId;
-                    const modelName = target.dataset.modelName;
-                    renderInventoryItemModal(item, modelId, modelName);
+                    renderInventoryItemModal(item, target.dataset.modelId, target.dataset.modelName);
                     break;
                 case 'delete-inventory-item':
                     if (confirm('Bạn có chắc chắn muốn xóa thiết bị này?')) {
                         await deleteDoc(doc(db, 'inventoryItems', id));
                     }
                     break;
-                // Customers
                 case 'open-customer-modal':
                     const customer = id ? state.customers.find(c => c.id === id) : null;
-                    const fromBooking = target.dataset.fromBooking === 'true';
-                    renderCustomerModal(customer, fromBooking);
+                    renderCustomerModal(customer, target.dataset.fromBooking === 'true');
                     break;
                 case 'delete-customer':
                     if (confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
@@ -665,43 +826,33 @@
                     }
                     break;
                 case 'view-customer-history':
-                    state.currentView = 'bookings';
-                    state.searchTerm = id;
+                    state.currentView = 'bookings'; state.searchTerm = id;
                     document.querySelectorAll('.nav-link').forEach(link => {
                         link.classList.remove('bg-gray-900');
                         if(link.dataset.view === 'bookings') link.classList.add('bg-gray-900');
                     });
                     render();
                     break;
-                // Bookings
                 case 'update-booking-status':
                     const newStatus = target.dataset.status;
                     const booking = state.bookings.find(b => b.id === id);
                     if (!booking) return;
-
                     const batch = writeBatch(db);
                     batch.update(doc(db, 'bookings', id), { status: newStatus });
                     const shouldUpdateItems = (newStatus === 'Đã trả' || newStatus === 'Đã hủy' || newStatus === 'Đang thuê');
                     if (shouldUpdateItems && booking.items) {
                         const itemStatus = (newStatus === 'Đang thuê') ? 'Đang thuê' : 'Sẵn sàng';
-                        booking.items.forEach(item => {
-                            batch.update(doc(db, 'inventoryItems', item.itemId), { status: itemStatus });
-                        });
+                        booking.items.forEach(item => { batch.update(doc(db, 'inventoryItems', item.itemId), { status: itemStatus }); });
                     }
                     await batch.commit();
                     break;
-                case 'open-booking-modal':
-                    renderBookingModal();
-                    break;
-                case 'open-device-selector':
-                    renderDeviceSelectorModal();
-                    break;
+                case 'open-booking-modal': renderBookingModal(); break;
+                case 'open-device-selector': renderDeviceSelectorModal(); break;
                 case 'toggle-device-selection':
                     const itemId = target.dataset.itemId;
                     const isChecked = target.checked;
-                    const tempSelectedItems = state.newBooking.items; // Direct mutation for simplicity in this handler
+                    const tempSelectedItems = state.newBooking.items;
                     const existingIndex = tempSelectedItems.findIndex(i => i.itemId === itemId);
-
                     if (isChecked && existingIndex === -1) {
                         const item = state.inventoryItems.find(i => i.id === itemId);
                         const model = state.productModels.find(m => m.id === item.productModelId);
@@ -710,15 +861,9 @@
                         tempSelectedItems.splice(existingIndex, 1);
                     }
                     break;
-                case 'confirm-device-selection':
-                    // The state.newBooking.items is already updated by the toggle action
-                    closeModal();
-                    updateBookingItemsList();
-                    break;
+                case 'confirm-device-selection': closeModal(); updateBookingItemsList(); break;
             }
         });
-
-        // Listener for Form Submissions
         modalsContainer.addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
@@ -726,76 +871,47 @@
             const isEditing = id !== '';
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
-
             try {
                 switch(form.id) {
                     case 'product-model-form':
                         data.pricePerDay = Number(data.pricePerDay);
-                        if (isEditing) {
-                            await updateDoc(doc(db, 'productModels', id), data);
-                        } else {
-                            await addDoc(collection(db, 'productModels'), data);
-                        }
+                        if (isEditing) await updateDoc(doc(db, 'productModels', id), data);
+                        else await addDoc(collection(db, 'productModels'), data);
                         break;
                     case 'inventory-item-form':
-                        if (isEditing) {
-                            await updateDoc(doc(db, 'inventoryItems', id), data);
-                        } else {
-                            await addDoc(collection(db, 'inventoryItems'), data);
-                        }
+                        if (isEditing) await updateDoc(doc(db, 'inventoryItems', id), data);
+                        else await addDoc(collection(db, 'inventoryItems'), data);
                         break;
                     case 'customer-form':
-                        const fromBooking = form.dataset.fromBooking === 'true';
-                        if (isEditing) {
-                            await updateDoc(doc(db, 'customers', id), data);
-                        } else {
+                        if (isEditing) await updateDoc(doc(db, 'customers', id), data);
+                        else {
                             const newCustomerRef = await addDoc(collection(db, 'customers'), { ...data, createdAt: Timestamp.now() });
-                            if (fromBooking) {
-                                // Re-render booking modal to include the new customer
-                                closeModal();
-                                renderBookingModal();
-                                // A small delay to allow the DOM to update
+                            if (form.dataset.fromBooking === 'true') {
+                                closeModal(); renderBookingModal();
                                 setTimeout(() => {
                                     const customerSelect = document.querySelector('#booking-form select[name="customerId"]');
                                     if(customerSelect) customerSelect.value = newCustomerRef.id;
                                 }, 100);
-                                return; // Prevent closing the new booking modal
+                                return;
                             }
                         }
                         break;
                     case 'booking-form':
                         const customer = state.customers.find(c => c.id === data.customerId);
                         if (!customer || !data.startDate || !data.endDate || state.newBooking.items.length === 0) {
-                            alert("Vui lòng điền đủ thông tin: khách hàng, ngày và chọn ít nhất 1 thiết bị.");
-                            return;
+                            alert("Vui lòng điền đủ thông tin: khách hàng, ngày và chọn ít nhất 1 thiết bị."); return;
                         }
                         const days = Math.max(1, moment(data.endDate).diff(moment(data.startDate), 'days') + 1);
                         const totalPrice = state.newBooking.items.reduce((acc, item) => acc + Number(item.pricePerDay), 0) * days;
-                        
-                        const bookingData = {
-                            customerId: customer.id,
-                            customerName: customer.name,
-                            customerPhone: customer.phone,
-                            startDate: Timestamp.fromDate(new Date(data.startDate)),
-                            endDate: Timestamp.fromDate(new Date(data.endDate)),
-                            items: state.newBooking.items,
-                            status: 'Chờ lấy máy',
-                            totalPrice: totalPrice,
-                            createdAt: Timestamp.now()
-                        };
-
+                        const bookingData = { customerId: customer.id, customerName: customer.name, customerPhone: customer.phone, startDate: Timestamp.fromDate(new Date(data.startDate)), endDate: Timestamp.fromDate(new Date(data.endDate)), items: state.newBooking.items, status: 'Chờ lấy máy', totalPrice: totalPrice, createdAt: Timestamp.now() };
                         const batch = writeBatch(db);
                         const bookingRef = doc(collection(db, 'bookings'));
                         batch.set(bookingRef, bookingData);
-                        // No need to update item status here, it will be updated when staff confirms pickup
                         await batch.commit();
                         break;
                 }
                 closeModal();
-            } catch (err) {
-                console.error("Form submission error:", err);
-                alert("Đã xảy ra lỗi. Vui lòng thử lại.");
-            }
+            } catch (err) { console.error("Form submission error:", err); alert("Đã xảy ra lỗi. Vui lòng thử lại."); }
         });
 
     </script>
