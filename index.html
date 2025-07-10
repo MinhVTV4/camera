@@ -3,155 +3,29 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lens Manager - Quản lý cho thuê (HTML/JS)</title>
+    <title>Lens Manager - Quản lý cho thuê</title>
     
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FullCalendar for the calendar view -->
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
-    
-    <!-- Moment.js for date formatting -->
+    <link rel="stylesheet" href="https://unpkg.com/react-big-calendar@1.8.1/lib/css/react-big-calendar.css">
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/moment@2.29.4/min/moment.min.js"></script>
     <script src="https://unpkg.com/moment@2.29.4/locale/vi.js"></script>
+    <script src="https://unpkg.com/react-big-calendar@1.8.1/dist/react-big-calendar.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
-    <!-- Chart.js for beautiful charts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-
-    <style>
-        /* Custom styles for the application */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        /* Hide scrollbar for IE, Edge and Firefox */
-        .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        /* Style for FullCalendar */
-        :root {
-            --fc-border-color: #e5e7eb;
-            --fc-daygrid-event-dot-width: 8px;
-            --fc-list-event-dot-width: 10px;
-            --fc-event-bg-color: #3b82f6;
-            --fc-event-border-color: #3b82f6;
-            --fc-event-text-color: #ffffff;
-            --fc-button-bg-color: #4f46e5;
-            --fc-button-active-bg-color: #4338ca;
-            --fc-today-bg-color: rgba(239, 246, 255, 0.8);
-        }
-        .fc .fc-button {
-            font-size: 0.875rem;
-        }
-        .fc .fc-toolbar-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-        /* Modal styles */
-        .modal-backdrop {
-            background-color: rgba(0, 0, 0, 0.5);
-            transition: opacity 0.3s ease;
-        }
-        /* Animation for dashboard cards */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .dashboard-card {
-            animation: fadeIn 0.5s ease-out forwards;
-            opacity: 0; /* Start hidden */
-        }
-    </style>
 </head>
 <body class="bg-gray-100">
+    <div id="root"></div>
 
-    <!-- Login Screen -->
-    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-        <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
-            <h2 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">Đăng nhập Lens Manager</h2>
-            <form id="login-form">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="email">Email</label>
-                    <input id="email" type="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="password">Mật khẩu</label>
-                    <input id="password" type="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" required />
-                </div>
-                <p id="login-error" class="text-red-500 text-xs italic mb-4 hidden"></p>
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">Đăng nhập</button>
-            </form>
-        </div>
-    </div>
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        const { Calendar, momentLocalizer } = ReactBigCalendar;
 
-    <!-- Main Application Panel -->
-    <div id="admin-panel" class="hidden h-screen bg-gray-100">
-        <div class="flex h-full">
-            <!-- Sidebar -->
-            <div id="sidebar-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden hidden"></div>
-            <nav id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-800 text-white flex flex-col transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-30">
-                <div class="px-6 py-4 border-b border-gray-700">
-                    <h2 class="text-2xl font-semibold">Lens Manager</h2>
-                </div>
-                <div class="flex-1 px-2 py-4 space-y-1">
-                    <a href="#" data-view="createBooking" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium bg-indigo-600 hover:bg-indigo-500">
-                        <svg class="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                        Tạo Đơn Thuê Mới
-                    </a>
-                    <hr class="border-gray-700 my-2">
-                    <a href="#" data-view="dashboard" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium bg-gray-900">Dashboard</a>
-                    <a href="#" data-view="bookings" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Quản Lý Đơn Thuê</a>
-                    <a href="#" data-view="productModels" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Mẫu Sản Phẩm</a>
-                    <a href="#" data-view="inventory" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Kho Thiết Bị</a>
-                    <a href="#" data-view="customers" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Khách Hàng</a>
-                    <a href="#" data-view="calendar" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Lịch</a>
-                </div>
-            </nav>
-
-            <!-- Main Content -->
-            <div class="flex-1 flex flex-col overflow-hidden">
-                <header class="bg-white shadow-sm z-10">
-                    <div class="w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                        <div class="flex items-center">
-                            <button id="open-sidebar-btn" class="text-gray-500 focus:outline-none md:hidden">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                            </button>
-                            <h1 id="view-title" class="text-xl sm:text-2xl font-bold text-gray-900 ml-4 md:ml-0">Dashboard</h1>
-                        </div>
-                        <div class="flex items-center space-x-4">
-                            <button id="logout-btn" class="text-sm font-medium text-red-600 hover:text-red-800 bg-red-100 p-2 rounded-full sm:rounded-md sm:px-3 sm:py-2">
-                                <span class="hidden sm:inline">Đăng xuất</span>
-                                <span class="sm:hidden">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
-                                      <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
-                                      <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-                                    </svg>
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-                </header>
-                <main id="main-content" class="flex-1 overflow-y-auto p-4 sm:p-6">
-                    <!-- Dynamic content will be injected here -->
-                </main>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modals container -->
-    <div id="modals-container"></div>
-
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, Timestamp, query, orderBy, where, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // --- Firebase Configuration ---
+        // --- Cấu hình Firebase ---
         const firebaseConfig = {
             apiKey: "AIzaSyB8KNNZnFSl54y0hXG_iNPksNC6DAyp-0U",
             authDomain: "lens-df7e7.firebaseapp.com",
@@ -161,984 +35,385 @@
             appId: "1:772821461113:web:2166b475800e7687bd0ca8"
         };
 
-        // --- Initialize Firebase ---
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        // --- Khởi tạo Firebase ---
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const { Timestamp } = firebase.firestore;
 
-        // --- Global State ---
-        let state = {
-            user: null,
-            currentView: 'dashboard',
-            productModels: [],
-            inventoryItems: [],
-            bookings: [],
-            customers: [],
-            isDataLoading: true,
-            searchTerm: '',
-            activeFilter: null,
-            calendar: null,
-            charts: {},
-            // This object is now managed by the createBooking view directly
-            // newBooking: {} 
-        };
-        
-        // --- DOM Elements ---
-        const loginScreen = document.getElementById('login-screen');
-        const adminPanel = document.getElementById('admin-panel');
-        const mainContent = document.getElementById('main-content');
-        const viewTitle = document.getElementById('view-title');
-        const modalsContainer = document.getElementById('modals-container');
+        moment.locale('vi');
+        const localizer = momentLocalizer(moment);
 
-        // --- Utility Functions ---
-        const formatDate = (date) => date ? moment(date).format('L') : '';
+        // --- Các hàm hỗ trợ ---
+        const formatDate = (date) => date ? new Date(date).toLocaleDateString('vi-VN') : '';
         const formatCurrency = (number) => (typeof number === 'number' ? number : 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
         const getStatusClass = (status) => {
-            const classes = {
-                'Sẵn sàng': 'bg-green-100 text-green-800', 'Đang thuê': 'bg-yellow-100 text-yellow-800',
-                'Bảo trì': 'bg-red-100 text-red-800', 'Chờ lấy máy': 'bg-blue-100 text-blue-800',
-                'Đã trả': 'bg-gray-200 text-gray-800', 'Đã hủy': 'bg-pink-100 text-pink-800',
-            };
-            return classes[status] || 'bg-gray-100 text-gray-800';
-        };
-
-        // --- Enhanced Modal & Notification Management ---
-        const openModal = (modalHTML) => { modalsContainer.innerHTML = modalHTML; document.body.classList.add('overflow-hidden'); };
-        const closeModal = () => { modalsContainer.innerHTML = ''; document.body.classList.remove('overflow-hidden'); };
-
-        const showNotificationModal = (title, message, type = 'info') => {
-            const colors = {
-                info: { bg: 'bg-blue-100', icon: '<svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>' },
-                success: { bg: 'bg-green-100', icon: '<svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>' },
-                error: { bg: 'bg-red-100', icon: '<svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>' }
-            };
-            const selectedColor = colors[type];
-            const modalHTML = `
-                <div class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-                    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm transform transition-all" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
-                        <div class="flex">
-                            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full ${selectedColor.bg} sm:mx-0 sm:h-10 sm:w-10">
-                                ${selectedColor.icon}
-                            </div>
-                            <div class="ml-4 text-left">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">${title}</h3>
-                                <div class="mt-2">
-                                    <p class="text-sm text-gray-500">${message}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                            <button type="button" data-action="close-modal" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                                OK
-                            </button>
-                        </div>
-                    </div>
-                </div>`;
-            openModal(modalHTML);
-        };
-
-        const showConfirmationModal = (title, message, onConfirm) => {
-            const modalHTML = `
-                <div class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-                    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm transform transition-all" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
-                        <div class="flex">
-                            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                                <svg class="h-6 w-6 text-red-600" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                </svg>
-                            </div>
-                            <div class="ml-4 text-left">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">${title}</h3>
-                                <div class="mt-2">
-                                    <p class="text-sm text-gray-500">${message}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                            <button type="button" id="confirm-action-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                                Xác nhận
-                            </button>
-                            <button type="button" data-action="close-modal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">
-                                Hủy
-                            </button>
-                        </div>
-                    </div>
-                </div>`;
-            openModal(modalHTML);
-            document.getElementById('confirm-action-btn').addEventListener('click', () => {
-                onConfirm();
-            }, { once: true });
-        };
-
-        // --- Render Functions (Main Views) ---
-        const render = () => {
-            if (state.isDataLoading) {
-                mainContent.innerHTML = `<div class="flex justify-center items-center h-full"><p class="text-gray-500 mt-8">Đang tải dữ liệu...</p></div>`;
-                return;
-            }
-
-            const viewTitles = { 
-                dashboard: 'Dashboard', 
-                createBooking: 'Tạo Đơn Thuê Mới',
-                productModels: 'Quản Lý Mẫu Sản Phẩm', 
-                inventory: 'Kho Thiết Bị', 
-                bookings: 'Quản Lý Đơn Thuê', 
-                calendar: 'Lịch Tổng Quan', 
-                customers: 'Quản Lý Khách Hàng' 
-            };
-            viewTitle.textContent = viewTitles[state.currentView] || 'Dashboard';
-
-            mainContent.innerHTML = '';
-            Object.values(state.charts).forEach(chart => chart.destroy());
-            state.charts = {};
-            if (state.calendar) { state.calendar.destroy(); state.calendar = null; }
-
-            const headerContainer = document.createElement('div');
-            headerContainer.id = 'view-header';
-            mainContent.appendChild(headerContainer);
-
-            const listContainer = document.createElement('div');
-            listContainer.id = 'list-container';
-            mainContent.appendChild(listContainer);
-
-            switch(state.currentView) {
-                case 'dashboard': renderDashboard(); break;
-                case 'createBooking': renderCreateBookingForm(); break;
-                case 'productModels':
-                    renderHeader(true, "Tìm kiếm mẫu sản phẩm...", "open-product-model-modal", "+ Thêm Mẫu Mới");
-                    renderProductModels();
-                    break;
-                case 'inventory': 
-                    renderHeader(false);
-                    renderInventory(); 
-                    break;
-                case 'bookings':
-                    renderHeader(true, "Tìm kiếm theo tên khách hàng...", null, null);
-                    renderBookings();
-                    break;
-                case 'customers':
-                    renderHeader(true, "Tìm kiếm theo tên hoặc SĐT...", "open-customer-modal", "+ Thêm Khách Hàng");
-                    renderCustomers();
-                    break;
-                case 'calendar': 
-                    renderCalendar(); 
-                    break;
-                default:
-                    renderDashboard();
+            switch (status) {
+                case 'Sẵn sàng': return 'bg-green-100 text-green-800';
+                case 'Đang thuê': return 'bg-yellow-100 text-yellow-800';
+                case 'Bảo trì': return 'bg-red-100 text-red-800';
+                case 'Chờ lấy máy': return 'bg-blue-100 text-blue-800';
+                case 'Đã trả': return 'bg-gray-200 text-gray-800';
+                case 'Đã hủy': return 'bg-pink-100 text-pink-800';
+                default: return 'bg-gray-100 text-gray-800';
             }
         };
+        
+        // --- Component con ---
+        function LoginScreen() {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const handleSubmit = async (e) => { e.preventDefault(); setError(''); try { await auth.signInWithEmailAndPassword(email, password); } catch (err) { setError('Email hoặc mật khẩu không đúng.'); } };
+            return (<div className="min-h-screen flex items-center justify-center bg-gray-100 p-4"><div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg"><h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">Đăng nhập Lens Manager</h2><form onSubmit={handleSubmit}><div className="mb-4"><label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">Email</label><input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required /></div><div className="mb-6"><label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">Mật khẩu</label><input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" required /></div>{error && <p className="text-red-500 text-xs italic mb-4">{error}</p>}<button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">Đăng nhập</button></form></div></div>);
+        }
 
-        const renderHeader = (showSearch, searchPlaceholder, buttonAction, buttonText) => {
-            const headerContainer = document.getElementById('view-header');
-            if (!headerContainer) return;
+        function CalendarView({ bookings }) {
+            const events = useMemo(() => bookings.filter(b => b.status !== 'Đã hủy').map(booking => ({ title: `${booking.customerName} - ${booking.items.map(i => i.productName).join(', ')}`, start: booking.startDate, end: moment(booking.endDate).add(1, 'days').toDate(), allDay: true, resource: booking })), [bookings]);
+            const eventStyleGetter = (event) => { const status = event.resource.status; let backgroundColor = '#3174ad'; if (status === 'Đang thuê') backgroundColor = '#f6b93b'; else if (status === 'Đã trả') backgroundColor = '#6c757d'; return { style: { backgroundColor, borderRadius: '5px', opacity: 0.8, color: 'white', border: '0px', display: 'block' } }; };
+            return (<div className="bg-white p-2 sm:p-4 rounded-lg shadow-lg" style={{ height: '80vh' }}><Calendar localizer={localizer} events={events} startAccessor="start" endAccessor="end" views={['month', 'week', 'day']} messages={{ next: "Sau", previous: "Trước", today: "Hôm nay", month: "Tháng", week: "Tuần", day: "Ngày" }} eventPropGetter={eventStyleGetter} /></div>);
+        }
 
-            let filterBadgeHTML = '';
-            if (state.activeFilter) {
-                const filterText = state.activeFilter.value === 'overdue' ? 'Quá hạn' : state.activeFilter.value;
-                filterBadgeHTML = `
-                    <span class="inline-flex items-center gap-x-2 rounded-md bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-700">
-                        Lọc: ${filterText}
-                        <button data-action="clear-filter" type="button" class="group relative -mr-1 h-3.5 w-3.5 rounded-sm hover:bg-gray-500/20">
-                            <span class="sr-only">Remove</span>
-                            <svg viewBox="0 0 14 14" class="h-3.5 w-3.5 stroke-gray-600/50 group-hover:stroke-gray-600/75">
-                                <path d="M4 4l6 6m0-6l-6 6" />
-                            </svg>
-                            <span class="absolute -inset-1"></span>
-                        </button>
-                    </span>
-                `;
-            }
+        function DashboardView({ inventoryItems, bookings }) {
+            const totalRevenue = useMemo(() => bookings.filter(b => b.status === 'Đã trả').reduce((acc, b) => acc + b.totalPrice, 0), [bookings]);
+            const itemsRented = useMemo(() => inventoryItems.filter(item => item.status === 'Đang thuê').length, [inventoryItems]);
+            const pendingBookingsCount = useMemo(() => bookings.filter(b => b.status === 'Chờ lấy máy').length, [bookings]);
+            
+            // --- Nâng cấp Dashboard: Logic cho Cảnh báo ---
+            const { overdueBookings, pickupTodayBookings } = useMemo(() => {
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
 
-            headerContainer.innerHTML = `
-                <div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div class="w-full sm:w-1/2 flex items-center gap-4">
-                        ${showSearch ? `<input type="text" id="search-input" placeholder="${searchPlaceholder}" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm" value="${state.searchTerm}"/>` : '<div></div>'}
-                        ${filterBadgeHTML}
-                    </div>
-                    ${buttonAction ? `<button data-action="${buttonAction}" class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">${buttonText}</button>` : ''}
-                </div>
-            `;
+                const todayEnd = new Date();
+                todayEnd.setHours(23, 59, 59, 999);
 
-            if (showSearch) {
-                document.getElementById('search-input').addEventListener('input', (e) => {
-                    state.searchTerm = e.target.value;
-                    switch(state.currentView) {
-                        case 'productModels': renderProductModels(); break;
-                        case 'bookings': renderBookings(); break;
-                        case 'customers': renderCustomers(); break;
-                    }
+                const overdue = bookings.filter(b => 
+                    b.status === 'Đang thuê' && b.endDate < todayStart
+                );
+
+                const pickupToday = bookings.filter(b => {
+                    const startDate = b.startDate;
+                    return b.status === 'Chờ lấy máy' && startDate >= todayStart && startDate <= todayEnd;
                 });
-            }
-        };
 
-        const renderDashboard = () => {
-             const totalRevenue = state.bookings.filter(b => b.status === 'Đã trả').reduce((acc, b) => acc + b.totalPrice, 0);
-             const itemsRented = state.inventoryItems.filter(item => item.status === 'Đang thuê').length;
-             const pendingBookingsCount = state.bookings.filter(b => b.status === 'Chờ lấy máy').length;
-             const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-             const overdueBookings = state.bookings.filter(b => b.status === 'Đang thuê' && b.endDate < todayStart);
-             
-             const listContainer = document.getElementById('list-container');
-             listContainer.innerHTML = `
-                <div class="space-y-8">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <a href="#" data-action="navigate" data-view="bookings" data-filter-type="status" data-filter-value="Đã trả" style="animation-delay: 0s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
-                            <div class="bg-green-100 p-3 rounded-full"><svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 10v-1m-6.364-3.636l.707-.707m11.314 0l-.707-.707M5 12H4m16 0h-1m-3.636 6.364l-.707.707M6.343 6.343l.707.707"></path></svg></div>
-                            <div><p class="text-sm font-medium text-gray-500">Tổng Doanh Thu</p><p class="kpi-value text-3xl font-bold text-gray-800" data-target="${totalRevenue}">${formatCurrency(0)}</p></div>
-                        </a>
-                        <a href="#" data-action="navigate" data-view="inventory" data-filter-type="status" data-filter-value="Đang thuê" style="animation-delay: 0.1s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
-                            <div class="bg-yellow-100 p-3 rounded-full"><svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
-                            <div><p class="text-sm font-medium text-gray-500">Đang Thuê</p><p class="kpi-value text-3xl font-bold text-gray-800" data-target="${itemsRented}">0</p></div>
-                        </a>
-                        <a href="#" data-action="navigate" data-view="bookings" data-filter-type="status" data-filter-value="Chờ lấy máy" style="animation-delay: 0.2s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
-                            <div class="bg-blue-100 p-3 rounded-full"><svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
-                            <div><p class="text-sm font-medium text-gray-500">Chờ Lấy Máy</p><p class="kpi-value text-3xl font-bold text-gray-800" data-target="${pendingBookingsCount}">0</p></div>
-                        </a>
-                         <a href="#" data-action="navigate" data-view="bookings" data-filter-type="status" data-filter-value="overdue" style="animation-delay: 0.3s" class="dashboard-card bg-white p-6 rounded-2xl shadow-lg flex items-center space-x-4 transition-all duration-300 hover:shadow-xl hover:scale-105">
-                            <div class="bg-red-100 p-3 rounded-full"><svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
-                            <div><p class="text-sm font-medium text-gray-500">Đơn Quá Hạn</p><p class="kpi-value text-3xl font-bold text-gray-800" data-target="${overdueBookings.length}">0</p></div>
-                        </a>
+                return { overdueBookings: overdue, pickupTodayBookings: pickupToday };
+            }, [bookings]);
+
+            return (
+                <div className="space-y-8">
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="bg-white p-6 rounded-lg shadow-lg"><h3 className="text-lg font-medium text-gray-500">Tổng Doanh Thu</h3><p className="mt-2 text-3xl md:text-4xl font-bold text-green-600">{formatCurrency(totalRevenue)}</p></div>
+                        <div className="bg-white p-6 rounded-lg shadow-lg"><h3 className="text-lg font-medium text-gray-500">Thiết Bị Đang Thuê</h3><p className="mt-2 text-3xl md:text-4xl font-bold text-yellow-600">{itemsRented}</p></div>
+                        <div className="bg-white p-6 rounded-lg shadow-lg"><h3 className="text-lg font-medium text-gray-500">Đơn Chờ Lấy Máy</h3><p className="mt-2 text-3xl md:text-4xl font-bold text-blue-600">{pendingBookingsCount}</p></div>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                        <div style="animation-delay: 0.4s" class="dashboard-card lg:col-span-3 bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Doanh thu 7 ngày gần nhất</h3>
-                            <div class="relative h-80">
-                                <canvas id="revenueChart"></canvas>
+
+                    {/* Action Items & Alerts Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Cảnh báo đơn quá hạn */}
+                        <div>
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Cảnh báo: Đơn quá hạn trả</h2>
+                            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                                {overdueBookings.length > 0 ? (
+                                    <ul className="divide-y divide-gray-200">
+                                        {overdueBookings.map(booking => (
+                                            <li key={booking.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-red-50">
+                                                <div>
+                                                    <p className="font-semibold text-red-800">{booking.customerName}</p>
+                                                    <p className="text-sm text-red-700">{booking.items.map(i => i.productName).join(', ')}</p>
+                                                </div>
+                                                <p className="text-sm text-red-600 font-medium mt-2 sm:mt-0">Quá hạn từ: {formatDate(booking.endDate)}</p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (<p className="text-gray-500 p-4">Không có đơn nào quá hạn.</p>)}
                             </div>
                         </div>
-                        <div style="animation-delay: 0.5s" class="dashboard-card lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Tình trạng thiết bị</h3>
-                            <div class="relative h-80 flex items-center justify-center">
-                                <canvas id="equipmentStatusChart"></canvas>
+
+                        {/* Nhắc nhở đơn lấy hôm nay */}
+                        <div>
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Cần xử lý: Đơn lấy hôm nay</h2>
+                             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                                {pickupTodayBookings.length > 0 ? (
+                                    <ul className="divide-y divide-gray-200">
+                                        {pickupTodayBookings.map(booking => (
+                                            <li key={booking.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                                                <div>
+                                                    <p className="font-semibold text-gray-900">{booking.customerName}</p>
+                                                    <p className="text-sm text-gray-600">{booking.items.map(i => i.productName).join(', ')}</p>
+                                                </div>
+                                                <p className="text-sm text-blue-600 font-medium mt-2 sm:mt-0">Lấy máy hôm nay</p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (<p className="text-gray-500 p-4">Không có đơn nào cần lấy hôm nay.</p>)}
                             </div>
                         </div>
                     </div>
                 </div>
-             `;
-             animateCounters();
-             initRevenueChart();
-             initEquipmentStatusChart();
-        };
+            );
+        }
         
-        const renderProductModels = () => {
-            const container = document.getElementById('list-container');
-            if (!container) return;
-            const filteredModels = state.productModels.filter(m => m.name.toLowerCase().includes(state.searchTerm.toLowerCase()));
-            container.className = "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6";
-            container.innerHTML = filteredModels.map(model => `
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div class="p-5">
-                        <h3 class="text-xl font-bold text-gray-800">${model.name}</h3>
-                        <p class="text-sm text-gray-600 mt-2">Loại: ${model.type}</p>
-                        <p class="text-lg font-semibold text-indigo-600 mt-3">${formatCurrency(model.pricePerDay)}/ngày</p>
+        function ProductModelsView({ productModels, onEdit, onDelete, onSearch, onAdd }) {
+             return (
+                <div>
+                    <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <input type="text" placeholder="Tìm kiếm mẫu sản phẩm..." onChange={(e) => onSearch(e.target.value)} className="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm"/>
+                        <button onClick={onAdd} className="w-full sm:w-auto bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">+ Thêm Mẫu Mới</button>
                     </div>
-                    <div class="bg-gray-50 px-5 py-3 flex justify-end space-x-4">
-                        <button data-action="open-product-model-modal" data-id="${model.id}" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">Sửa</button>
-                        <button data-action="delete-product-model" data-id="${model.id}" class="text-sm font-medium text-red-600 hover:text-red-900">Xóa</button>
-                    </div>
-                </div>`).join('');
-        };
-
-        const renderInventory = () => {
-            renderHeader(false);
-            let items = state.inventoryItems;
-            if (state.activeFilter && state.activeFilter.type === 'status') {
-                items = items.filter(item => item.status === state.activeFilter.value);
-            }
-            
-            const listContainer = document.getElementById('list-container');
-            listContainer.className = 'space-y-4';
-            listContainer.innerHTML = state.productModels.map(model => {
-                const itemsForModel = items.filter(item => item.productModelId === model.id);
-                if (state.activeFilter && itemsForModel.length === 0) return '';
-                
-                const allItemsForModel = state.inventoryItems.filter(item => item.productModelId === model.id);
-                const availableItems = allItemsForModel.filter(item => item.status === 'Sẵn sàng').length;
-                return `
-                    <div class="bg-white rounded-lg shadow-md" data-model-id="${model.id}">
-                        <div class="p-4 flex justify-between items-center cursor-pointer" data-action="toggle-inventory-model">
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-800">${model.name}</h3>
-                                <p class="text-sm text-gray-500">Sẵn sàng: <span class="font-semibold text-green-600">${availableItems}</span> / Tổng: ${allItemsForModel.length}</p>
-                            </div>
-                            <div class="flex items-center space-x-4">
-                                <button data-action="open-inventory-item-modal" data-model-id="${model.id}" data-model-name="${model.name}" class="text-sm bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600">+ Thêm S/N</button>
-                                <svg class="w-6 h-6 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
-                        </div>
-                        <div class="border-t border-gray-200 p-4 hidden">
-                            ${itemsForModel.length > 0 ? `<ul class="space-y-2">${itemsForModel.map(item => `<li class="flex justify-between items-center p-2 rounded-md hover:bg-gray-50"><div><p class="font-mono text-sm text-gray-800">S/N: ${item.serial}</p></div><div class="flex items-center space-x-4"><span class="px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusClass(item.status)}">${item.status}</span><button data-action="open-inventory-item-modal" data-id="${item.id}" class="text-xs text-indigo-600">Sửa</button><button data-action="delete-inventory-item" data-id="${item.id}" class="text-xs text-red-600">Xóa</button></div></li>`).join('')}</ul>` : `<p class="text-sm text-gray-400">Không có thiết bị nào cho mẫu này.</p>`}
-                        </div>
-                    </div>`;
-            }).join('');
-        };
-        
-        const renderBookings = () => {
-            const container = document.getElementById('list-container');
-            if (!container) return;
-            
-            let filteredBookings = state.bookings;
-
-            if (state.activeFilter && state.activeFilter.type === 'status') {
-                if (state.activeFilter.value === 'overdue') {
-                    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-                    filteredBookings = filteredBookings.filter(b => b.status === 'Đang thuê' && b.endDate < todayStart);
-                } else {
-                    filteredBookings = filteredBookings.filter(b => b.status === state.activeFilter.value);
-                }
-            }
-            
-            const searchTermLower = state.searchTerm.toLowerCase();
-            if (searchTermLower) {
-                 filteredBookings = filteredBookings.filter(b => b.customerName.toLowerCase().includes(searchTermLower));
-            }
-
-            container.className = "space-y-6";
-            container.innerHTML = filteredBookings.length > 0 ? filteredBookings.map(booking => `
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div class="p-5">
-                        <div class="flex justify-between items-start">
-                            <div><p class="text-lg sm:text-xl font-bold text-gray-800">${booking.customerName}</p><p class="text-sm text-gray-500">${booking.customerPhone}</p></div>
-                            <span class="flex-shrink-0 mt-1 px-3 py-1 text-xs font-semibold rounded-full ${getStatusClass(booking.status)}">${booking.status}</span>
-                        </div>
-                        <div class="mt-4 border-t pt-4">
-                            <p class="font-semibold">Thiết bị thuê:</p>
-                            <ul class="list-disc list-inside text-sm text-gray-700">${booking.items.map(item => `<li key="${item.itemId}">${item.productName} (S/N: ${item.serial})</li>`).join('')}</ul>
-                            <div class="flex flex-col sm:flex-row justify-between mt-3 text-sm"><p>Ngày thuê: <span class="font-medium">${formatDate(booking.startDate)}</span></p><p class="mt-1 sm:mt-0">Ngày trả: <span class="font-medium">${formatDate(booking.endDate)}</span></p></div>
-                            <p class="text-right text-lg font-bold text-cyan-700 mt-2">${formatCurrency(booking.totalPrice)}</p>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 px-5 py-3 flex justify-end space-x-3">
-                        ${booking.status === 'Chờ lấy máy' ? `<button data-action="update-booking-status" data-id="${booking.id}" data-status="Đang thuê" class="text-sm font-medium text-yellow-600 hover:text-yellow-800">Xác nhận lấy máy</button>` : ''}
-                        ${booking.status === 'Đang thuê' ? `<button data-action="update-booking-status" data-id="${booking.id}" data-status="Đã trả" class="text-sm font-medium text-green-600 hover:text-green-800">Xác nhận đã trả</button>` : ''}
-                        ${(booking.status === 'Chờ lấy máy' || booking.status === 'Đang thuê') ? `<button data-action="update-booking-status" data-id="${booking.id}" data-status="Đã hủy" class="text-sm font-medium text-pink-600 hover:text-pink-800">Hủy đơn</button>` : ''}
-                    </div>
-                </div>`).join('') : '<p class="text-center text-gray-500">Không tìm thấy đơn thuê nào.</p>';
-        };
-
-        const renderCustomers = () => {
-            const container = document.getElementById('list-container');
-            if (!container) return;
-            const searchTermLower = state.searchTerm.toLowerCase();
-            const filteredCustomers = state.customers.filter(c => c.name.toLowerCase().includes(searchTermLower) || c.phone.includes(searchTermLower));
-            container.className = "bg-white rounded-lg shadow-lg overflow-hidden";
-            container.innerHTML = `<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Khách Hàng</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Căn cước</th><th scope="col" class="relative px-6 py-3"><span class="sr-only">Hành động</span></th></tr></thead><tbody class="bg-white divide-y divide-gray-200">${filteredCustomers.map(customer => `<tr><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${customer.name}</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-500">${customer.phone}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">${customer.idCard || ''}</td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4"><button data-action="view-customer-history" data-id="${customer.id}" class="text-cyan-600 hover:text-cyan-900">Xem Lịch sử</button><button data-action="open-customer-modal" data-id="${customer.id}" class="text-indigo-600 hover:text-indigo-900">Sửa</button><button data-action="delete-customer" data-id="${customer.id}" class="text-red-600 hover:text-red-900">Xóa</button></td></tr>`).join('')}</tbody></table>`;
-        };
-
-        const renderCalendar = () => {
-            const listContainer = document.getElementById('list-container');
-            listContainer.className = 'bg-white p-2 sm:p-4 rounded-lg shadow-lg h-[80vh]';
-            const events = state.bookings.filter(b => b.status !== 'Đã hủy').map(booking => ({ title: `${booking.customerName} - ${booking.items.map(i => i.productName).join(', ')}`, start: booking.startDate, end: moment(booking.endDate).add(1, 'days').toDate(), allDay: true, backgroundColor: booking.status === 'Đang thuê' ? '#f6b93b' : (booking.status === 'Đã trả' ? '#6c757d' : '#3174ad'), borderColor: booking.status === 'Đang thuê' ? '#f6b93b' : (booking.status === 'Đã trả' ? '#6c757d' : '#3174ad')}));
-            state.calendar = new FullCalendar.Calendar(listContainer, { locale: 'vi', headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' }, initialView: 'dayGridMonth', events: events, editable: false, selectable: false });
-            state.calendar.render();
-        };
-        
-        // --- Render Functions (Modals) ---
-        
-        const renderProductModelModal = (model = null) => {
-            const isEditing = model !== null;
-            const modalHTML = `
-                <div class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-                    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-                        <h2 class="text-2xl font-bold mb-6">${isEditing ? 'Sửa Mẫu Sản Phẩm' : 'Thêm Mẫu Mới'}</h2>
-                        <form id="product-model-form" data-id="${isEditing ? model.id : ''}">
-                            <div class="space-y-4">
-                                <input type="text" name="name" value="${isEditing ? model.name : ''}" placeholder="Tên mẫu (VD: Sony A7S III)" class="w-full px-3 py-2 border rounded-lg" required />
-                                <select name="type" class="w-full px-3 py-2 border rounded-lg">
-                                    <option ${isEditing && model.type === 'Máy ảnh' ? 'selected' : ''}>Máy ảnh</option>
-                                    <option ${isEditing && model.type === 'Ống kính' ? 'selected' : ''}>Ống kính</option>
-                                    <option ${isEditing && model.type === 'Phụ kiện khác' ? 'selected' : ''}>Phụ kiện khác</option>
-                                </select>
-                                <input type="number" name="pricePerDay" value="${isEditing ? model.pricePerDay : ''}" placeholder="Giá thuê / ngày" class="w-full px-3 py-2 border rounded-lg" required />
-                            </div>
-                            <div class="flex justify-end mt-6 space-x-4">
-                                <button type="button" data-action="close-modal" class="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button>
-                                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Lưu</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>`;
-            openModal(modalHTML);
-        };
-        
-        const renderInventoryItemModal = (item = null, modelId = '', modelName = '') => {
-            const isEditing = item !== null;
-            const currentItem = isEditing ? item : { serial: '', status: 'Sẵn sàng', notes: '', productModelId: modelId, productName: modelName };
-            const modalHTML = `
-                <div class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-                    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-                        <h2 class="text-2xl font-bold mb-6">${isEditing ? 'Sửa Thiết Bị' : `Thêm S/N cho ${currentItem.productName}`}</h2>
-                        <form id="inventory-item-form" data-id="${isEditing ? item.id : ''}">
-                            <input type="hidden" name="productModelId" value="${currentItem.productModelId}">
-                            <input type="hidden" name="productName" value="${currentItem.productName}">
-                            <div class="space-y-4">
-                                <input type="text" name="serial" value="${currentItem.serial}" placeholder="Số Seri (S/N)" class="w-full px-3 py-2 border rounded-lg" required />
-                                <select name="status" class="w-full px-3 py-2 border rounded-lg" ${isEditing && currentItem.status !== 'Sẵn sàng' && currentItem.status !== 'Bảo trì' ? 'disabled' : ''}>
-                                    <option ${currentItem.status === 'Sẵn sàng' ? 'selected' : ''}>Sẵn sàng</option>
-                                    <option ${currentItem.status === 'Bảo trì' ? 'selected' : ''}>Bảo trì</option>
-                                    ${isEditing && currentItem.status !== 'Sẵn sàng' && currentItem.status !== 'Bảo trì' ? `<option selected>${currentItem.status}</option>` : ''}
-                                </select>
-                                <textarea name="notes" placeholder="Ghi chú" class="w-full px-3 py-2 border rounded-lg h-24">${currentItem.notes || ''}</textarea>
-                            </div>
-                            <div class="flex justify-end mt-6 space-x-4">
-                                <button type="button" data-action="close-modal" class="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button>
-                                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Lưu</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>`;
-            openModal(modalHTML);
-        };
-        
-        const renderCustomerModal = (customer = null, fromBooking = false) => {
-            const isEditing = customer !== null;
-            const modalHTML = `
-                <div class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-                    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-                        <h2 class="text-2xl font-bold mb-6">${isEditing ? 'Sửa Khách Hàng' : 'Thêm Khách Hàng Mới'}</h2>
-                        <form id="customer-form" data-id="${isEditing ? customer.id : ''}" data-from-booking="${fromBooking}">
-                            <div class="space-y-4">
-                                <input type="text" name="name" value="${isEditing ? customer.name || '' : ''}" placeholder="Tên khách hàng" class="w-full px-3 py-2 border rounded-lg" required />
-                                <input type="tel" name="phone" value="${isEditing ? customer.phone || '' : ''}" placeholder="Số điện thoại" class="w-full px-3 py-2 border rounded-lg" required />
-                                <input type="text" name="idCard" value="${isEditing ? customer.idCard || '' : ''}" placeholder="Căn cước của khách hàng" class="w-full px-3 py-2 border rounded-lg" />
-                            </div>
-                            <div class="flex justify-end mt-6 space-x-4">
-                                <button type="button" data-action="close-modal" class="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button>
-                                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Lưu</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>`;
-            openModal(modalHTML);
-        };
-
-        const renderDeviceSelectorModal = (currentItems, onConfirm) => {
-            let tempSelectedItems = JSON.parse(JSON.stringify(currentItems));
-            const modalHTML = `
-                <div class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-                    <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl flex flex-col h-[90vh]">
-                        <h2 class="text-2xl font-bold p-6 border-b">Chọn Thiết Bị</h2>
-                        <div class="p-6 border-b">
-                            <input type="text" id="device-search-input" placeholder="Tìm kiếm theo tên mẫu hoặc S/N..." class="w-full px-4 py-2 border rounded-lg"/>
-                        </div>
-                        <div id="device-list-container" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
-                        <div class="p-6 border-t flex justify-end space-x-4">
-                            <button type="button" data-action="close-modal" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Hủy</button>
-                            <button type="button" id="confirm-device-selection-btn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Xác nhận</button>
-                        </div>
-                    </div>
-                </div>`;
-            openModal(modalHTML);
-
-            const modalElement = modalsContainer.firstElementChild;
-            const deviceListContainer = modalElement.querySelector('#device-list-container');
-            const searchInput = modalElement.querySelector('#device-search-input');
-            const confirmBtn = modalElement.querySelector('#confirm-device-selection-btn');
-
-            const rerenderDeviceList = () => {
-                const searchTerm = searchInput.value.toLowerCase();
-                let content = '';
-                state.productModels.forEach(model => {
-                    const availableItems = state.inventoryItems.filter(i => 
-                        i.productModelId === model.id && 
-                        (i.status === 'Sẵn sàng' || tempSelectedItems.some(si => si.itemId === i.id)) &&
-                        (model.name.toLowerCase().includes(searchTerm) || i.serial.toLowerCase().includes(searchTerm))
-                    );
-                    if (availableItems.length === 0 && !model.name.toLowerCase().includes(searchTerm)) return;
-                    content += `
-                        <div key="${model.id}">
-                            <h3 class="font-bold text-lg text-gray-700">${model.name}</h3>
-                            <div class="mt-2 space-y-2 pl-4">
-                                ${availableItems.length > 0 ? availableItems.map(item => `
-                                    <label class="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
-                                        <input type="checkbox" data-item-id="${item.id}" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 device-selector-checkbox" ${tempSelectedItems.some(i => i.itemId === item.id) ? 'checked' : ''}/>
-                                        <p class="ml-4 font-mono text-sm text-gray-800">S/N: ${item.serial}</p>
-                                    </label>
-                                `).join('') : '<p class="text-sm text-gray-400 italic">Không có thiết bị nào sẵn sàng.</p>'}
-                            </div>
-                        </div>`;
-                });
-                deviceListContainer.innerHTML = content || '<p class="text-center text-gray-500">Không tìm thấy thiết bị phù hợp.</p>';
-            };
-
-            searchInput.addEventListener('input', rerenderDeviceList);
-            deviceListContainer.addEventListener('change', (e) => {
-                if (e.target.classList.contains('device-selector-checkbox')) {
-                    const target = e.target;
-                    const itemId = target.dataset.itemId;
-                    const isChecked = target.checked;
-                    const existingIndex = tempSelectedItems.findIndex(i => i.itemId === itemId);
-                    if (isChecked && existingIndex === -1) {
-                        const item = state.inventoryItems.find(i => i.id === itemId);
-                        const model = state.productModels.find(m => m.id === item.productModelId);
-                        tempSelectedItems.push({ itemId: item.id, serial: item.serial, productName: model.name, pricePerDay: model.pricePerDay });
-                    } else if (!isChecked && existingIndex > -1) {
-                        tempSelectedItems.splice(existingIndex, 1);
-                    }
-                }
-            });
-            confirmBtn.addEventListener('click', () => {
-                onConfirm(tempSelectedItems);
-                closeModal();
-            });
-            rerenderDeviceList();
-        };
-
-        // --- [NEW] Dedicated View for Creating Bookings ---
-        const renderCreateBookingForm = () => {
-            document.getElementById('view-header').innerHTML = ''; // No header for this view
-            const container = document.getElementById('list-container');
-            
-            // Local state for this form
-            let localBooking = {
-                customerId: '',
-                startDate: '',
-                endDate: '',
-                items: []
-            };
-
-            const renderForm = () => {
-                const customer = state.customers.find(c => c.id === localBooking.customerId);
-                const days = (localBooking.startDate && localBooking.endDate && moment(localBooking.endDate).isSameOrAfter(localBooking.startDate)) 
-                    ? Math.max(1, moment(localBooking.endDate).diff(moment(localBooking.startDate), 'days') + 1)
-                    : 0;
-                const totalPrice = localBooking.items.reduce((acc, item) => acc + Number(item.pricePerDay), 0) * days;
-
-                container.innerHTML = `
-                <form id="create-booking-page-form" class="space-y-8 max-w-4xl mx-auto">
-                    <!-- Customer and Dates Section -->
-                    <div class="bg-white p-8 rounded-xl shadow-lg">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-6">1. Thông tin đơn hàng</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Khách hàng</label>
-                                <div class="flex items-center space-x-2">
-                                    <select name="customerId" class="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
-                                        <option value="">-- Chọn hoặc tạo mới --</option>
-                                        ${state.customers.map(c => `<option value="${c.id}" ${localBooking.customerId === c.id ? 'selected' : ''}>${c.name} - ${c.phone}</option>`).join('')}
-                                    </select>
-                                    <button type="button" data-action="open-customer-modal" data-from-booking="true" class="flex-shrink-0 p-2 bg-green-500 text-white rounded-full hover:bg-green-600">+</button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {productModels.map((model) => (
+                            <div key={model.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                                <div className="p-5">
+                                    <h3 className="text-xl font-bold text-gray-800">{model.name}</h3>
+                                    <p className="text-sm text-gray-600 mt-2">Loại: {model.type}</p>
+                                    <p className="text-lg font-semibold text-indigo-600 mt-3">{formatCurrency(model.pricePerDay)}/ngày</p>
+                                </div>
+                                <div className="bg-gray-50 px-5 py-3 flex justify-end space-x-4">
+                                    <button onClick={() => onEdit(model)} className="text-sm font-medium text-indigo-600 hover:text-indigo-900">Sửa</button>
+                                    <button onClick={() => onDelete(model.id)} className="text-sm font-medium text-red-600 hover:text-red-900">Xóa</button>
                                 </div>
                             </div>
-                            <div></div> <!-- Spacer -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Ngày thuê</label>
-                                <input type="date" name="startDate" value="${localBooking.startDate}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Ngày trả</label>
-                                <input type="date" name="endDate" value="${localBooking.endDate}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
-                            </div>
-                        </div>
+                        ))}
                     </div>
+                </div>
+            );
+        }
 
-                    <!-- Items Section -->
-                    <div class="bg-white p-8 rounded-xl shadow-lg">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-xl font-semibold text-gray-800">2. Thiết bị thuê</h3>
-                            <button type="button" id="open-device-selector-btn" class="font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-100 px-4 py-2 rounded-lg">[+] Chọn thiết bị...</button>
-                        </div>
-                        <div id="booking-items-list" class="mt-2 p-4 border-2 border-dashed rounded-lg min-h-[80px] bg-gray-50">
-                            <!-- Items will be rendered here -->
-                        </div>
-                    </div>
-                    
-                    <!-- Summary and Submit Section -->
-                    <div class="bg-white p-8 rounded-xl shadow-lg">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-6">3. Tổng kết</h3>
-                        <div class="space-y-4 text-gray-700">
-                            <div class="flex justify-between"><span class="font-medium">Khách hàng:</span><span>${customer ? `${customer.name} - ${customer.phone}`: 'Chưa chọn'}</span></div>
-                            <div class="flex justify-between"><span class="font-medium">Số ngày thuê:</span><span>${days} ngày</span></div>
-                            <div class="flex justify-between border-t pt-4 mt-4">
-                                <span class="text-lg font-bold">Tổng tiền:</span>
-                                <span class="text-2xl font-bold text-indigo-600">${formatCurrency(totalPrice)}</span>
-                            </div>
-                        </div>
-                         <div class="mt-8 text-right">
-                             <button type="submit" class="w-full md:w-auto bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-cyan-700 transition duration-300 disabled:bg-gray-400">
-                                Hoàn Tất & Tạo Đơn
-                            </button>
-                         </div>
-                    </div>
-                </form>
-                `;
+        function InventoryView({ productModels, inventoryItems, onAddItem, onEditItem, onDeleteItem }) {
+            const [expandedModels, setExpandedModels] = useState({});
+            const toggleModel = (modelId) => setExpandedModels(prev => ({...prev, [modelId]: !prev[modelId]}));
 
-                // Render the list of items inside the summary
-                const itemsListContainer = container.querySelector('#booking-items-list');
-                if (localBooking.items.length === 0) {
-                    itemsListContainer.innerHTML = `<p class="text-gray-400 text-center p-4">Chưa có thiết bị nào được chọn</p>`;
-                } else {
-                    itemsListContainer.innerHTML = `
-                        <ul class="space-y-2">
-                            ${localBooking.items.map(item => `
-                                <li class="p-2 bg-indigo-50 rounded-md flex justify-between items-center">
-                                    <span>${item.productName} <span class="text-xs text-gray-500">(S/N: ${item.serial})</span></span>
-                                    <span class="font-semibold">${formatCurrency(item.pricePerDay)}/ngày</span>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    `;
+            return (
+                <div className="space-y-4">
+                    {productModels.map(model => {
+                        const itemsForModel = inventoryItems.filter(item => item.productModelId === model.id);
+                        const availableItems = itemsForModel.filter(item => item.status === 'Sẵn sàng').length;
+                        return (
+                            <div key={model.id} className="bg-white rounded-lg shadow-md">
+                                <div className="p-4 flex justify-between items-center cursor-pointer" onClick={() => toggleModel(model.id)}>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-800">{model.name}</h3>
+                                        <p className="text-sm text-gray-500">Sẵn sàng: <span className="font-semibold text-green-600">{availableItems}</span> / Tổng: {itemsForModel.length}</p>
+                                    </div>
+                                    <div className="flex items-center space-x-4">
+                                        <button onClick={(e) => { e.stopPropagation(); onAddItem(model.id, model.name); }} className="text-sm bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600">+ Thêm S/N</button>
+                                        <svg className={`w-6 h-6 text-gray-500 transform transition-transform ${expandedModels[model.id] ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                                {expandedModels[model.id] && (
+                                    <div className="border-t border-gray-200 p-4">
+                                        {itemsForModel.length > 0 ? (
+                                            <ul className="space-y-2">
+                                                {itemsForModel.map(item => (
+                                                    <li key={item.id} className="flex justify-between items-center p-2 rounded-md hover:bg-gray-50">
+                                                        <div><p className="font-mono text-sm text-gray-800">S/N: {item.serial}</p></div>
+                                                        <div className="flex items-center space-x-4">
+                                                            <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusClass(item.status)}`}>{item.status}</span>
+                                                            <button onClick={() => onEditItem(item)} className="text-xs text-indigo-600">Sửa</button>
+                                                            <button onClick={() => onDeleteItem(item.id)} className="text-xs text-red-600">Xóa</button>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : <p className="text-sm text-gray-400">Chưa có thiết bị nào cho mẫu này.</p>}
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+            );
+        }
+
+        function BookingsView({ bookings, onUpdateStatus, onSearch }) { 
+            return (<div><div className="mb-6"><input type="text" placeholder="Tìm kiếm theo tên khách hàng..." onChange={(e) => onSearch(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm"/></div><div className="space-y-6">{bookings.map(booking => (<div key={booking.id} className="bg-white rounded-lg shadow-lg overflow-hidden"><div className="p-5"><div className="flex justify-between items-start"><div><p className="text-lg sm:text-xl font-bold text-gray-800">{booking.customerName}</p><p className="text-sm text-gray-500">{booking.customerPhone}</p></div><span className={`flex-shrink-0 mt-1 px-3 py-1 text-xs font-semibold rounded-full ${getStatusClass(booking.status)}`}>{booking.status}</span></div><div className="mt-4 border-t pt-4"><p className="font-semibold">Thiết bị thuê:</p><ul className="list-disc list-inside text-sm text-gray-700">{booking.items.map(item => <li key={item.itemId}>{item.productName} (S/N: {item.serial})</li>)}</ul><div className="flex flex-col sm:flex-row justify-between mt-3 text-sm"><p>Ngày thuê: <span className="font-medium">{formatDate(booking.startDate)}</span></p><p className="mt-1 sm:mt-0">Ngày trả: <span className="font-medium">{formatDate(booking.endDate)}</span></p></div><p className="text-right text-lg font-bold text-cyan-700 mt-2">{formatCurrency(booking.totalPrice)}</p></div></div><div className="bg-gray-50 px-5 py-3 flex justify-end space-x-3">{booking.status === 'Chờ lấy máy' && <button onClick={() => onUpdateStatus(booking.id, 'Đang thuê', booking.items)} className="text-sm font-medium text-yellow-600 hover:text-yellow-800">Xác nhận lấy máy</button>}{booking.status === 'Đang thuê' && <button onClick={() => onUpdateStatus(booking.id, 'Đã trả', booking.items)} className="text-sm font-medium text-green-600 hover:text-green-800">Xác nhận đã trả</button>}{(booking.status === 'Chờ lấy máy' || booking.status === 'Đang thuê') && <button onClick={() => onUpdateStatus(booking.id, 'Đã hủy', booking.items)} className="text-sm font-medium text-pink-600 hover:text-pink-800">Hủy đơn</button>}</div></div>))}</div></div>);
+        }
+        
+        function CustomersView({ customers, onEdit, onDelete, onSearch, onViewHistory }) {
+            return (<div><div className="mb-6"><input type="text" placeholder="Tìm kiếm theo tên hoặc SĐT..." onChange={(e) => onSearch(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm"/></div><div className="bg-white rounded-lg shadow-lg overflow-hidden"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr><th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Khách Hàng</th><th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th><th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Ghi Chú</th><th scope="col" className="relative px-6 py-3"><span className="sr-only">Hành động</span></th></tr></thead><tbody className="bg-white divide-y divide-gray-200">{customers.map((customer) => (<tr key={customer.id}><td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-medium text-gray-900">{customer.name}</div></td><td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-500">{customer.phone}</div></td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{customer.notes}</td><td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4"><button onClick={() => onViewHistory(customer.id)} className="text-cyan-600 hover:text-cyan-900">Xem Lịch sử</button><button onClick={() => onEdit(customer)} className="text-indigo-600 hover:text-indigo-900">Sửa</button><button onClick={() => onDelete(customer.id)} className="text-red-600 hover:text-red-900">Xóa</button></td></tr>))}</tbody></table></div></div>);
+        }
+
+        // --- Component Bảng điều khiển chính ---
+        function AdminPanel({ user, onLogout }) {
+            // --- STATE ---
+            const [view, setView] = useState('dashboard');
+            const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+            const [productModels, setProductModels] = useState([]);
+            const [inventoryItems, setInventoryItems] = useState([]);
+            const [bookings, setBookings] = useState([]);
+            const [customers, setCustomers] = useState([]);
+            const [isDataLoading, setIsDataLoading] = useState(true);
+            
+            const [searchTerm, setSearchTerm] = useState('');
+
+            const [isProductModelModalOpen, setIsProductModelModalOpen] = useState(false);
+            const [isInventoryItemModalOpen, setIsInventoryItemModalOpen] = useState(false);
+            const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+            const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+            const [isDeviceSelectorOpen, setIsDeviceSelectorOpen] = useState(false);
+
+            const [isEditing, setIsEditing] = useState(false);
+            const [currentProductModel, setCurrentProductModel] = useState({ name: '', type: 'Máy ảnh', pricePerDay: '' });
+            const [currentInventoryItem, setCurrentInventoryItem] = useState({ serial: '', status: 'Sẵn sàng', notes: '', productModelId: '', productName: '' });
+            const [currentCustomer, setCurrentCustomer] = useState({ name: '', phone: '', notes: '' });
+            const [newBooking, setNewBooking] = useState({ customerId: '', customerName: '', customerPhone: '', startDate: '', endDate: '', items: [], totalPrice: 0, status: 'Chờ lấy máy' });
+
+            // --- DATA FETCHING ---
+            useEffect(() => {
+                const unsubProducts = db.collection('productModels').orderBy('name').onSnapshot(snap => setProductModels(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.error(err));
+                const unsubItems = db.collection('inventoryItems').orderBy('serial').onSnapshot(snap => setInventoryItems(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.error(err));
+                const unsubBookings = db.collection('bookings').orderBy('createdAt', 'desc').onSnapshot(snap => setBookings(snap.docs.map(d => ({ id: d.id, ...d.data(), startDate: d.data().startDate.toDate(), endDate: d.data().endDate.toDate() }))), err => console.error(err));
+                const unsubCustomers = db.collection('customers').orderBy('name').onSnapshot(snap => { setCustomers(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setIsDataLoading(false); }, err => { console.error(err); setIsDataLoading(false); });
+                return () => { unsubProducts(); unsubItems(); unsubBookings(); unsubCustomers(); };
+            }, []);
+
+            // --- MEMOIZED FILTERS ---
+            const filteredModels = useMemo(() => productModels.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())), [productModels, searchTerm]);
+            const filteredBookings = useMemo(() => bookings.filter(b => b.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || (b.customerId && b.customerId === searchTerm)), [bookings, searchTerm]);
+            const filteredCustomers = useMemo(() => customers.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.phone.includes(searchTerm)), [customers, searchTerm]);
+            
+            // --- HANDLERS ---
+            const handleModelSubmit = async (e) => { e.preventDefault(); if (!currentProductModel.name || !currentProductModel.pricePerDay) return; const data = { name: currentProductModel.name, type: currentProductModel.type, pricePerDay: Number(currentProductModel.pricePerDay) }; try { if (isEditing) { await db.collection('productModels').doc(currentProductModel.id).update(data); } else { await db.collection('productModels').add(data); } setIsProductModelModalOpen(false); } catch (err) { console.error(err); alert("Lỗi lưu mẫu sản phẩm!"); } };
+            const handleItemSubmit = async (e) => { e.preventDefault(); if (!currentInventoryItem.serial) return; const data = { serial: currentInventoryItem.serial, status: currentInventoryItem.status, notes: currentInventoryItem.notes, productModelId: currentInventoryItem.productModelId, productName: currentInventoryItem.productName }; try { if (isEditing) { await db.collection('inventoryItems').doc(currentInventoryItem.id).update(data); } else { await db.collection('inventoryItems').add(data); } setIsInventoryItemModalOpen(false); } catch (err) { console.error(err); alert("Lỗi lưu thiết bị!"); } };
+            const handleCustomerSubmit = async (e) => { e.preventDefault(); if (!currentCustomer.name || !currentCustomer.phone) return; const data = { name: currentCustomer.name, phone: currentCustomer.phone, notes: currentCustomer.notes }; try { if (isEditing) { await db.collection('customers').doc(currentCustomer.id).update(data); } else { const newCustomerRef = await db.collection('customers').add({ ...data, createdAt: Timestamp.now() }); if (currentCustomer.fromBooking) { setNewBooking(prev => ({...prev, customerId: newCustomerRef.id, customerName: data.name, customerPhone: data.phone })); } } setIsCustomerModalOpen(false); } catch (err) { console.error(err); alert("Lỗi lưu khách hàng!"); } };
+            const handleCreateBooking = async (e) => { e.preventDefault(); if (!newBooking.customerId || !newBooking.startDate || !newBooking.endDate || newBooking.items.length === 0) { alert("Vui lòng điền đủ thông tin."); return; } const batch = db.batch(); try { const bookingRef = db.collection('bookings').doc(); const days = Math.max(1, (new Date(newBooking.endDate) - new Date(newBooking.startDate)) / (1000 * 60 * 60 * 24) + 1); const totalPrice = newBooking.items.reduce((acc, item) => acc + Number(item.pricePerDay), 0) * days; const bookingData = { customerId: newBooking.customerId, customerName: newBooking.customerName, customerPhone: newBooking.customerPhone, startDate: Timestamp.fromDate(new Date(newBooking.startDate)), endDate: Timestamp.fromDate(new Date(newBooking.endDate)), items: newBooking.items, status: 'Chờ lấy máy', totalPrice: totalPrice, createdAt: Timestamp.now() }; batch.set(bookingRef, bookingData); newBooking.items.forEach(item => { batch.update(db.collection('inventoryItems').doc(item.itemId), { status: 'Đang thuê' }); }); await batch.commit(); setIsBookingModalOpen(false); } catch (err) { console.error(err); alert("Lỗi tạo đơn thuê!"); } };
+            const handleUpdateBookingStatus = async (bookingId, newStatus, items) => { const batch = db.batch(); try { batch.update(db.collection('bookings').doc(bookingId), { status: newStatus }); if ((newStatus === 'Đã trả' || newStatus === 'Đã hủy') && items) { items.forEach(item => { batch.update(db.collection('inventoryItems').doc(item.itemId), { status: 'Sẵn sàng' }); }); } await batch.commit(); } catch (err) { console.error(err); } };
+            const handleViewCustomerHistory = (customerId) => { setSearchTerm(customerId); setView('bookings'); };
+            const handleDeviceSelectionConfirm = (selectedItems) => { setNewBooking(prev => ({...prev, items: selectedItems})); setIsDeviceSelectorOpen(false); };
+
+            const viewTitles = { dashboard: 'Dashboard', productModels: 'Quản Lý Mẫu Sản Phẩm', inventory: 'Kho Thiết Bị', bookings: 'Quản Lý Đơn Thuê', calendar: 'Lịch Tổng Quan', customers: 'Quản Lý Khách Hàng' };
+            const handleSetView = (newView) => { setSearchTerm(''); setView(newView); setIsSidebarOpen(false); }
+
+            const renderView = () => {
+                if (isDataLoading) return <div className="flex justify-center items-center h-full"><p className="text-gray-500 mt-8">Đang tải dữ liệu...</p></div>;
+                switch (view) {
+                    case 'dashboard': return <DashboardView inventoryItems={inventoryItems} bookings={bookings} />;
+                    case 'productModels': return <ProductModelsView productModels={filteredModels} onAdd={() => { setIsEditing(false); setCurrentProductModel({ name: '', type: 'Máy ảnh', pricePerDay: '' }); setIsProductModelModalOpen(true); }} onEdit={(model) => { setIsEditing(true); setCurrentProductModel(model); setIsProductModelModalOpen(true); }} onDelete={(id) => db.collection('productModels').doc(id).delete()} onSearch={setSearchTerm} />;
+                    case 'inventory': return <InventoryView productModels={productModels} inventoryItems={inventoryItems} onAddItem={(modelId, modelName) => { setIsEditing(false); setCurrentInventoryItem({ serial: '', status: 'Sẵn sàng', notes: '', productModelId: modelId, productName: modelName }); setIsInventoryItemModalOpen(true); }} onEditItem={(item) => { setIsEditing(true); setCurrentInventoryItem(item); setIsInventoryItemModalOpen(true); }} onDeleteItem={(id) => db.collection('inventoryItems').doc(id).delete()} />;
+                    case 'bookings': return <BookingsView bookings={filteredBookings} onUpdateStatus={handleUpdateBookingStatus} onSearch={setSearchTerm} />;
+                    case 'calendar': return <CalendarView bookings={bookings} />;
+                    case 'customers': return <CustomersView customers={filteredCustomers} onEdit={(customer) => { setIsEditing(true); setCurrentCustomer(customer); setIsCustomerModalOpen(true); }} onDelete={(id) => db.collection('customers').doc(id).delete()} onSearch={setSearchTerm} onViewHistory={handleViewCustomerHistory} />;
+                    default: return null;
                 }
+            };
+            
+            return (
+                 <div className="flex h-screen bg-gray-100">
+                    {isSidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
+                    <div className={`fixed inset-y-0 left-0 w-64 bg-gray-800 text-white flex flex-col transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-30`}>
+                        <div className="px-6 py-4 border-b border-gray-700"><h2 className="text-2xl font-semibold">Lens Manager</h2></div>
+                        <nav className="flex-1 px-2 py-4 space-y-1">
+                            <a href="#" onClick={(e) => handleSetView('dashboard')} className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${view === 'dashboard' ? 'bg-gray-900' : 'hover:bg-gray-700'}`}>Dashboard</a>
+                            <a href="#" onClick={(e) => handleSetView('productModels')} className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${view === 'productModels' ? 'bg-gray-900' : 'hover:bg-gray-700'}`}>Mẫu Sản Phẩm</a>
+                            <a href="#" onClick={(e) => handleSetView('inventory')} className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${view === 'inventory' ? 'bg-gray-900' : 'hover:bg-gray-700'}`}>Kho Thiết Bị</a>
+                            <a href="#" onClick={(e) => handleSetView('bookings')} className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${view === 'bookings' ? 'bg-gray-900' : 'hover:bg-gray-700'}`}>Đơn Thuê</a>
+                            <a href="#" onClick={(e) => handleSetView('customers')} className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${view === 'customers' ? 'bg-gray-900' : 'hover:bg-gray-700'}`}>Khách Hàng</a>
+                            <a href="#" onClick={(e) => handleSetView('calendar')} className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${view === 'calendar' ? 'bg-gray-900' : 'hover:bg-gray-700'}`}>Lịch</a>
+                        </nav>
+                    </div>
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                        <header className="bg-white shadow-sm z-10"><div className="w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center"><div className="flex items-center"><button className="text-gray-500 focus:outline-none md:hidden" onClick={() => setIsSidebarOpen(true)}><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button><h1 className="text-xl sm:text-2xl font-bold text-gray-900 ml-4 md:ml-0">{viewTitles[view]}</h1></div><div className="flex items-center space-x-4"><button onClick={onLogout} className="text-sm font-medium text-red-600 hover:text-red-800 bg-red-100 p-2 rounded-full sm:rounded-md sm:px-3 sm:py-2"><span className="hidden sm:inline">Đăng xuất</span></button></div></div></header>
+                        <main className="flex-1 overflow-y-auto p-4 sm:p-6"><div className="mb-6 flex justify-end">
+                            {view === 'bookings' && <button onClick={() => { setNewBooking({ customerId: '', customerName: '', customerPhone: '', startDate: '', endDate: '', items: [], totalPrice: 0, status: 'Chờ lấy máy' }); setIsBookingModalOpen(true); }} className="bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-cyan-700 transition duration-300">+ Tạo Đơn Thuê</button>}
+                        </div>{renderView()}</main>
+                    </div>
+                    {isProductModelModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md"><h2 className="text-2xl font-bold mb-6">{isEditing ? 'Sửa Mẫu Sản Phẩm' : 'Thêm Mẫu Mới'}</h2><form onSubmit={handleModelSubmit}><div className="space-y-4"><input type="text" value={currentProductModel.name} onChange={(e) => setCurrentProductModel({...currentProductModel, name: e.target.value})} placeholder="Tên mẫu (VD: Sony A7S III)" className="w-full px-3 py-2 border rounded-lg" required /><select value={currentProductModel.type} onChange={(e) => setCurrentProductModel({...currentProductModel, type: e.target.value})} className="w-full px-3 py-2 border rounded-lg"><option>Máy ảnh</option><option>Ống kính</option><option>Phụ kiện khác</option></select><input type="number" value={currentProductModel.pricePerDay} onChange={(e) => setCurrentProductModel({...currentProductModel, pricePerDay: e.target.value})} placeholder="Giá thuê / ngày" className="w-full px-3 py-2 border rounded-lg" required /></div><div className="flex justify-end mt-6 space-x-4"><button type="button" onClick={() => setIsProductModelModalOpen(false)} className="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button><button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Lưu</button></div></form></div></div>)}
+                    {isInventoryItemModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md"><h2 className="text-2xl font-bold mb-6">{isEditing ? 'Sửa Thiết Bị' : `Thêm S/N cho ${currentInventoryItem.productName}`}</h2><form onSubmit={handleItemSubmit}><div className="space-y-4"><input type="text" value={currentInventoryItem.serial} onChange={(e) => setCurrentInventoryItem({...currentInventoryItem, serial: e.target.value})} placeholder="Số Seri (S/N)" className="w-full px-3 py-2 border rounded-lg" required /><select value={currentInventoryItem.status} onChange={(e) => setCurrentInventoryItem({...currentInventoryItem, status: e.target.value})} className="w-full px-3 py-2 border rounded-lg"><option>Sẵn sàng</option><option>Bảo trì</option></select><textarea value={currentInventoryItem.notes} onChange={(e) => setCurrentInventoryItem({...currentInventoryItem, notes: e.target.value})} placeholder="Ghi chú" className="w-full px-3 py-2 border rounded-lg h-24"></textarea></div><div className="flex justify-end mt-6 space-x-4"><button type="button" onClick={() => setIsInventoryItemModalOpen(false)} className="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button><button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-lg">Lưu</button></div></form></div></div>)}
+                    {isCustomerModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md"><h2 className="text-2xl font-bold mb-6">{isEditing ? 'Sửa Khách Hàng' : 'Thêm Khách Hàng Mới'}</h2><form onSubmit={handleCustomerSubmit}><div className="space-y-4"><input type="text" value={currentCustomer.name} onChange={(e) => setCurrentCustomer({...currentCustomer, name: e.target.value})} placeholder="Tên khách hàng" className="w-full px-3 py-2 border rounded-lg" required /><input type="tel" value={currentCustomer.phone} onChange={(e) => setCurrentCustomer({...currentCustomer, phone: e.target.value})} placeholder="Số điện thoại" className="w-full px-3 py-2 border rounded-lg" required /><textarea value={currentCustomer.notes} onChange={(e) => setCurrentCustomer({...currentCustomer, notes: e.target.value})} placeholder="Ghi chú" className="w-full px-3 py-2 border rounded-lg h-24"></textarea></div><div className="flex justify-end mt-6 space-x-4"><button type="button" onClick={() => setIsCustomerModalOpen(false)} className="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button><button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-lg">Lưu</button></div></form></div></div>)}
+                    {isBookingModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-lg"><h2 className="text-2xl font-bold mb-6">Tạo Đơn Thuê Mới</h2><form onSubmit={handleCreateBooking}><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="md:col-span-2"><label className="text-sm font-medium text-gray-700">Chọn khách hàng</label><div className="flex items-center space-x-2"><select value={newBooking.customerId} onChange={(e) => { const c = customers.find(c => c.id === e.target.value); if(c) setNewBooking({...newBooking, customerId: c.id, customerName: c.name, customerPhone: c.phone }); }} className="w-full px-3 py-2 border rounded-lg" required><option value="">-- Chọn khách hàng --</option>{customers.map(c => (<option key={c.id} value={c.id}>{c.name} - {c.phone}</option>))}</select><button type="button" onClick={() => { setIsEditing(false); setCurrentCustomer({ name: '', phone: '', notes: '', fromBooking: true }); setIsCustomerModalOpen(true); }} className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600">+</button></div></div><div><label className="text-sm font-medium text-gray-700">Ngày thuê</label><input type="date" name="startDate" value={newBooking.startDate} onChange={(e) => setNewBooking({...newBooking, startDate: e.target.value})} className="w-full px-3 py-2 border rounded-lg" required /></div><div><label className="text-sm font-medium text-gray-700">Ngày trả</label><input type="date" name="endDate" value={newBooking.endDate} onChange={(e) => setNewBooking({...newBooking, endDate: e.target.value})} className="w-full px-3 py-2 border rounded-lg" required /></div>
+                        <div className="md:col-span-2">
+                            <label className="text-sm font-medium text-gray-700">Thiết bị đã chọn</label>
+                            <div className="mt-2 p-2 border rounded-lg min-h-[40px] bg-gray-50 flex flex-wrap gap-2">
+                                {newBooking.items.length === 0 ? <span className="text-gray-400">Chưa có thiết bị nào</span> : newBooking.items.map(item => (<span key={item.itemId} className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-1 rounded-full flex items-center">{item.productName} (S/N: {item.serial})<button type="button" onClick={() => setNewBooking(prev => ({...prev, items: prev.items.filter(i => i.itemId !== item.itemId)}))} className="ml-2 text-indigo-500 hover:text-indigo-700">x</button></span>))}
+                            </div>
+                            <button type="button" onClick={() => setIsDeviceSelectorOpen(true)} className="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-semibold">[+] Chọn thiết bị...</button>
+                        </div>
+                    </div><div className="flex justify-end mt-6 space-x-4"><button type="button" onClick={() => setIsBookingModalOpen(false)} className="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button><button type="submit" className="px-4 py-2 bg-cyan-600 text-white rounded-lg">Tạo Đơn</button></div></form></div></div>)}
+                    {isDeviceSelectorOpen && <DeviceSelectorModal productModels={productModels} inventoryItems={inventoryItems} previouslySelectedItems={newBooking.items} onConfirm={handleDeviceSelectionConfirm} onCancel={() => setIsDeviceSelectorOpen(false)} />}
+                </div>
+            );
+        }
+        
+        function DeviceSelectorModal({ productModels, inventoryItems, previouslySelectedItems, onConfirm, onCancel }) {
+            const [selectedItems, setSelectedItems] = useState(previouslySelectedItems || []);
+            const [searchTerm, setSearchTerm] = useState('');
 
-                // Add event listeners for the form
-                container.querySelector('select[name="customerId"]').addEventListener('change', e => { localBooking.customerId = e.target.value; renderForm(); });
-                container.querySelector('input[name="startDate"]').addEventListener('change', e => { localBooking.startDate = e.target.value; renderForm(); });
-                container.querySelector('input[name="endDate"]').addEventListener('change', e => { localBooking.endDate = e.target.value; renderForm(); });
-                container.querySelector('#open-device-selector-btn').addEventListener('click', () => {
-                    renderDeviceSelectorModal(localBooking.items, (selectedItems) => {
-                        localBooking.items = selectedItems;
-                        renderForm();
-                    });
-                });
+            const handleToggle = (item, model) => {
+                const isSelected = selectedItems.some(i => i.itemId === item.id);
+                if (isSelected) {
+                    setSelectedItems(prev => prev.filter(i => i.itemId !== item.id));
+                } else {
+                    setSelectedItems(prev => [...prev, { itemId: item.id, serial: item.serial, productName: model.name, pricePerDay: model.pricePerDay }]);
+                }
             };
 
-            renderForm(); // Initial render
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl flex flex-col" style={{height: '90vh'}}>
+                        <h2 className="text-2xl font-bold p-6 border-b">Chọn Thiết Bị</h2>
+                        <div className="p-6 border-b"><input type="text" placeholder="Tìm kiếm theo tên mẫu hoặc S/N..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full px-4 py-2 border rounded-lg"/></div>
+                        <div className="flex-1 overflow-y-auto p-6">
+                            <div className="space-y-4">
+                                {productModels.map(model => {
+                                    const availableItems = inventoryItems.filter(i => i.productModelId === model.id && i.status === 'Sẵn sàng' && (model.name.toLowerCase().includes(searchTerm.toLowerCase()) || i.serial.toLowerCase().includes(searchTerm.toLowerCase())));
+                                    if(availableItems.length === 0 && !model.name.toLowerCase().includes(searchTerm.toLowerCase())) return null;
+                                    return (
+                                        <div key={model.id}>
+                                            <h3 className="font-bold text-lg text-gray-700">{model.name}</h3>
+                                            <div className="mt-2 space-y-2 pl-4">
+                                                {availableItems.length > 0 ? availableItems.map(item => (
+                                                    <label key={item.id} className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                                                        <input type="checkbox" checked={selectedItems.some(i => i.itemId === item.id)} onChange={() => handleToggle(item, model)} className="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
+                                                        <p className="ml-4 font-mono text-sm text-gray-800">S/N: {item.serial}</p>
+                                                    </label>
+                                                )) : <p className="text-sm text-gray-400 italic">Không có thiết bị nào sẵn sàng.</p>}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                        <div className="p-6 border-t flex justify-end space-x-4">
+                            <button type="button" onClick={onCancel} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Hủy</button>
+                            <button type="button" onClick={() => onConfirm(selectedItems)} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Xác nhận</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
 
-            // Handle the final submission of the page form
-            container.querySelector('#create-booking-page-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const submitButton = e.target.querySelector('button[type="submit"]');
-                const originalButtonText = submitButton.textContent;
-                
-                // Validation
-                const customer = state.customers.find(c => c.id === localBooking.customerId);
-                if (!customer || !localBooking.startDate || !localBooking.endDate || localBooking.items.length === 0) {
-                    showNotificationModal('Thiếu thông tin', 'Vui lòng điền đủ: khách hàng, ngày thuê/trả và chọn ít nhất 1 thiết bị.', 'error');
-                    return; 
-                }
-                if (moment(localBooking.endDate).isBefore(moment(localBooking.startDate))) {
-                    showNotificationModal('Ngày không hợp lệ', 'Ngày trả không được ở trước ngày thuê.', 'error');
-                    return;
-                }
+        // --- Component App chính (Quản lý trạng thái Đăng nhập) ---
+        function App() {
+            const [user, setUser] = useState(null);
+            const [isLoading, setIsLoading] = useState(true);
 
-                submitButton.disabled = true;
-                submitButton.textContent = 'Đang xử lý...';
-
-                try {
-                    const days = Math.max(1, moment(localBooking.endDate).diff(moment(localBooking.startDate), 'days') + 1);
-                    const totalPrice = localBooking.items.reduce((acc, item) => acc + Number(item.pricePerDay), 0) * days;
-                    const bookingData = {
-                        customerId: customer.id,
-                        customerName: customer.name,
-                        customerPhone: customer.phone,
-                        startDate: Timestamp.fromDate(new Date(localBooking.startDate)),
-                        endDate: Timestamp.fromDate(new Date(localBooking.endDate)),
-                        items: localBooking.items,
-                        status: 'Chờ lấy máy',
-                        totalPrice: totalPrice,
-                        createdAt: Timestamp.now()
-                    };
-                    
-                    const batch = writeBatch(db);
-                    const bookingRef = doc(collection(db, 'bookings'));
-                    batch.set(bookingRef, bookingData);
-
-                    localBooking.items.forEach(item => {
-                        const itemRef = doc(db, "inventoryItems", item.itemId);
-                        batch.update(itemRef, { status: "Chờ lấy máy" });
-                    });
-
-                    await batch.commit();
-                    showNotificationModal('Thành công', 'Đã tạo đơn thuê mới thành công!', 'success');
-                    
-                    // Reset form by navigating to the new empty form view
-                    document.querySelector('.nav-link[data-view="createBooking"]').click();
-
-                } catch (err) {
-                    console.error("Booking creation error:", err);
-                    showNotificationModal('Đã có lỗi', 'Không thể tạo đơn thuê. Vui lòng xem console để biết chi tiết.', 'error');
-                    submitButton.disabled = false;
-                    submitButton.textContent = originalButtonText;
-                }
-            });
-        };
-
-        // --- Dashboard Specific Functions ---
-        const animateCounters = () => {
-            const counters = document.querySelectorAll('.kpi-value');
-            counters.forEach(counter => {
-                const target = +counter.getAttribute('data-target');
-                const isCurrency = counter.textContent.includes('₫');
-                let current = 0;
-                const increment = target / 100;
-                const updateCounter = () => {
-                    if (current < target) {
-                        current += increment;
-                        counter.textContent = isCurrency ? formatCurrency(Math.ceil(current)) : Math.ceil(current);
-                        requestAnimationFrame(updateCounter);
-                    } else {
-                        counter.textContent = isCurrency ? formatCurrency(target) : target;
-                    }
-                };
-                updateCounter();
-            });
-        };
-
-        const initRevenueChart = () => {
-            const ctx = document.getElementById('revenueChart');
-            if (!ctx) return;
-            const labels = [];
-            const data = [];
-            for (let i = 6; i >= 0; i--) {
-                const day = moment().subtract(i, 'days');
-                labels.push(day.format('DD/MM'));
-                const revenueForDay = state.bookings
-                    .filter(b => b.status === 'Đã trả' && moment(b.endDate).isSame(day, 'day'))
-                    .reduce((sum, b) => sum + b.totalPrice, 0);
-                data.push(revenueForDay);
-            }
-            state.charts.revenue = new Chart(ctx, {
-                type: 'bar',
-                data: { labels, datasets: [{ label: 'Doanh thu', data, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1, borderRadius: 8 }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: value => formatCurrency(value) } }, x: { grid: { display: false } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => formatCurrency(context.parsed.y) } } } }
-            });
-        };
-
-        const initEquipmentStatusChart = () => {
-            const ctx = document.getElementById('equipmentStatusChart');
-            if (!ctx) return;
-            const statusCounts = state.inventoryItems.reduce((acc, item) => { acc[item.status] = (acc[item.status] || 0) + 1; return acc; }, {});
-            const labels = ['Sẵn sàng', 'Đang thuê', 'Bảo trì', 'Chờ lấy máy'];
-            const data = labels.map(label => statusCounts[label] || 0);
-            state.charts.equipmentStatus = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels, datasets: [{ label: 'Số lượng', data, backgroundColor: ['rgba(34, 197, 94, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(239, 68, 68, 0.7)', 'rgba(59, 130, 246, 0.7)'], borderColor: ['#22c55e', '#f59e0b', '#ef4444', '#3b82f6'], borderWidth: 1 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
-            });
-        };
-
-        // --- Data Fetching ---
-        const fetchData = () => {
-            let loadingCounter = 4;
-            const doneLoading = () => { if (--loadingCounter === 0) { state.isDataLoading = false; render(); } };
-            onSnapshot(query(collection(db, 'productModels'), orderBy('name')), (snapshot) => { state.productModels = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); if(!state.isDataLoading) render(); else doneLoading(); });
-            onSnapshot(query(collection(db, 'inventoryItems'), orderBy('serial')), (snapshot) => { state.inventoryItems = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); if(!state.isDataLoading) render(); else doneLoading(); });
-            onSnapshot(query(collection(db, 'bookings'), orderBy('createdAt', 'desc')), (snapshot) => { state.bookings = snapshot.docs.map(d => ({ id: d.id, ...d.data(), startDate: d.data().startDate.toDate(), endDate: d.data().endDate.toDate() })); if(!state.isDataLoading) render(); else doneLoading(); });
-            onSnapshot(query(collection(db, 'customers'), orderBy('name')), (snapshot) => { state.customers = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); if(!state.isDataLoading) render(); else doneLoading(); });
-        };
-
-        // --- Authentication ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                state.user = user;
-                loginScreen.classList.add('hidden');
-                adminPanel.classList.remove('hidden');
-                // Set initial view to dashboard on login
-                state.currentView = 'dashboard';
-                document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('bg-gray-900'));
-                document.querySelector('.nav-link[data-view="dashboard"]').classList.add('bg-gray-900');
-                fetchData();
-            } else {
-                state.user = null;
-                loginScreen.classList.remove('hidden');
-                adminPanel.classList.add('hidden');
-                state.isDataLoading = true;
-            }
-        });
-
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const errorEl = document.getElementById('login-error');
-            errorEl.classList.add('hidden');
-            try { await signInWithEmailAndPassword(auth, email, password); } catch (err) {
-                errorEl.textContent = 'Email hoặc mật khẩu không đúng.';
-                errorEl.classList.remove('hidden');
-            }
-        });
-
-        document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
-        
-        // --- Navigation & Sidebar ---
-        document.querySelector('nav').addEventListener('click', (e) => {
-            const navLink = e.target.closest('.nav-link');
-            if (navLink) {
-                e.preventDefault();
-                document.querySelectorAll('.nav-link').forEach(link => {
-                    // Don't remove active style from the primary create button
-                    if(!link.dataset.view.includes('createBooking')) {
-                       link.classList.remove('bg-gray-900');
-                    }
+            useEffect(() => {
+                const unsubscribe = auth.onAuthStateChanged(currentUser => {
+                    setUser(currentUser);
+                    setIsLoading(false);
                 });
+                return () => unsubscribe();
+            }, []);
 
-                if(!navLink.dataset.view.includes('createBooking')) {
-                    navLink.classList.add('bg-gray-900');
-                }
+            const handleLogout = () => {
+                auth.signOut();
+            };
 
-                state.currentView = navLink.dataset.view;
-                state.searchTerm = '';
-                state.activeFilter = null;
-                render();
-                const sidebar = document.getElementById('sidebar');
-                if(!sidebar.classList.contains('md:relative')) {
-                    sidebar.classList.add('-translate-x-full');
-                    document.getElementById('sidebar-backdrop').classList.add('hidden');
-                }
+            if (isLoading) {
+                return <div className="flex h-screen justify-center items-center">Đang kiểm tra phiên đăng nhập...</div>;
             }
-        });
-        
-        document.getElementById('open-sidebar-btn').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.remove('-translate-x-full');
-            document.getElementById('sidebar-backdrop').classList.remove('hidden');
-        });
-        document.getElementById('sidebar-backdrop').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.add('-translate-x-full');
-            document.getElementById('sidebar-backdrop').classList.add('hidden');
-        });
 
-        // --- GLOBAL EVENT LISTENERS (Delegation) ---
-        document.body.addEventListener('click', async (e) => {
-            const target = e.target.closest('[data-action]');
-            if (!target) return;
-            const action = target.dataset.action;
-            const id = target.dataset.id;
-            switch(action) {
-                case 'navigate':
-                    e.preventDefault();
-                    document.querySelector(`.nav-link[data-view="${target.dataset.view}"]`)?.click();
-                    setTimeout(() => {
-                        state.activeFilter = { type: target.dataset.filterType, value: target.dataset.filterValue };
-                        state.searchTerm = '';
-                        render();
-                    }, 50);
-                    break;
-                case 'clear-filter':
-                    state.activeFilter = null;
-                    render();
-                    break;
-                case 'close-modal': closeModal(); break;
-                case 'open-product-model-modal':
-                    const model = id ? state.productModels.find(m => m.id === id) : null;
-                    renderProductModelModal(model);
-                    break;
-                case 'delete-product-model':
-                    showConfirmationModal('Xác nhận xóa', 'Bạn có chắc chắn muốn xóa mẫu sản phẩm này? Thao tác này không thể hoàn tác.', async () => {
-                        await deleteDoc(doc(db, 'productModels', id));
-                        showNotificationModal('Thành công', 'Đã xóa mẫu sản phẩm.', 'success');
-                    });
-                    break;
-                case 'toggle-inventory-model':
-                    target.closest('[data-model-id]').querySelector('.border-t').classList.toggle('hidden');
-                    target.closest('[data-model-id]').querySelector('svg').classList.toggle('rotate-180');
-                    break;
-                case 'open-inventory-item-modal':
-                    const item = id ? state.inventoryItems.find(i => i.id === id) : null;
-                    renderInventoryItemModal(item, target.dataset.modelId, target.dataset.modelName);
-                    break;
-                case 'delete-inventory-item':
-                    showConfirmationModal('Xác nhận xóa', 'Bạn có chắc chắn muốn xóa thiết bị này? Thao tác này không thể hoàn tác.', async () => {
-                        await deleteDoc(doc(db, 'inventoryItems', id));
-                        showNotificationModal('Thành công', 'Đã xóa thiết bị.', 'success');
-                    });
-                    break;
-                case 'open-customer-modal':
-                    const customer = id ? state.customers.find(c => c.id === id) : null;
-                    renderCustomerModal(customer, target.dataset.fromBooking === 'true');
-                    break;
-                case 'delete-customer':
-                     showConfirmationModal('Xác nhận xóa', 'Bạn có chắc chắn muốn xóa khách hàng này? Thao tác này không thể hoàn tác.', async () => {
-                        await deleteDoc(doc(db, 'customers', id));
-                        showNotificationModal('Thành công', 'Đã xóa khách hàng.', 'success');
-                    });
-                    break;
-                case 'view-customer-history':
-                    state.currentView = 'bookings'; state.searchTerm = id;
-                    document.querySelectorAll('.nav-link').forEach(link => {
-                        link.classList.remove('bg-gray-900');
-                        if(link.dataset.view === 'bookings') link.classList.add('bg-gray-900');
-                    });
-                    render();
-                    break;
-                case 'update-booking-status':
-                    const newStatus = target.dataset.status;
-                    const booking = state.bookings.find(b => b.id === id);
-                    if (!booking) return;
-                    
-                    const batchUpdate = writeBatch(db);
-                    batchUpdate.update(doc(db, 'bookings', id), { status: newStatus });
-                    
-                    if (booking.items) {
-                        let itemStatus;
-                        if (newStatus === 'Đang thuê') itemStatus = 'Đang thuê';
-                        else if (newStatus === 'Đã trả' || newStatus === 'Đã hủy') itemStatus = 'Sẵn sàng';
-                        
-                        if(itemStatus) {
-                            booking.items.forEach(item => { 
-                                const itemRef = doc(db, 'inventoryItems', item.itemId);
-                                batchUpdate.update(itemRef, { status: itemStatus }); 
-                            });
-                        }
-                    }
-                    await batchUpdate.commit();
-                    showNotificationModal('Thành công', `Đã cập nhật trạng thái đơn hàng thành "${newStatus}".`, 'success');
-                    break;
+            if (!user) {
+                return <LoginScreen />;
             }
-        });
 
-        // Listener for forms inside modals
-        modalsContainer.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const form = e.target;
-            const submitButton = form.querySelector('button[type="submit"]');
-            const originalButtonText = submitButton.textContent;
+            return <AdminPanel user={user} onLogout={handleLogout} />;
+        }
 
-            if(submitButton) {
-                submitButton.disabled = true;
-                submitButton.textContent = 'Đang xử lý...';
-            }
-            
-            const id = form.dataset.id;
-            const isEditing = id !== '';
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            
-            try {
-                switch(form.id) {
-                    case 'product-model-form':
-                        data.pricePerDay = Number(data.pricePerDay);
-                        if (isEditing) await updateDoc(doc(db, 'productModels', id), data);
-                        else await addDoc(collection(db, 'productModels'), data);
-                        showNotificationModal('Thành công', 'Đã lưu mẫu sản phẩm.', 'success');
-                        break;
-                    case 'inventory-item-form':
-                        if (isEditing) await updateDoc(doc(db, 'inventoryItems', id), data);
-                        else await addDoc(collection(db, 'inventoryItems'), data);
-                        showNotificationModal('Thành công', 'Đã lưu thiết bị.', 'success');
-                        break;
-                    case 'customer-form':
-                        if (isEditing) await updateDoc(doc(db, 'customers', id), data);
-                        else {
-                            const newCustomerRef = await addDoc(collection(db, 'customers'), { ...data, createdAt: Timestamp.now() });
-                            if (form.dataset.fromBooking === 'true') {
-                                // This is called from the create booking page, so we need to update that page's state
-                                closeModal(); 
-                                // The main page will re-render via onSnapshot, just need to select the new customer
-                                setTimeout(() => {
-                                    const customerSelect = document.querySelector('#create-booking-page-form select[name="customerId"]');
-                                    if(customerSelect) {
-                                        customerSelect.value = newCustomerRef.id;
-                                        // Manually trigger change to update the UI
-                                        customerSelect.dispatchEvent(new Event('change'));
-                                    }
-                                }, 200); // Wait for firestore to update state
-                                return; // Prevent double modal close
-                            }
-                        }
-                        showNotificationModal('Thành công', 'Đã lưu khách hàng.', 'success');
-                        break;
-                }
-                closeModal();
-            } catch (err) { 
-                console.error("Form submission error:", err); 
-                showNotificationModal('Đã có lỗi', 'Không thể hoàn thành thao tác. Vui lòng xem console để biết chi tiết.', 'error'); 
-                if(submitButton) {
-                    submitButton.disabled = false;
-                    submitButton.textContent = originalButtonText;
-                }
-            }
-        });
-
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
     </script>
 </body>
 </html>
