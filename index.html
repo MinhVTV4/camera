@@ -54,6 +54,7 @@
         /* Modal styles */
         .modal-backdrop {
             background-color: rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease;
         }
         /* Animation for dashboard cards */
         @keyframes fadeIn {
@@ -97,10 +98,15 @@
                     <h2 class="text-2xl font-semibold">Lens Manager</h2>
                 </div>
                 <div class="flex-1 px-2 py-4 space-y-1">
+                    <a href="#" data-view="createBooking" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium bg-indigo-600 hover:bg-indigo-500">
+                        <svg class="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                        Tạo Đơn Thuê Mới
+                    </a>
+                    <hr class="border-gray-700 my-2">
                     <a href="#" data-view="dashboard" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium bg-gray-900">Dashboard</a>
+                    <a href="#" data-view="bookings" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Quản Lý Đơn Thuê</a>
                     <a href="#" data-view="productModels" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Mẫu Sản Phẩm</a>
                     <a href="#" data-view="inventory" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Kho Thiết Bị</a>
-                    <a href="#" data-view="bookings" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Đơn Thuê</a>
                     <a href="#" data-view="customers" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Khách Hàng</a>
                     <a href="#" data-view="calendar" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700">Lịch</a>
                 </div>
@@ -170,13 +176,11 @@
             customers: [],
             isDataLoading: true,
             searchTerm: '',
-            activeFilter: null, // Holds filter info e.g. {type: 'status', value: 'Đang thuê'}
+            activeFilter: null,
             calendar: null,
             charts: {},
-            newBooking: {
-                customerId: '', customerName: '', customerPhone: '',
-                startDate: '', endDate: '', items: [], totalPrice: 0,
-            }
+            // This object is now managed by the createBooking view directly
+            // newBooking: {} 
         };
         
         // --- DOM Elements ---
@@ -198,9 +202,73 @@
             return classes[status] || 'bg-gray-100 text-gray-800';
         };
 
-        // --- Modal Management ---
+        // --- Enhanced Modal & Notification Management ---
         const openModal = (modalHTML) => { modalsContainer.innerHTML = modalHTML; document.body.classList.add('overflow-hidden'); };
         const closeModal = () => { modalsContainer.innerHTML = ''; document.body.classList.remove('overflow-hidden'); };
+
+        const showNotificationModal = (title, message, type = 'info') => {
+            const colors = {
+                info: { bg: 'bg-blue-100', icon: '<svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>' },
+                success: { bg: 'bg-green-100', icon: '<svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>' },
+                error: { bg: 'bg-red-100', icon: '<svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>' }
+            };
+            const selectedColor = colors[type];
+            const modalHTML = `
+                <div class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+                    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm transform transition-all" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+                        <div class="flex">
+                            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full ${selectedColor.bg} sm:mx-0 sm:h-10 sm:w-10">
+                                ${selectedColor.icon}
+                            </div>
+                            <div class="ml-4 text-left">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">${title}</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">${message}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                            <button type="button" data-action="close-modal" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            openModal(modalHTML);
+        };
+
+        const showConfirmationModal = (title, message, onConfirm) => {
+            const modalHTML = `
+                <div class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+                    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm transform transition-all" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+                        <div class="flex">
+                            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-red-600" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-4 text-left">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">${title}</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">${message}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                            <button type="button" id="confirm-action-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                                Xác nhận
+                            </button>
+                            <button type="button" data-action="close-modal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">
+                                Hủy
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            openModal(modalHTML);
+            document.getElementById('confirm-action-btn').addEventListener('click', () => {
+                onConfirm();
+            }, { once: true });
+        };
 
         // --- Render Functions (Main Views) ---
         const render = () => {
@@ -209,8 +277,16 @@
                 return;
             }
 
-            const viewTitles = { dashboard: 'Dashboard', productModels: 'Quản Lý Mẫu Sản Phẩm', inventory: 'Kho Thiết Bị', bookings: 'Quản Lý Đơn Thuê', calendar: 'Lịch Tổng Quan', customers: 'Quản Lý Khách Hàng' };
-            viewTitle.textContent = viewTitles[state.currentView];
+            const viewTitles = { 
+                dashboard: 'Dashboard', 
+                createBooking: 'Tạo Đơn Thuê Mới',
+                productModels: 'Quản Lý Mẫu Sản Phẩm', 
+                inventory: 'Kho Thiết Bị', 
+                bookings: 'Quản Lý Đơn Thuê', 
+                calendar: 'Lịch Tổng Quan', 
+                customers: 'Quản Lý Khách Hàng' 
+            };
+            viewTitle.textContent = viewTitles[state.currentView] || 'Dashboard';
 
             mainContent.innerHTML = '';
             Object.values(state.charts).forEach(chart => chart.destroy());
@@ -227,16 +303,17 @@
 
             switch(state.currentView) {
                 case 'dashboard': renderDashboard(); break;
+                case 'createBooking': renderCreateBookingForm(); break;
                 case 'productModels':
                     renderHeader(true, "Tìm kiếm mẫu sản phẩm...", "open-product-model-modal", "+ Thêm Mẫu Mới");
                     renderProductModels();
                     break;
                 case 'inventory': 
-                    renderHeader(false); // No search/add button in header for inventory
+                    renderHeader(false);
                     renderInventory(); 
                     break;
                 case 'bookings':
-                    renderHeader(true, "Tìm kiếm theo tên khách hàng...", "open-booking-modal", "+ Tạo Đơn Thuê");
+                    renderHeader(true, "Tìm kiếm theo tên khách hàng...", null, null);
                     renderBookings();
                     break;
                 case 'customers':
@@ -246,6 +323,8 @@
                 case 'calendar': 
                     renderCalendar(); 
                     break;
+                default:
+                    renderDashboard();
             }
         };
 
@@ -283,7 +362,6 @@
             if (showSearch) {
                 document.getElementById('search-input').addEventListener('input', (e) => {
                     state.searchTerm = e.target.value;
-                    // Re-render only the list part
                     switch(state.currentView) {
                         case 'productModels': renderProductModels(); break;
                         case 'bookings': renderBookings(); break;
@@ -362,7 +440,7 @@
         };
 
         const renderInventory = () => {
-            renderHeader(false); // No header for inventory view
+            renderHeader(false);
             let items = state.inventoryItems;
             if (state.activeFilter && state.activeFilter.type === 'status') {
                 items = items.filter(item => item.status === state.activeFilter.value);
@@ -372,7 +450,7 @@
             listContainer.className = 'space-y-4';
             listContainer.innerHTML = state.productModels.map(model => {
                 const itemsForModel = items.filter(item => item.productModelId === model.id);
-                if (state.activeFilter && itemsForModel.length === 0) return ''; // Hide model if no items match filter
+                if (state.activeFilter && itemsForModel.length === 0) return '';
                 
                 const allItemsForModel = state.inventoryItems.filter(item => item.productModelId === model.id);
                 const availableItems = allItemsForModel.filter(item => item.status === 'Sẵn sàng').length;
@@ -401,7 +479,6 @@
             
             let filteredBookings = state.bookings;
 
-            // Apply status filter first
             if (state.activeFilter && state.activeFilter.type === 'status') {
                 if (state.activeFilter.value === 'overdue') {
                     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
@@ -411,7 +488,6 @@
                 }
             }
             
-            // Then apply search term filter
             const searchTermLower = state.searchTerm.toLowerCase();
             if (searchTermLower) {
                  filteredBookings = filteredBookings.filter(b => b.customerName.toLowerCase().includes(searchTermLower));
@@ -446,7 +522,7 @@
             const searchTermLower = state.searchTerm.toLowerCase();
             const filteredCustomers = state.customers.filter(c => c.name.toLowerCase().includes(searchTermLower) || c.phone.includes(searchTermLower));
             container.className = "bg-white rounded-lg shadow-lg overflow-hidden";
-            container.innerHTML = `<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Khách Hàng</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Ghi Chú</th><th scope="col" class="relative px-6 py-3"><span class="sr-only">Hành động</span></th></tr></thead><tbody class="bg-white divide-y divide-gray-200">${filteredCustomers.map(customer => `<tr><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${customer.name}</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-500">${customer.phone}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">${customer.notes || ''}</td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4"><button data-action="view-customer-history" data-id="${customer.id}" class="text-cyan-600 hover:text-cyan-900">Xem Lịch sử</button><button data-action="open-customer-modal" data-id="${customer.id}" class="text-indigo-600 hover:text-indigo-900">Sửa</button><button data-action="delete-customer" data-id="${customer.id}" class="text-red-600 hover:text-red-900">Xóa</button></td></tr>`).join('')}</tbody></table>`;
+            container.innerHTML = `<table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Khách Hàng</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Căn cước</th><th scope="col" class="relative px-6 py-3"><span class="sr-only">Hành động</span></th></tr></thead><tbody class="bg-white divide-y divide-gray-200">${filteredCustomers.map(customer => `<tr><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${customer.name}</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-500">${customer.phone}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">${customer.idCard || ''}</td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4"><button data-action="view-customer-history" data-id="${customer.id}" class="text-cyan-600 hover:text-cyan-900">Xem Lịch sử</button><button data-action="open-customer-modal" data-id="${customer.id}" class="text-indigo-600 hover:text-indigo-900">Sửa</button><button data-action="delete-customer" data-id="${customer.id}" class="text-red-600 hover:text-red-900">Xóa</button></td></tr>`).join('')}</tbody></table>`;
         };
 
         const renderCalendar = () => {
@@ -522,9 +598,9 @@
                         <h2 class="text-2xl font-bold mb-6">${isEditing ? 'Sửa Khách Hàng' : 'Thêm Khách Hàng Mới'}</h2>
                         <form id="customer-form" data-id="${isEditing ? customer.id : ''}" data-from-booking="${fromBooking}">
                             <div class="space-y-4">
-                                <input type="text" name="name" value="${isEditing ? customer.name : ''}" placeholder="Tên khách hàng" class="w-full px-3 py-2 border rounded-lg" required />
-                                <input type="tel" name="phone" value="${isEditing ? customer.phone : ''}" placeholder="Số điện thoại" class="w-full px-3 py-2 border rounded-lg" required />
-                                <textarea name="notes" placeholder="Ghi chú" class="w-full px-3 py-2 border rounded-lg h-24">${isEditing ? customer.notes || '' : ''}</textarea>
+                                <input type="text" name="name" value="${isEditing ? customer.name || '' : ''}" placeholder="Tên khách hàng" class="w-full px-3 py-2 border rounded-lg" required />
+                                <input type="tel" name="phone" value="${isEditing ? customer.phone || '' : ''}" placeholder="Số điện thoại" class="w-full px-3 py-2 border rounded-lg" required />
+                                <input type="text" name="idCard" value="${isEditing ? customer.idCard || '' : ''}" placeholder="Căn cước của khách hàng" class="w-full px-3 py-2 border rounded-lg" />
                             </div>
                             <div class="flex justify-end mt-6 space-x-4">
                                 <button type="button" data-action="close-modal" class="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button>
@@ -536,56 +612,31 @@
             openModal(modalHTML);
         };
 
-        const renderBookingModal = () => {
-             // Reset newBooking state when opening
-            state.newBooking = { customerId: '', customerName: '', customerPhone: '', startDate: '', endDate: '', items: [], totalPrice: 0 };
+        const renderDeviceSelectorModal = (currentItems, onConfirm) => {
+            let tempSelectedItems = JSON.parse(JSON.stringify(currentItems));
             const modalHTML = `
                 <div class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-                    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-lg">
-                        <h2 class="text-2xl font-bold mb-6">Tạo Đơn Thuê Mới</h2>
-                        <form id="booking-form">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="md:col-span-2">
-                                    <label class="text-sm font-medium text-gray-700">Chọn khách hàng</label>
-                                    <div class="flex items-center space-x-2">
-                                        <select name="customerId" class="w-full px-3 py-2 border rounded-lg" required>
-                                            <option value="">-- Chọn khách hàng --</option>
-                                            ${state.customers.map(c => `<option value="${c.id}">${c.name} - ${c.phone}</option>`).join('')}
-                                        </select>
-                                        <button type="button" data-action="open-customer-modal" data-from-booking="true" class="p-2 bg-green-500 text-white rounded-full hover:bg-green-600">+</button>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="text-sm font-medium text-gray-700">Ngày thuê</label>
-                                    <input type="date" name="startDate" class="w-full px-3 py-2 border rounded-lg" required />
-                                </div>
-                                <div>
-                                    <label class="text-sm font-medium text-gray-700">Ngày trả</label>
-                                    <input type="date" name="endDate" class="w-full px-3 py-2 border rounded-lg" required />
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="text-sm font-medium text-gray-700">Thiết bị đã chọn</label>
-                                    <div id="booking-items-list" class="mt-2 p-2 border rounded-lg min-h-[40px] bg-gray-50 flex flex-wrap gap-2">
-                                        <span class="text-gray-400">Chưa có thiết bị nào</span>
-                                    </div>
-                                    <button type="button" data-action="open-device-selector" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-semibold">[+] Chọn thiết bị...</button>
-                                </div>
-                            </div>
-                            <div class="flex justify-end mt-6 space-x-4">
-                                <button type="button" data-action="close-modal" class="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button>
-                                <button type="submit" class="px-4 py-2 bg-cyan-600 text-white rounded-lg">Tạo Đơn</button>
-                            </div>
-                        </form>
+                    <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl flex flex-col h-[90vh]">
+                        <h2 class="text-2xl font-bold p-6 border-b">Chọn Thiết Bị</h2>
+                        <div class="p-6 border-b">
+                            <input type="text" id="device-search-input" placeholder="Tìm kiếm theo tên mẫu hoặc S/N..." class="w-full px-4 py-2 border rounded-lg"/>
+                        </div>
+                        <div id="device-list-container" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+                        <div class="p-6 border-t flex justify-end space-x-4">
+                            <button type="button" data-action="close-modal" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Hủy</button>
+                            <button type="button" id="confirm-device-selection-btn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Xác nhận</button>
+                        </div>
                     </div>
                 </div>`;
             openModal(modalHTML);
-        };
 
-        const renderDeviceSelectorModal = () => {
-            let tempSelectedItems = [...state.newBooking.items]; // Work on a copy
+            const modalElement = modalsContainer.firstElementChild;
+            const deviceListContainer = modalElement.querySelector('#device-list-container');
+            const searchInput = modalElement.querySelector('#device-search-input');
+            const confirmBtn = modalElement.querySelector('#confirm-device-selection-btn');
 
-            const getModalContent = () => {
-                const searchTerm = document.getElementById('device-search-input')?.value.toLowerCase() || '';
+            const rerenderDeviceList = () => {
+                const searchTerm = searchInput.value.toLowerCase();
                 let content = '';
                 state.productModels.forEach(model => {
                     const availableItems = state.inventoryItems.filter(i => 
@@ -594,60 +645,213 @@
                         (model.name.toLowerCase().includes(searchTerm) || i.serial.toLowerCase().includes(searchTerm))
                     );
                     if (availableItems.length === 0 && !model.name.toLowerCase().includes(searchTerm)) return;
-
                     content += `
                         <div key="${model.id}">
                             <h3 class="font-bold text-lg text-gray-700">${model.name}</h3>
                             <div class="mt-2 space-y-2 pl-4">
                                 ${availableItems.length > 0 ? availableItems.map(item => `
                                     <label class="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
-                                        <input type="checkbox" data-action="toggle-device-selection" data-item-id="${item.id}" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" ${tempSelectedItems.some(i => i.itemId === item.id) ? 'checked' : ''}/>
+                                        <input type="checkbox" data-item-id="${item.id}" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 device-selector-checkbox" ${tempSelectedItems.some(i => i.itemId === item.id) ? 'checked' : ''}/>
                                         <p class="ml-4 font-mono text-sm text-gray-800">S/N: ${item.serial}</p>
                                     </label>
                                 `).join('') : '<p class="text-sm text-gray-400 italic">Không có thiết bị nào sẵn sàng.</p>'}
                             </div>
                         </div>`;
                 });
-                return content;
+                deviceListContainer.innerHTML = content || '<p class="text-center text-gray-500">Không tìm thấy thiết bị phù hợp.</p>';
             };
 
-            const modalHTML = `
-                <div class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-                    <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl flex flex-col h-[90vh]">
-                        <h2 class="text-2xl font-bold p-6 border-b">Chọn Thiết Bị</h2>
-                        <div class="p-6 border-b">
-                            <input type="text" id="device-search-input" placeholder="Tìm kiếm theo tên mẫu hoặc S/N..." class="w-full px-4 py-2 border rounded-lg"/>
-                        </div>
-                        <div id="device-list-container" class="flex-1 overflow-y-auto p-6 space-y-4">
-                            ${getModalContent()}
-                        </div>
-                        <div class="p-6 border-t flex justify-end space-x-4">
-                            <button type="button" data-action="close-modal" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Hủy</button>
-                            <button type="button" data-action="confirm-device-selection" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Xác nhận</button>
+            searchInput.addEventListener('input', rerenderDeviceList);
+            deviceListContainer.addEventListener('change', (e) => {
+                if (e.target.classList.contains('device-selector-checkbox')) {
+                    const target = e.target;
+                    const itemId = target.dataset.itemId;
+                    const isChecked = target.checked;
+                    const existingIndex = tempSelectedItems.findIndex(i => i.itemId === itemId);
+                    if (isChecked && existingIndex === -1) {
+                        const item = state.inventoryItems.find(i => i.id === itemId);
+                        const model = state.productModels.find(m => m.id === item.productModelId);
+                        tempSelectedItems.push({ itemId: item.id, serial: item.serial, productName: model.name, pricePerDay: model.pricePerDay });
+                    } else if (!isChecked && existingIndex > -1) {
+                        tempSelectedItems.splice(existingIndex, 1);
+                    }
+                }
+            });
+            confirmBtn.addEventListener('click', () => {
+                onConfirm(tempSelectedItems);
+                closeModal();
+            });
+            rerenderDeviceList();
+        };
+
+        // --- [NEW] Dedicated View for Creating Bookings ---
+        const renderCreateBookingForm = () => {
+            document.getElementById('view-header').innerHTML = ''; // No header for this view
+            const container = document.getElementById('list-container');
+            
+            // Local state for this form
+            let localBooking = {
+                customerId: '',
+                startDate: '',
+                endDate: '',
+                items: []
+            };
+
+            const renderForm = () => {
+                const customer = state.customers.find(c => c.id === localBooking.customerId);
+                const days = (localBooking.startDate && localBooking.endDate && moment(localBooking.endDate).isSameOrAfter(localBooking.startDate)) 
+                    ? Math.max(1, moment(localBooking.endDate).diff(moment(localBooking.startDate), 'days') + 1)
+                    : 0;
+                const totalPrice = localBooking.items.reduce((acc, item) => acc + Number(item.pricePerDay), 0) * days;
+
+                container.innerHTML = `
+                <form id="create-booking-page-form" class="space-y-8 max-w-4xl mx-auto">
+                    <!-- Customer and Dates Section -->
+                    <div class="bg-white p-8 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-6">1. Thông tin đơn hàng</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Khách hàng</label>
+                                <div class="flex items-center space-x-2">
+                                    <select name="customerId" class="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
+                                        <option value="">-- Chọn hoặc tạo mới --</option>
+                                        ${state.customers.map(c => `<option value="${c.id}" ${localBooking.customerId === c.id ? 'selected' : ''}>${c.name} - ${c.phone}</option>`).join('')}
+                                    </select>
+                                    <button type="button" data-action="open-customer-modal" data-from-booking="true" class="flex-shrink-0 p-2 bg-green-500 text-white rounded-full hover:bg-green-600">+</button>
+                                </div>
+                            </div>
+                            <div></div> <!-- Spacer -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Ngày thuê</label>
+                                <input type="date" name="startDate" value="${localBooking.startDate}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Ngày trả</label>
+                                <input type="date" name="endDate" value="${localBooking.endDate}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+                            </div>
                         </div>
                     </div>
-                </div>`;
-            openModal(modalHTML);
-            
-            // Add listener for search input
-             document.getElementById('device-search-input').addEventListener('input', () => {
-                document.getElementById('device-list-container').innerHTML = getModalContent();
+
+                    <!-- Items Section -->
+                    <div class="bg-white p-8 rounded-xl shadow-lg">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-semibold text-gray-800">2. Thiết bị thuê</h3>
+                            <button type="button" id="open-device-selector-btn" class="font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-100 px-4 py-2 rounded-lg">[+] Chọn thiết bị...</button>
+                        </div>
+                        <div id="booking-items-list" class="mt-2 p-4 border-2 border-dashed rounded-lg min-h-[80px] bg-gray-50">
+                            <!-- Items will be rendered here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Summary and Submit Section -->
+                    <div class="bg-white p-8 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-6">3. Tổng kết</h3>
+                        <div class="space-y-4 text-gray-700">
+                            <div class="flex justify-between"><span class="font-medium">Khách hàng:</span><span>${customer ? `${customer.name} - ${customer.phone}`: 'Chưa chọn'}</span></div>
+                            <div class="flex justify-between"><span class="font-medium">Số ngày thuê:</span><span>${days} ngày</span></div>
+                            <div class="flex justify-between border-t pt-4 mt-4">
+                                <span class="text-lg font-bold">Tổng tiền:</span>
+                                <span class="text-2xl font-bold text-indigo-600">${formatCurrency(totalPrice)}</span>
+                            </div>
+                        </div>
+                         <div class="mt-8 text-right">
+                             <button type="submit" class="w-full md:w-auto bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-cyan-700 transition duration-300 disabled:bg-gray-400">
+                                Hoàn Tất & Tạo Đơn
+                            </button>
+                         </div>
+                    </div>
+                </form>
+                `;
+
+                // Render the list of items inside the summary
+                const itemsListContainer = container.querySelector('#booking-items-list');
+                if (localBooking.items.length === 0) {
+                    itemsListContainer.innerHTML = `<p class="text-gray-400 text-center p-4">Chưa có thiết bị nào được chọn</p>`;
+                } else {
+                    itemsListContainer.innerHTML = `
+                        <ul class="space-y-2">
+                            ${localBooking.items.map(item => `
+                                <li class="p-2 bg-indigo-50 rounded-md flex justify-between items-center">
+                                    <span>${item.productName} <span class="text-xs text-gray-500">(S/N: ${item.serial})</span></span>
+                                    <span class="font-semibold">${formatCurrency(item.pricePerDay)}/ngày</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                }
+
+                // Add event listeners for the form
+                container.querySelector('select[name="customerId"]').addEventListener('change', e => { localBooking.customerId = e.target.value; renderForm(); });
+                container.querySelector('input[name="startDate"]').addEventListener('change', e => { localBooking.startDate = e.target.value; renderForm(); });
+                container.querySelector('input[name="endDate"]').addEventListener('change', e => { localBooking.endDate = e.target.value; renderForm(); });
+                container.querySelector('#open-device-selector-btn').addEventListener('click', () => {
+                    renderDeviceSelectorModal(localBooking.items, (selectedItems) => {
+                        localBooking.items = selectedItems;
+                        renderForm();
+                    });
+                });
+            };
+
+            renderForm(); // Initial render
+
+            // Handle the final submission of the page form
+            container.querySelector('#create-booking-page-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const submitButton = e.target.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.textContent;
+                
+                // Validation
+                const customer = state.customers.find(c => c.id === localBooking.customerId);
+                if (!customer || !localBooking.startDate || !localBooking.endDate || localBooking.items.length === 0) {
+                    showNotificationModal('Thiếu thông tin', 'Vui lòng điền đủ: khách hàng, ngày thuê/trả và chọn ít nhất 1 thiết bị.', 'error');
+                    return; 
+                }
+                if (moment(localBooking.endDate).isBefore(moment(localBooking.startDate))) {
+                    showNotificationModal('Ngày không hợp lệ', 'Ngày trả không được ở trước ngày thuê.', 'error');
+                    return;
+                }
+
+                submitButton.disabled = true;
+                submitButton.textContent = 'Đang xử lý...';
+
+                try {
+                    const days = Math.max(1, moment(localBooking.endDate).diff(moment(localBooking.startDate), 'days') + 1);
+                    const totalPrice = localBooking.items.reduce((acc, item) => acc + Number(item.pricePerDay), 0) * days;
+                    const bookingData = {
+                        customerId: customer.id,
+                        customerName: customer.name,
+                        customerPhone: customer.phone,
+                        startDate: Timestamp.fromDate(new Date(localBooking.startDate)),
+                        endDate: Timestamp.fromDate(new Date(localBooking.endDate)),
+                        items: localBooking.items,
+                        status: 'Chờ lấy máy',
+                        totalPrice: totalPrice,
+                        createdAt: Timestamp.now()
+                    };
+                    
+                    const batch = writeBatch(db);
+                    const bookingRef = doc(collection(db, 'bookings'));
+                    batch.set(bookingRef, bookingData);
+
+                    localBooking.items.forEach(item => {
+                        const itemRef = doc(db, "inventoryItems", item.itemId);
+                        batch.update(itemRef, { status: "Chờ lấy máy" });
+                    });
+
+                    await batch.commit();
+                    showNotificationModal('Thành công', 'Đã tạo đơn thuê mới thành công!', 'success');
+                    
+                    // Reset form by navigating to the new empty form view
+                    document.querySelector('.nav-link[data-view="createBooking"]').click();
+
+                } catch (err) {
+                    console.error("Booking creation error:", err);
+                    showNotificationModal('Đã có lỗi', 'Không thể tạo đơn thuê. Vui lòng xem console để biết chi tiết.', 'error');
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalButtonText;
+                }
             });
         };
-
-        const updateBookingItemsList = () => {
-            const container = document.getElementById('booking-items-list');
-            if (!container) return;
-            if (state.newBooking.items.length === 0) {
-                container.innerHTML = `<span class="text-gray-400">Chưa có thiết bị nào</span>`;
-            } else {
-                container.innerHTML = state.newBooking.items.map(item => `
-                    <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-1 rounded-full flex items-center">
-                        ${item.productName} (S/N: ${item.serial})
-                    </span>`).join('');
-            }
-        };
-
 
         // --- Dashboard Specific Functions ---
         const animateCounters = () => {
@@ -655,25 +859,15 @@
             counters.forEach(counter => {
                 const target = +counter.getAttribute('data-target');
                 const isCurrency = counter.textContent.includes('₫');
-                
                 let current = 0;
-                const increment = target / 100; // Animate in 100 steps
-
+                const increment = target / 100;
                 const updateCounter = () => {
                     if (current < target) {
                         current += increment;
-                        if (isCurrency) {
-                            counter.textContent = formatCurrency(Math.ceil(current));
-                        } else {
-                            counter.textContent = Math.ceil(current);
-                        }
+                        counter.textContent = isCurrency ? formatCurrency(Math.ceil(current)) : Math.ceil(current);
                         requestAnimationFrame(updateCounter);
                     } else {
-                         if (isCurrency) {
-                            counter.textContent = formatCurrency(target);
-                        } else {
-                            counter.textContent = target;
-                        }
+                        counter.textContent = isCurrency ? formatCurrency(target) : target;
                     }
                 };
                 updateCounter();
@@ -683,8 +877,6 @@
         const initRevenueChart = () => {
             const ctx = document.getElementById('revenueChart');
             if (!ctx) return;
-
-            // Prepare data for the last 7 days
             const labels = [];
             const data = [];
             for (let i = 6; i >= 0; i--) {
@@ -695,70 +887,25 @@
                     .reduce((sum, b) => sum + b.totalPrice, 0);
                 data.push(revenueForDay);
             }
-
             state.charts.revenue = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Doanh thu',
-                        data: data,
-                        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                        borderColor: 'rgba(59, 130, 246, 1)',
-                        borderWidth: 1,
-                        borderRadius: 8,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, ticks: { callback: value => formatCurrency(value) } },
-                        x: { grid: { display: false } }
-                    },
-                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => formatCurrency(context.parsed.y) } } }
-                }
+                data: { labels, datasets: [{ label: 'Doanh thu', data, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1, borderRadius: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: value => formatCurrency(value) } }, x: { grid: { display: false } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => formatCurrency(context.parsed.y) } } } }
             });
         };
 
         const initEquipmentStatusChart = () => {
             const ctx = document.getElementById('equipmentStatusChart');
             if (!ctx) return;
-            
-            const statusCounts = state.inventoryItems.reduce((acc, item) => {
-                acc[item.status] = (acc[item.status] || 0) + 1;
-                return acc;
-            }, {});
-
-            const labels = ['Sẵn sàng', 'Đang thuê', 'Bảo trì'];
-            const data = [
-                statusCounts['Sẵn sàng'] || 0,
-                statusCounts['Đang thuê'] || 0,
-                statusCounts['Bảo trì'] || 0,
-            ];
-
+            const statusCounts = state.inventoryItems.reduce((acc, item) => { acc[item.status] = (acc[item.status] || 0) + 1; return acc; }, {});
+            const labels = ['Sẵn sàng', 'Đang thuê', 'Bảo trì', 'Chờ lấy máy'];
+            const data = labels.map(label => statusCounts[label] || 0);
             state.charts.equipmentStatus = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Số lượng',
-                        data: data,
-                        backgroundColor: ['rgba(34, 197, 94, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(239, 68, 68, 0.7)'],
-                        borderColor: ['rgba(34, 197, 94, 1)', 'rgba(245, 158, 11, 1)', 'rgba(239, 68, 68, 1)'],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top' }
-                    }
-                }
+                data: { labels, datasets: [{ label: 'Số lượng', data, backgroundColor: ['rgba(34, 197, 94, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(239, 68, 68, 0.7)', 'rgba(59, 130, 246, 0.7)'], borderColor: ['#22c55e', '#f59e0b', '#ef4444', '#3b82f6'], borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
             });
         };
-
 
         // --- Data Fetching ---
         const fetchData = () => {
@@ -776,6 +923,10 @@
                 state.user = user;
                 loginScreen.classList.add('hidden');
                 adminPanel.classList.remove('hidden');
+                // Set initial view to dashboard on login
+                state.currentView = 'dashboard';
+                document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('bg-gray-900'));
+                document.querySelector('.nav-link[data-view="dashboard"]').classList.add('bg-gray-900');
                 fetchData();
             } else {
                 state.user = null;
@@ -804,11 +955,20 @@
             const navLink = e.target.closest('.nav-link');
             if (navLink) {
                 e.preventDefault();
-                document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('bg-gray-900'));
-                navLink.classList.add('bg-gray-900');
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    // Don't remove active style from the primary create button
+                    if(!link.dataset.view.includes('createBooking')) {
+                       link.classList.remove('bg-gray-900');
+                    }
+                });
+
+                if(!navLink.dataset.view.includes('createBooking')) {
+                    navLink.classList.add('bg-gray-900');
+                }
+
                 state.currentView = navLink.dataset.view;
                 state.searchTerm = '';
-                state.activeFilter = null; // Reset filter on any navigation
+                state.activeFilter = null;
                 render();
                 const sidebar = document.getElementById('sidebar');
                 if(!sidebar.classList.contains('md:relative')) {
@@ -836,13 +996,12 @@
             switch(action) {
                 case 'navigate':
                     e.preventDefault();
-                    state.currentView = target.dataset.view;
-                    state.activeFilter = { type: target.dataset.filterType, value: target.dataset.filterValue };
-                    state.searchTerm = '';
-                    document.querySelectorAll('.nav-link').forEach(link => {
-                        link.classList.toggle('bg-gray-900', link.dataset.view === state.currentView);
-                    });
-                    render();
+                    document.querySelector(`.nav-link[data-view="${target.dataset.view}"]`)?.click();
+                    setTimeout(() => {
+                        state.activeFilter = { type: target.dataset.filterType, value: target.dataset.filterValue };
+                        state.searchTerm = '';
+                        render();
+                    }, 50);
                     break;
                 case 'clear-filter':
                     state.activeFilter = null;
@@ -854,9 +1013,10 @@
                     renderProductModelModal(model);
                     break;
                 case 'delete-product-model':
-                    if (confirm('Bạn có chắc chắn muốn xóa mẫu sản phẩm này?')) {
+                    showConfirmationModal('Xác nhận xóa', 'Bạn có chắc chắn muốn xóa mẫu sản phẩm này? Thao tác này không thể hoàn tác.', async () => {
                         await deleteDoc(doc(db, 'productModels', id));
-                    }
+                        showNotificationModal('Thành công', 'Đã xóa mẫu sản phẩm.', 'success');
+                    });
                     break;
                 case 'toggle-inventory-model':
                     target.closest('[data-model-id]').querySelector('.border-t').classList.toggle('hidden');
@@ -867,18 +1027,20 @@
                     renderInventoryItemModal(item, target.dataset.modelId, target.dataset.modelName);
                     break;
                 case 'delete-inventory-item':
-                    if (confirm('Bạn có chắc chắn muốn xóa thiết bị này?')) {
+                    showConfirmationModal('Xác nhận xóa', 'Bạn có chắc chắn muốn xóa thiết bị này? Thao tác này không thể hoàn tác.', async () => {
                         await deleteDoc(doc(db, 'inventoryItems', id));
-                    }
+                        showNotificationModal('Thành công', 'Đã xóa thiết bị.', 'success');
+                    });
                     break;
                 case 'open-customer-modal':
                     const customer = id ? state.customers.find(c => c.id === id) : null;
                     renderCustomerModal(customer, target.dataset.fromBooking === 'true');
                     break;
                 case 'delete-customer':
-                    if (confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
+                     showConfirmationModal('Xác nhận xóa', 'Bạn có chắc chắn muốn xóa khách hàng này? Thao tác này không thể hoàn tác.', async () => {
                         await deleteDoc(doc(db, 'customers', id));
-                    }
+                        showNotificationModal('Thành công', 'Đã xóa khách hàng.', 'success');
+                    });
                     break;
                 case 'view-customer-history':
                     state.currentView = 'bookings'; state.searchTerm = id;
@@ -892,81 +1054,89 @@
                     const newStatus = target.dataset.status;
                     const booking = state.bookings.find(b => b.id === id);
                     if (!booking) return;
-                    const batch = writeBatch(db);
-                    batch.update(doc(db, 'bookings', id), { status: newStatus });
-                    const shouldUpdateItems = (newStatus === 'Đã trả' || newStatus === 'Đã hủy' || newStatus === 'Đang thuê');
-                    if (shouldUpdateItems && booking.items) {
-                        const itemStatus = (newStatus === 'Đang thuê') ? 'Đang thuê' : 'Sẵn sàng';
-                        booking.items.forEach(item => { batch.update(doc(db, 'inventoryItems', item.itemId), { status: itemStatus }); });
+                    
+                    const batchUpdate = writeBatch(db);
+                    batchUpdate.update(doc(db, 'bookings', id), { status: newStatus });
+                    
+                    if (booking.items) {
+                        let itemStatus;
+                        if (newStatus === 'Đang thuê') itemStatus = 'Đang thuê';
+                        else if (newStatus === 'Đã trả' || newStatus === 'Đã hủy') itemStatus = 'Sẵn sàng';
+                        
+                        if(itemStatus) {
+                            booking.items.forEach(item => { 
+                                const itemRef = doc(db, 'inventoryItems', item.itemId);
+                                batchUpdate.update(itemRef, { status: itemStatus }); 
+                            });
+                        }
                     }
-                    await batch.commit();
+                    await batchUpdate.commit();
+                    showNotificationModal('Thành công', `Đã cập nhật trạng thái đơn hàng thành "${newStatus}".`, 'success');
                     break;
-                case 'open-booking-modal': renderBookingModal(); break;
-                case 'open-device-selector': renderDeviceSelectorModal(); break;
-                case 'toggle-device-selection':
-                    const itemId = target.dataset.itemId;
-                    const isChecked = target.checked;
-                    const tempSelectedItems = state.newBooking.items;
-                    const existingIndex = tempSelectedItems.findIndex(i => i.itemId === itemId);
-                    if (isChecked && existingIndex === -1) {
-                        const item = state.inventoryItems.find(i => i.id === itemId);
-                        const model = state.productModels.find(m => m.id === item.productModelId);
-                        tempSelectedItems.push({ itemId: item.id, serial: item.serial, productName: model.name, pricePerDay: model.pricePerDay });
-                    } else if (!isChecked && existingIndex > -1) {
-                        tempSelectedItems.splice(existingIndex, 1);
-                    }
-                    break;
-                case 'confirm-device-selection': closeModal(); updateBookingItemsList(); break;
             }
         });
+
+        // Listener for forms inside modals
         modalsContainer.addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.textContent;
+
+            if(submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Đang xử lý...';
+            }
+            
             const id = form.dataset.id;
             const isEditing = id !== '';
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
+            
             try {
                 switch(form.id) {
                     case 'product-model-form':
                         data.pricePerDay = Number(data.pricePerDay);
                         if (isEditing) await updateDoc(doc(db, 'productModels', id), data);
                         else await addDoc(collection(db, 'productModels'), data);
+                        showNotificationModal('Thành công', 'Đã lưu mẫu sản phẩm.', 'success');
                         break;
                     case 'inventory-item-form':
                         if (isEditing) await updateDoc(doc(db, 'inventoryItems', id), data);
                         else await addDoc(collection(db, 'inventoryItems'), data);
+                        showNotificationModal('Thành công', 'Đã lưu thiết bị.', 'success');
                         break;
                     case 'customer-form':
                         if (isEditing) await updateDoc(doc(db, 'customers', id), data);
                         else {
                             const newCustomerRef = await addDoc(collection(db, 'customers'), { ...data, createdAt: Timestamp.now() });
                             if (form.dataset.fromBooking === 'true') {
-                                closeModal(); renderBookingModal();
+                                // This is called from the create booking page, so we need to update that page's state
+                                closeModal(); 
+                                // The main page will re-render via onSnapshot, just need to select the new customer
                                 setTimeout(() => {
-                                    const customerSelect = document.querySelector('#booking-form select[name="customerId"]');
-                                    if(customerSelect) customerSelect.value = newCustomerRef.id;
-                                }, 100);
-                                return;
+                                    const customerSelect = document.querySelector('#create-booking-page-form select[name="customerId"]');
+                                    if(customerSelect) {
+                                        customerSelect.value = newCustomerRef.id;
+                                        // Manually trigger change to update the UI
+                                        customerSelect.dispatchEvent(new Event('change'));
+                                    }
+                                }, 200); // Wait for firestore to update state
+                                return; // Prevent double modal close
                             }
                         }
-                        break;
-                    case 'booking-form':
-                        const customer = state.customers.find(c => c.id === data.customerId);
-                        if (!customer || !data.startDate || !data.endDate || state.newBooking.items.length === 0) {
-                            alert("Vui lòng điền đủ thông tin: khách hàng, ngày và chọn ít nhất 1 thiết bị."); return;
-                        }
-                        const days = Math.max(1, moment(data.endDate).diff(moment(data.startDate), 'days') + 1);
-                        const totalPrice = state.newBooking.items.reduce((acc, item) => acc + Number(item.pricePerDay), 0) * days;
-                        const bookingData = { customerId: customer.id, customerName: customer.name, customerPhone: customer.phone, startDate: Timestamp.fromDate(new Date(data.startDate)), endDate: Timestamp.fromDate(new Date(data.endDate)), items: state.newBooking.items, status: 'Chờ lấy máy', totalPrice: totalPrice, createdAt: Timestamp.now() };
-                        const batch = writeBatch(db);
-                        const bookingRef = doc(collection(db, 'bookings'));
-                        batch.set(bookingRef, bookingData);
-                        await batch.commit();
+                        showNotificationModal('Thành công', 'Đã lưu khách hàng.', 'success');
                         break;
                 }
                 closeModal();
-            } catch (err) { console.error("Form submission error:", err); alert("Đã xảy ra lỗi. Vui lòng thử lại."); }
+            } catch (err) { 
+                console.error("Form submission error:", err); 
+                showNotificationModal('Đã có lỗi', 'Không thể hoàn thành thao tác. Vui lòng xem console để biết chi tiết.', 'error'); 
+                if(submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalButtonText;
+                }
+            }
         });
 
     </script>
