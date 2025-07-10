@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lens Manager - Quản lý cho thuê</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/react-big-calendar@1.8.1/lib/css/react-big-calendar.css">
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/moment@2.29.4/min/moment.min.js"></script>
+    <script src="https://unpkg.com/moment@2.29.4/locale/vi.js"></script>
+    <script src="https://unpkg.com/react-big-calendar@1.8.1/dist/react-big-calendar.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        const { Calendar, momentLocalizer } = ReactBigCalendar;
+
+        // --- Cấu hình Firebase ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyB8KNNZnFSl54y0hXG_iNPksNC6DAyp-0U",
+            authDomain: "lens-df7e7.firebaseapp.com",
+            projectId: "lens-df7e7",
+            storageBucket: "lens-df7e7.appspot.com",
+            messagingSenderId: "772821461113",
+            appId: "1:772821461113:web:2166b475800e7687bd0ca8"
+        };
+
+        // --- Khởi tạo Firebase ---
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const { Timestamp } = firebase.firestore;
+
+        moment.locale('vi');
+        const localizer = momentLocalizer(moment);
+
+        // --- Các hàm hỗ trợ ---
+        const formatDate = (date) => date ? new Date(date).toLocaleDateString('vi-VN') : '';
+        const formatCurrency = (number) => (typeof number === 'number' ? number : 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+        const getStatusClass = (status) => {
+            switch (status) {
+                case 'Sẵn sàng': return 'bg-green-100 text-green-800';
+                case 'Đang thuê': return 'bg-yellow-100 text-yellow-800';
+                case 'Bảo trì': return 'bg-red-100 text-red-800';
+                case 'Chờ lấy máy': return 'bg-blue-100 text-blue-800';
+                case 'Đã trả': return 'bg-gray-200 text-gray-800';
+                case 'Đã hủy': return 'bg-pink-100 text-pink-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        };
+        
+        // --- Component con ---
+        function LoginScreen() {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const handleSubmit = async (e) => { e.preventDefault(); setError(''); try { await auth.signInWithEmailAndPassword(email, password); } catch (err) { setError('Email hoặc mật khẩu không đúng.'); } };
+            return (<div className="min-h-screen flex items-center justify-center bg-gray-100 p-4"><div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg"><h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">Đăng nhập Lens Manager</h2><form onSubmit={handleSubmit}><div className="mb-4"><label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">Email</label><input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required /></div><div className="mb-6"><label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">Mật khẩu</label><input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" required /></div>{error && <p className="text-red-500 text-xs italic mb-4">{error}</p>}<button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">Đăng nhập</button></form></div></div>);
+        }
+
+        function CalendarView({ bookings }) {
+            const events = useMemo(() => bookings.filter(b => b.status !== 'Đã hủy').map(booking => ({ title: `${booking.customerName} - ${booking.items.map(i => i.productName).join(', ')}`, start: booking.startDate, end: moment(booking.endDate).add(1, 'days').toDate(), allDay: true, resource: booking })), [bookings]);
+            const eventStyleGetter = (event) => { const status = event.resource.status; let backgroundColor = '#3174ad'; if (status === 'Đang thuê') backgroundColor = '#f6b93b'; else if (status === 'Đã trả') backgroundColor = '#6c757d'; return { style: { backgroundColor, borderRadius: '5px', opacity: 0.8, color: 'white', border: '0px', display: 'block' } }; };
+            return (<div className="bg-white p-2 sm:p-4 rounded-lg shadow-lg" style={{ height: '80vh' }}><Calendar localizer={localizer} events={events} startAccessor="start" endAccessor="end" views={['month', 'week', 'day']} messages={{ next: "Sau", previous: "Trước", today: "Hôm nay", month: "Tháng", week: "Tuần", day: "Ngày" }} eventPropGetter={eventStyleGetter} /></div>);
+        }
+
+        function DashboardView({ inventoryItems, bookings }) {
+            const totalRevenue = useMemo(() => bookings.filter(b => b.status === 'Đã trả').reduce((acc, b) => acc + b.totalPrice, 0), [bookings]);
+            const itemsRented = useMemo(() => inventoryItems.filter(item => item.status === 'Đang thuê').length, [inventoryItems]);
+            const pendingBookingsCount = useMemo(() => bookings.filter(b => b.status === 'Chờ lấy máy').length, [bookings]);
+            
+            // --- Nâng cấp Dashboard: Logic cho Cảnh báo ---
+            const { overdueBookings, pickupTodayBookings } = useMemo(() => {
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+
+                const todayEnd = new Date();
+                todayEnd.setHours(23, 59, 59, 999);
+
+                const overdue = bookings.filter(b => 
+                    b.status === 'Đang thuê' && b.endDate < todayStart
+                );
+
+                const pickupToday = bookings.filter(b => {
+                    const startDate = b.startDate;
+                    return b.status === 'Chờ lấy máy' && startDate >= todayStart && startDate <= todayEnd;
+                });
+
+                return { overdueBookings: overdue, pickupTodayBookings: pickupToday };
+            }, [bookings]);
+
+            return (
+                <div className="space-y-8">
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="bg-white p-6 rounded-lg shadow-lg"><h3 className="text-lg font-medium text-gray-500">Tổng Doanh Thu</h3><p className="mt-2 text-3xl md:text-4xl font-bold text-green-600">{formatCurrency(totalRevenue)}</p></div>
+                        <div className="bg-white p-6 rounded-lg shadow-lg"><h3 className="text-lg font-medium text-gray-500">Thiết Bị Đang Thuê</h3><p className="mt-2 text-3xl md:text-4xl font-bold text-yellow-600">{itemsRented}</p></div>
+                        <div className="bg-white p-6 rounded-lg shadow-lg"><h3 className="text-lg font-medium text-gray-500">Đơn Chờ Lấy Máy</h3><p className="mt-2 text-3xl md:text-4xl font-bold text-blue-600">{pendingBookingsCount}</p></div>
+                    </div>
+
+                    {/* Action Items & Alerts Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Cảnh báo đơn quá hạn */}
+                        <div>
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Cảnh báo: Đơn quá hạn trả</h2>
+                            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                                {overdueBookings.length > 0 ? (
+                                    <ul className="divide-y divide-gray-200">
+                                        {overdueBookings.map(booking => (
+                                            <li key={booking.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-red-50">
+                                                <div>
+                                                    <p className="font-semibold text-red-800">{booking.customerName}</p>
+                                                    <p className="text-sm text-red-700">{booking.items.map(i => i.productName).join(', ')}</p>
+                                                </div>
+                                                <p className="text-sm text-red-600 font-medium mt-2 sm:mt-0">Quá hạn từ: {formatDate(booking.endDate)}</p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (<p className="text-gray-500 p-4">Không có đơn nào quá hạn.</p>)}
+                            </div>
+                        </div>
+
+                        {/* Nhắc nhở đơn lấy hôm nay */}
+                        <div>
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Cần xử lý: Đơn lấy hôm nay</h2>
+                             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                                {pickupTodayBookings.length > 0 ? (
+                                    <ul className="divide-y divide-gray-200">
+                                        {pickupTodayBookings.map(booking => (
+                                            <li key={booking.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                                                <div>
+                                                    <p className="font-semibold text-gray-900">{booking.customerName}</p>
+                                                    <p className="text-sm text-gray-600">{booking.items.map(i => i.productName).join(', ')}</p>
+                                                </div>
+                                                <p className="text-sm text-blue-600 font-medium mt-2 sm:mt-0">Lấy máy hôm nay</p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (<p className="text-gray-500 p-4">Không có đơn nào cần lấy hôm nay.</p>)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        function ProductModelsView({ productModels, onEdit, onDelete, onSearch, onAdd }) {
+             return (
+                <div>
+                    <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <input type="text" placeholder="Tìm kiếm mẫu sản phẩm..." onChange={(e) => onSearch(e.target.value)} className="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm"/>
+                        <button onClick={onAdd} className="w-full sm:w-auto bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">+ Thêm Mẫu Mới</button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {productModels.map((model) => (
+                            <div key={model.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                                <div className="p-5">
+                                    <h3 className="text-xl font-bold text-gray-800">{model.name}</h3>
+                                    <p className="text-sm text-gray-600 mt-2">Loại: {model.type}</p>
+                                    <p className="text-lg font-semibold text-indigo-600 mt-3">{formatCurrency(model.pricePerDay)}/ngày</p>
+                                </div>
+                                <div className="bg-gray-50 px-5 py-3 flex justify-end space-x-4">
+                                    <button onClick={() => onEdit(model)} className="text-sm font-medium text-indigo-600 hover:text-indigo-900">Sửa</button>
+                                    <button onClick={() => onDelete(model.id)} className="text-sm font-medium text-red-600 hover:text-red-900">Xóa</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        function InventoryView({ productModels, inventoryItems, onAddItem, onEditItem, onDeleteItem }) {
+            const [expandedModels, setExpandedModels] = useState({});
+            const toggleModel = (modelId) => setExpandedModels(prev => ({...prev, [modelId]: !prev[modelId]}));
+
+            return (
+                <div className="space-y-4">
+                    {productModels.map(model => {
+                        const itemsForModel = inventoryItems.filter(item => item.productModelId === model.id);
+                        const availableItems = itemsForModel.filter(item => item.status === 'Sẵn sàng').length;
+                        return (
+                            <div key={model.id} className="bg-white rounded-lg shadow-md">
+                                <div className="p-4 flex justify-between items-center cursor-pointer" onClick={() => toggleModel(model.id)}>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-800">{model.name}</h3>
+                                        <p className="text-sm text-gray-500">Sẵn sàng: <span className="font-semibold text-green-600">{availableItems}</span> / Tổng: {itemsForModel.length}</p>
+                                    </div>
+                                    <div className="flex items-center space-x-4">
+                                        <button onClick={(e) => { e.stopPropagation(); onAddItem(model.id, model.name); }} className="text-sm bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600">+ Thêm S/N</button>
+                                        <svg className={`w-6 h-6 text-gray-500 transform transition-transform ${expandedModels[model.id] ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                                {expandedModels[model.id] && (
+                                    <div className="border-t border-gray-200 p-4">
+                                        {itemsForModel.length > 0 ? (
+                                            <ul className="space-y-2">
+                                                {itemsForModel.map(item => (
+                                                    <li key={item.id} className="flex justify-between items-center p-2 rounded-md hover:bg-gray-50">
+                                                        <div><p className="font-mono text-sm text-gray-800">S/N: {item.serial}</p></div>
+                                                        <div className="flex items-center space-x-4">
+                                                            <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusClass(item.status)}`}>{item.status}</span>
+                                                            <button onClick={() => onEditItem(item)} className="text-xs text-indigo-600">Sửa</button>
+                                                            <button onClick={() => onDeleteItem(item.id)} className="text-xs text-red-600">Xóa</button>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : <p className="text-sm text-gray-400">Chưa có thiết bị nào cho mẫu này.</p>}
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+            );
+        }
+
+        function BookingsView({ bookings, onUpdateStatus, onSearch }) { 
+            return (<div><div className="mb-6"><input type="text" placeholder="Tìm kiếm theo tên khách hàng..." onChange={(e) => onSearch(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm"/></div><div className="space-y-6">{bookings.map(booking => (<div key={booking.id} className="bg-white rounded-lg shadow-lg overflow-hidden"><div className="p-5"><div className="flex justify-between items-start"><div><p className="text-lg sm:text-xl font-bold text-gray-800">{booking.customerName}</p><p className="text-sm text-gray-500">{booking.customerPhone}</p></div><span className={`flex-shrink-0 mt-1 px-3 py-1 text-xs font-semibold rounded-full ${getStatusClass(booking.status)}`}>{booking.status}</span></div><div className="mt-4 border-t pt-4"><p className="font-semibold">Thiết bị thuê:</p><ul className="list-disc list-inside text-sm text-gray-700">{booking.items.map(item => <li key={item.itemId}>{item.productName} (S/N: {item.serial})</li>)}</ul><div className="flex flex-col sm:flex-row justify-between mt-3 text-sm"><p>Ngày thuê: <span className="font-medium">{formatDate(booking.startDate)}</span></p><p className="mt-1 sm:mt-0">Ngày trả: <span className="font-medium">{formatDate(booking.endDate)}</span></p></div><p className="text-right text-lg font-bold text-cyan-700 mt-2">{formatCurrency(booking.totalPrice)}</p></div></div><div className="bg-gray-50 px-5 py-3 flex justify-end space-x-3">{booking.status === 'Chờ lấy máy' && <button onClick={() => onUpdateStatus(booking.id, 'Đang thuê', booking.items)} className="text-sm font-medium text-yellow-600 hover:text-yellow-800">Xác nhận lấy máy</button>}{booking.status === 'Đang thuê' && <button onClick={() => onUpdateStatus(booking.id, 'Đã trả', booking.items)} className="text-sm font-medium text-green-600 hover:text-green-800">Xác nhận đã trả</button>}{(booking.status === 'Chờ lấy máy' || booking.status === 'Đang thuê') && <button onClick={() => onUpdateStatus(booking.id, 'Đã hủy', booking.items)} className="text-sm font-medium text-pink-600 hover:text-pink-800">Hủy đơn</button>}</div></div>))}</div></div>);
+        }
+        
+        function CustomersView({ customers, onEdit, onDelete, onSearch, onViewHistory }) {
+            return (<div><div className="mb-6"><input type="text" placeholder="Tìm kiếm theo tên hoặc SĐT..." onChange={(e) => onSearch(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm"/></div><div className="bg-white rounded-lg shadow-lg overflow-hidden"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr><th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Khách Hàng</th><th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th><th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Ghi Chú</th><th scope="col" className="relative px-6 py-3"><span className="sr-only">Hành động</span></th></tr></thead><tbody className="bg-white divide-y divide-gray-200">{customers.map((customer) => (<tr key={customer.id}><td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-medium text-gray-900">{customer.name}</div></td><td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-500">{customer.phone}</div></td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{customer.notes}</td><td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4"><button onClick={() => onViewHistory(customer.id)} className="text-cyan-600 hover:text-cyan-900">Xem Lịch sử</button><button onClick={() => onEdit(customer)} className="text-indigo-600 hover:text-indigo-900">Sửa</button><button onClick={() => onDelete(customer.id)} className="text-red-600 hover:text-red-900">Xóa</button></td></tr>))}</tbody></table></div></div>);
+        }
+
+        // --- Component Bảng điều khiển chính ---
+        function AdminPanel({ user, onLogout }) {
+            // --- STATE ---
+            const [view, setView] = useState('dashboard');
+            const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+            const [productModels, setProductModels] = useState([]);
+            const [inventoryItems, setInventoryItems] = useState([]);
+            const [bookings, setBookings] = useState([]);
+            const [customers, setCustomers] = useState([]);
+            const [isDataLoading, setIsDataLoading] = useState(true);
+            
+            const [searchTerm, setSearchTerm] = useState('');
+
+            const [isProductModelModalOpen, setIsProductModelModalOpen] = useState(false);
+            const [isInventoryItemModalOpen, setIsInventoryItemModalOpen] = useState(false);
+            const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+            const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+            const [isDeviceSelectorOpen, setIsDeviceSelectorOpen] = useState(false);
+
+            const [isEditing, setIsEditing] = useState(false);
+            const [currentProductModel, setCurrentProductModel] = useState({ name: '', type: 'Máy ảnh', pricePerDay: '' });
+            const [currentInventoryItem, setCurrentInventoryItem] = useState({ serial: '', status: 'Sẵn sàng', notes: '', productModelId: '', productName: '' });
+            const [currentCustomer, setCurrentCustomer] = useState({ name: '', phone: '', notes: '' });
+            const [newBooking, setNewBooking] = useState({ customerId: '', customerName: '', customerPhone: '', startDate: '', endDate: '', items: [], totalPrice: 0, status: 'Chờ lấy máy' });
+
+            // --- DATA FETCHING ---
+            useEffect(() => {
+                const unsubProducts = db.collection('productModels').orderBy('name').onSnapshot(snap => setProductModels(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.error(err));
+                const unsubItems = db.collection('inventoryItems').orderBy('serial').onSnapshot(snap => setInventoryItems(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.error(err));
+                const unsubBookings = db.collection('bookings').orderBy('createdAt', 'desc').onSnapshot(snap => setBookings(snap.docs.map(d => ({ id: d.id, ...d.data(), startDate: d.data().startDate.toDate(), endDate: d.data().endDate.toDate() }))), err => console.error(err));
+                const unsubCustomers = db.collection('customers').orderBy('name').onSnapshot(snap => { setCustomers(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setIsDataLoading(false); }, err => { console.error(err); setIsDataLoading(false); });
+                return () => { unsubProducts(); unsubItems(); unsubBookings(); unsubCustomers(); };
+            }, []);
+
+            // --- MEMOIZED FILTERS ---
+            const filteredModels = useMemo(() => productModels.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())), [productModels, searchTerm]);
+            const filteredBookings = useMemo(() => bookings.filter(b => b.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || (b.customerId && b.customerId === searchTerm)), [bookings, searchTerm]);
+            const filteredCustomers = useMemo(() => customers.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.phone.includes(searchTerm)), [customers, searchTerm]);
+            
+            // --- HANDLERS ---
+            const handleModelSubmit = async (e) => { e.preventDefault(); if (!currentProductModel.name || !currentProductModel.pricePerDay) return; const data = { name: currentProductModel.name, type: currentProductModel.type, pricePerDay: Number(currentProductModel.pricePerDay) }; try { if (isEditing) { await db.collection('productModels').doc(currentProductModel.id).update(data); } else { await db.collection('productModels').add(data); } setIsProductModelModalOpen(false); } catch (err) { console.error(err); alert("Lỗi lưu mẫu sản phẩm!"); } };
+            const handleItemSubmit = async (e) => { e.preventDefault(); if (!currentInventoryItem.serial) return; const data = { serial: currentInventoryItem.serial, status: currentInventoryItem.status, notes: currentInventoryItem.notes, productModelId: currentInventoryItem.productModelId, productName: currentInventoryItem.productName }; try { if (isEditing) { await db.collection('inventoryItems').doc(currentInventoryItem.id).update(data); } else { await db.collection('inventoryItems').add(data); } setIsInventoryItemModalOpen(false); } catch (err) { console.error(err); alert("Lỗi lưu thiết bị!"); } };
+            const handleCustomerSubmit = async (e) => { e.preventDefault(); if (!currentCustomer.name || !currentCustomer.phone) return; const data = { name: currentCustomer.name, phone: currentCustomer.phone, notes: currentCustomer.notes }; try { if (isEditing) { await db.collection('customers').doc(currentCustomer.id).update(data); } else { const newCustomerRef = await db.collection('customers').add({ ...data, createdAt: Timestamp.now() }); if (currentCustomer.fromBooking) { setNewBooking(prev => ({...prev, customerId: newCustomerRef.id, customerName: data.name, customerPhone: data.phone })); } } setIsCustomerModalOpen(false); } catch (err) { console.error(err); alert("Lỗi lưu khách hàng!"); } };
+            const handleCreateBooking = async (e) => { e.preventDefault(); if (!newBooking.customerId || !newBooking.startDate || !newBooking.endDate || newBooking.items.length === 0) { alert("Vui lòng điền đủ thông tin."); return; } const batch = db.batch(); try { const bookingRef = db.collection('bookings').doc(); const days = Math.max(1, (new Date(newBooking.endDate) - new Date(newBooking.startDate)) / (1000 * 60 * 60 * 24) + 1); const totalPrice = newBooking.items.reduce((acc, item) => acc + Number(item.pricePerDay), 0) * days; const bookingData = { customerId: newBooking.customerId, customerName: newBooking.customerName, customerPhone: newBooking.customerPhone, startDate: Timestamp.fromDate(new Date(newBooking.startDate)), endDate: Timestamp.fromDate(new Date(newBooking.endDate)), items: newBooking.items, status: 'Chờ lấy máy', totalPrice: totalPrice, createdAt: Timestamp.now() }; batch.set(bookingRef, bookingData); newBooking.items.forEach(item => { batch.update(db.collection('inventoryItems').doc(item.itemId), { status: 'Đang thuê' }); }); await batch.commit(); setIsBookingModalOpen(false); } catch (err) { console.error(err); alert("Lỗi tạo đơn thuê!"); } };
+            const handleUpdateBookingStatus = async (bookingId, newStatus, items) => { const batch = db.batch(); try { batch.update(db.collection('bookings').doc(bookingId), { status: newStatus }); if ((newStatus === 'Đã trả' || newStatus === 'Đã hủy') && items) { items.forEach(item => { batch.update(db.collection('inventoryItems').doc(item.itemId), { status: 'Sẵn sàng' }); }); } await batch.commit(); } catch (err) { console.error(err); } };
+            const handleViewCustomerHistory = (customerId) => { setSearchTerm(customerId); setView('bookings'); };
+            const handleDeviceSelectionConfirm = (selectedItems) => { setNewBooking(prev => ({...prev, items: selectedItems})); setIsDeviceSelectorOpen(false); };
+
+            const viewTitles = { dashboard: 'Dashboard', productModels: 'Quản Lý Mẫu Sản Phẩm', inventory: 'Kho Thiết Bị', bookings: 'Quản Lý Đơn Thuê', calendar: 'Lịch Tổng Quan', customers: 'Quản Lý Khách Hàng' };
+            const handleSetView = (newView) => { setSearchTerm(''); setView(newView); setIsSidebarOpen(false); }
+
+            const renderView = () => {
+                if (isDataLoading) return <div className="flex justify-center items-center h-full"><p className="text-gray-500 mt-8">Đang tải dữ liệu...</p></div>;
+                switch (view) {
+                    case 'dashboard': return <DashboardView inventoryItems={inventoryItems} bookings={bookings} />;
+                    case 'productModels': return <ProductModelsView productModels={filteredModels} onAdd={() => { setIsEditing(false); setCurrentProductModel({ name: '', type: 'Máy ảnh', pricePerDay: '' }); setIsProductModelModalOpen(true); }} onEdit={(model) => { setIsEditing(true); setCurrentProductModel(model); setIsProductModelModalOpen(true); }} onDelete={(id) => db.collection('productModels').doc(id).delete()} onSearch={setSearchTerm} />;
+                    case 'inventory': return <InventoryView productModels={productModels} inventoryItems={inventoryItems} onAddItem={(modelId, modelName) => { setIsEditing(false); setCurrentInventoryItem({ serial: '', status: 'Sẵn sàng', notes: '', productModelId: modelId, productName: modelName }); setIsInventoryItemModalOpen(true); }} onEditItem={(item) => { setIsEditing(true); setCurrentInventoryItem(item); setIsInventoryItemModalOpen(true); }} onDeleteItem={(id) => db.collection('inventoryItems').doc(id).delete()} />;
+                    case 'bookings': return <BookingsView bookings={filteredBookings} onUpdateStatus={handleUpdateBookingStatus} onSearch={setSearchTerm} />;
+                    case 'calendar': return <CalendarView bookings={bookings} />;
+                    case 'customers': return <CustomersView customers={filteredCustomers} onEdit={(customer) => { setIsEditing(true); setCurrentCustomer(customer); setIsCustomerModalOpen(true); }} onDelete={(id) => db.collection('customers').doc(id).delete()} onSearch={setSearchTerm} onViewHistory={handleViewCustomerHistory} />;
+                    default: return null;
+                }
+            };
+            
+            return (
+                 <div className="flex h-screen bg-gray-100">
+                    {isSidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
+                    <div className={`fixed inset-y-0 left-0 w-64 bg-gray-800 text-white flex flex-col transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-30`}>
+                        <div className="px-6 py-4 border-b border-gray-700"><h2 className="text-2xl font-semibold">Lens Manager</h2></div>
+                        <nav className="flex-1 px-2 py-4 space-y-1">
+                            <a href="#" onClick={(e) => handleSetView('dashboard')} className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${view === 'dashboard' ? 'bg-gray-900' : 'hover:bg-gray-700'}`}>Dashboard</a>
+                            <a href="#" onClick={(e) => handleSetView('productModels')} className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${view === 'productModels' ? 'bg-gray-900' : 'hover:bg-gray-700'}`}>Mẫu Sản Phẩm</a>
+                            <a href="#" onClick={(e) => handleSetView('inventory')} className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${view === 'inventory' ? 'bg-gray-900' : 'hover:bg-gray-700'}`}>Kho Thiết Bị</a>
+                            <a href="#" onClick={(e) => handleSetView('bookings')} className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${view === 'bookings' ? 'bg-gray-900' : 'hover:bg-gray-700'}`}>Đơn Thuê</a>
+                            <a href="#" onClick={(e) => handleSetView('customers')} className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${view === 'customers' ? 'bg-gray-900' : 'hover:bg-gray-700'}`}>Khách Hàng</a>
+                            <a href="#" onClick={(e) => handleSetView('calendar')} className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${view === 'calendar' ? 'bg-gray-900' : 'hover:bg-gray-700'}`}>Lịch</a>
+                        </nav>
+                    </div>
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                        <header className="bg-white shadow-sm z-10"><div className="w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center"><div className="flex items-center"><button className="text-gray-500 focus:outline-none md:hidden" onClick={() => setIsSidebarOpen(true)}><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button><h1 className="text-xl sm:text-2xl font-bold text-gray-900 ml-4 md:ml-0">{viewTitles[view]}</h1></div><div className="flex items-center space-x-4"><button onClick={onLogout} className="text-sm font-medium text-red-600 hover:text-red-800 bg-red-100 p-2 rounded-full sm:rounded-md sm:px-3 sm:py-2"><span className="hidden sm:inline">Đăng xuất</span></button></div></div></header>
+                        <main className="flex-1 overflow-y-auto p-4 sm:p-6"><div className="mb-6 flex justify-end">
+                            {view === 'bookings' && <button onClick={() => { setNewBooking({ customerId: '', customerName: '', customerPhone: '', startDate: '', endDate: '', items: [], totalPrice: 0, status: 'Chờ lấy máy' }); setIsBookingModalOpen(true); }} className="bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-cyan-700 transition duration-300">+ Tạo Đơn Thuê</button>}
+                        </div>{renderView()}</main>
+                    </div>
+                    {isProductModelModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md"><h2 className="text-2xl font-bold mb-6">{isEditing ? 'Sửa Mẫu Sản Phẩm' : 'Thêm Mẫu Mới'}</h2><form onSubmit={handleModelSubmit}><div className="space-y-4"><input type="text" value={currentProductModel.name} onChange={(e) => setCurrentProductModel({...currentProductModel, name: e.target.value})} placeholder="Tên mẫu (VD: Sony A7S III)" className="w-full px-3 py-2 border rounded-lg" required /><select value={currentProductModel.type} onChange={(e) => setCurrentProductModel({...currentProductModel, type: e.target.value})} className="w-full px-3 py-2 border rounded-lg"><option>Máy ảnh</option><option>Ống kính</option><option>Phụ kiện khác</option></select><input type="number" value={currentProductModel.pricePerDay} onChange={(e) => setCurrentProductModel({...currentProductModel, pricePerDay: e.target.value})} placeholder="Giá thuê / ngày" className="w-full px-3 py-2 border rounded-lg" required /></div><div className="flex justify-end mt-6 space-x-4"><button type="button" onClick={() => setIsProductModelModalOpen(false)} className="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button><button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Lưu</button></div></form></div></div>)}
+                    {isInventoryItemModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md"><h2 className="text-2xl font-bold mb-6">{isEditing ? 'Sửa Thiết Bị' : `Thêm S/N cho ${currentInventoryItem.productName}`}</h2><form onSubmit={handleItemSubmit}><div className="space-y-4"><input type="text" value={currentInventoryItem.serial} onChange={(e) => setCurrentInventoryItem({...currentInventoryItem, serial: e.target.value})} placeholder="Số Seri (S/N)" className="w-full px-3 py-2 border rounded-lg" required /><select value={currentInventoryItem.status} onChange={(e) => setCurrentInventoryItem({...currentInventoryItem, status: e.target.value})} className="w-full px-3 py-2 border rounded-lg"><option>Sẵn sàng</option><option>Bảo trì</option></select><textarea value={currentInventoryItem.notes} onChange={(e) => setCurrentInventoryItem({...currentInventoryItem, notes: e.target.value})} placeholder="Ghi chú" className="w-full px-3 py-2 border rounded-lg h-24"></textarea></div><div className="flex justify-end mt-6 space-x-4"><button type="button" onClick={() => setIsInventoryItemModalOpen(false)} className="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button><button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-lg">Lưu</button></div></form></div></div>)}
+                    {isCustomerModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md"><h2 className="text-2xl font-bold mb-6">{isEditing ? 'Sửa Khách Hàng' : 'Thêm Khách Hàng Mới'}</h2><form onSubmit={handleCustomerSubmit}><div className="space-y-4"><input type="text" value={currentCustomer.name} onChange={(e) => setCurrentCustomer({...currentCustomer, name: e.target.value})} placeholder="Tên khách hàng" className="w-full px-3 py-2 border rounded-lg" required /><input type="tel" value={currentCustomer.phone} onChange={(e) => setCurrentCustomer({...currentCustomer, phone: e.target.value})} placeholder="Số điện thoại" className="w-full px-3 py-2 border rounded-lg" required /><textarea value={currentCustomer.notes} onChange={(e) => setCurrentCustomer({...currentCustomer, notes: e.target.value})} placeholder="Ghi chú" className="w-full px-3 py-2 border rounded-lg h-24"></textarea></div><div className="flex justify-end mt-6 space-x-4"><button type="button" onClick={() => setIsCustomerModalOpen(false)} className="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button><button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-lg">Lưu</button></div></form></div></div>)}
+                    {isBookingModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-lg"><h2 className="text-2xl font-bold mb-6">Tạo Đơn Thuê Mới</h2><form onSubmit={handleCreateBooking}><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="md:col-span-2"><label className="text-sm font-medium text-gray-700">Chọn khách hàng</label><div className="flex items-center space-x-2"><select value={newBooking.customerId} onChange={(e) => { const c = customers.find(c => c.id === e.target.value); if(c) setNewBooking({...newBooking, customerId: c.id, customerName: c.name, customerPhone: c.phone }); }} className="w-full px-3 py-2 border rounded-lg" required><option value="">-- Chọn khách hàng --</option>{customers.map(c => (<option key={c.id} value={c.id}>{c.name} - {c.phone}</option>))}</select><button type="button" onClick={() => { setIsEditing(false); setCurrentCustomer({ name: '', phone: '', notes: '', fromBooking: true }); setIsCustomerModalOpen(true); }} className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600">+</button></div></div><div><label className="text-sm font-medium text-gray-700">Ngày thuê</label><input type="date" name="startDate" value={newBooking.startDate} onChange={(e) => setNewBooking({...newBooking, startDate: e.target.value})} className="w-full px-3 py-2 border rounded-lg" required /></div><div><label className="text-sm font-medium text-gray-700">Ngày trả</label><input type="date" name="endDate" value={newBooking.endDate} onChange={(e) => setNewBooking({...newBooking, endDate: e.target.value})} className="w-full px-3 py-2 border rounded-lg" required /></div>
+                        <div className="md:col-span-2">
+                            <label className="text-sm font-medium text-gray-700">Thiết bị đã chọn</label>
+                            <div className="mt-2 p-2 border rounded-lg min-h-[40px] bg-gray-50 flex flex-wrap gap-2">
+                                {newBooking.items.length === 0 ? <span className="text-gray-400">Chưa có thiết bị nào</span> : newBooking.items.map(item => (<span key={item.itemId} className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-1 rounded-full flex items-center">{item.productName} (S/N: {item.serial})<button type="button" onClick={() => setNewBooking(prev => ({...prev, items: prev.items.filter(i => i.itemId !== item.itemId)}))} className="ml-2 text-indigo-500 hover:text-indigo-700">x</button></span>))}
+                            </div>
+                            <button type="button" onClick={() => setIsDeviceSelectorOpen(true)} className="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-semibold">[+] Chọn thiết bị...</button>
+                        </div>
+                    </div><div className="flex justify-end mt-6 space-x-4"><button type="button" onClick={() => setIsBookingModalOpen(false)} className="px-4 py-2 bg-gray-200 rounded-lg">Hủy</button><button type="submit" className="px-4 py-2 bg-cyan-600 text-white rounded-lg">Tạo Đơn</button></div></form></div></div>)}
+                    {isDeviceSelectorOpen && <DeviceSelectorModal productModels={productModels} inventoryItems={inventoryItems} previouslySelectedItems={newBooking.items} onConfirm={handleDeviceSelectionConfirm} onCancel={() => setIsDeviceSelectorOpen(false)} />}
+                </div>
+            );
+        }
+        
+        function DeviceSelectorModal({ productModels, inventoryItems, previouslySelectedItems, onConfirm, onCancel }) {
+            const [selectedItems, setSelectedItems] = useState(previouslySelectedItems || []);
+            const [searchTerm, setSearchTerm] = useState('');
+
+            const handleToggle = (item, model) => {
+                const isSelected = selectedItems.some(i => i.itemId === item.id);
+                if (isSelected) {
+                    setSelectedItems(prev => prev.filter(i => i.itemId !== item.id));
+                } else {
+                    setSelectedItems(prev => [...prev, { itemId: item.id, serial: item.serial, productName: model.name, pricePerDay: model.pricePerDay }]);
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl flex flex-col" style={{height: '90vh'}}>
+                        <h2 className="text-2xl font-bold p-6 border-b">Chọn Thiết Bị</h2>
+                        <div className="p-6 border-b"><input type="text" placeholder="Tìm kiếm theo tên mẫu hoặc S/N..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full px-4 py-2 border rounded-lg"/></div>
+                        <div className="flex-1 overflow-y-auto p-6">
+                            <div className="space-y-4">
+                                {productModels.map(model => {
+                                    const availableItems = inventoryItems.filter(i => i.productModelId === model.id && i.status === 'Sẵn sàng' && (model.name.toLowerCase().includes(searchTerm.toLowerCase()) || i.serial.toLowerCase().includes(searchTerm.toLowerCase())));
+                                    if(availableItems.length === 0 && !model.name.toLowerCase().includes(searchTerm.toLowerCase())) return null;
+                                    return (
+                                        <div key={model.id}>
+                                            <h3 className="font-bold text-lg text-gray-700">{model.name}</h3>
+                                            <div className="mt-2 space-y-2 pl-4">
+                                                {availableItems.length > 0 ? availableItems.map(item => (
+                                                    <label key={item.id} className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                                                        <input type="checkbox" checked={selectedItems.some(i => i.itemId === item.id)} onChange={() => handleToggle(item, model)} className="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
+                                                        <p className="ml-4 font-mono text-sm text-gray-800">S/N: {item.serial}</p>
+                                                    </label>
+                                                )) : <p className="text-sm text-gray-400 italic">Không có thiết bị nào sẵn sàng.</p>}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                        <div className="p-6 border-t flex justify-end space-x-4">
+                            <button type="button" onClick={onCancel} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Hủy</button>
+                            <button type="button" onClick={() => onConfirm(selectedItems)} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Xác nhận</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Component App chính (Quản lý trạng thái Đăng nhập) ---
+        function App() {
+            const [user, setUser] = useState(null);
+            const [isLoading, setIsLoading] = useState(true);
+
+            useEffect(() => {
+                const unsubscribe = auth.onAuthStateChanged(currentUser => {
+                    setUser(currentUser);
+                    setIsLoading(false);
+                });
+                return () => unsubscribe();
+            }, []);
+
+            const handleLogout = () => {
+                auth.signOut();
+            };
+
+            if (isLoading) {
+                return <div className="flex h-screen justify-center items-center">Đang kiểm tra phiên đăng nhập...</div>;
+            }
+
+            if (!user) {
+                return <LoginScreen />;
+            }
+
+            return <AdminPanel user={user} onLogout={handleLogout} />;
+        }
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>
