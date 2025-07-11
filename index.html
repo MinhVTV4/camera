@@ -1,1277 +1,516 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="dark">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lens Manager - Quản lý cho thuê</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Gear Hub - Quản lý cho thuê</title>
     
-    <!-- Tailwind CSS for styling -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Moment.js for date handling -->
-    <script src="https://unpkg.com/moment@2.29.4/min/moment.min.js"></script>
-    <script src="https://unpkg.com/moment@2.29.4/locale/vi.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Chart.js for analytics -->
+    <!-- Flatpickr Date Picker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    
+    <!-- JS Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Firebase SDKs (Modular v9+) -->
-    <script type="module">
-        // Import functions from the Firebase SDKs
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { 
-            getFirestore, collection, onSnapshot, orderBy, query, 
-            addDoc, doc, updateDoc, deleteDoc, Timestamp, writeBatch, where
-        } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
-        
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyB8KNNZnFSl54y0hXG_iNPksNC6DAyp-0U",
-            authDomain: "lens-df7e7.firebaseapp.com",
-            projectId: "lens-df7e7",
-            storageBucket: "lens-df7e7.appspot.com",
-            messagingSenderId: "772821461113",
-            appId: "1:772821461113:web:2166b475800e7687bd0ca8"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        // Make db and auth globally accessible
-        window.db = db;
-        window.auth = auth;
-        window.firebase = {
-            onAuthStateChanged,
-            signInWithEmailAndPassword,
-            signOut,
-            collection,
-            onSnapshot,
-            orderBy,
-            query,
-            addDoc,
-            doc,
-            updateDoc,
-            deleteDoc,
-            Timestamp,
-            writeBatch,
-            where
-        };
-    </script>
-
     <style>
-        /* Custom styles for modals and transitions */
-        .modal-overlay {
-            transition: opacity 0.3s ease;
-        }
-        .modal-container {
-            transition: transform 0.3s ease, opacity 0.3s ease;
-        }
-        .nav-link {
-            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-        }
-        .btn, .dashboard-card {
-            transition: all 0.2s ease-in-out;
-        }
-        .btn:hover, .dashboard-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .btn:active {
-            transform: translateY(0);
-        }
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        .flatpickr-calendar { background-color: #374151; border-color: #4b5563; }
+        .flatpickr-day { color: #d1d5db; }
+        .flatpickr-day:hover { background-color: #4b5563; }
+        .flatpickr-day.selected { background-color: #3b82f6; border-color: #3b82f6; }
+        .flatpickr-time input.flatpickr-hour, .flatpickr-time input.flatpickr-minute { color: #d1d5db !important; }
+        .numInputWrapper span { border-color: #d1d5db !important; }
     </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Main container for the app -->
-    <div id="app-container">
-        <!-- This will be populated by JavaScript -->
-    </div>
-    <!-- Container for modals -->
-    <div id="modal-root"></div>
+<body class="bg-gray-900 text-gray-200">
 
+    <!-- Loading Indicator -->
+    <div id="loading-indicator" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50">
+        <div class="text-center"><svg class="animate-spin h-10 w-10 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="mt-4 text-lg">Đang tải ứng dụng...</p></div>
+    </div>
+
+    <!-- Auth Container -->
+    <div id="auth-container" class="hidden">
+        <div id="login-page" class="min-h-screen flex items-center justify-center p-4"><div class="w-full max-w-md bg-gray-800 rounded-2xl shadow-xl p-8"><h2 class="text-3xl font-bold text-center text-white mb-2">Đăng Nhập</h2><p class="text-center text-gray-400 mb-8">Chào mừng trở lại!</p><form id="login-form"><div class="mb-4"><label for="login-email" class="block text-gray-300 mb-2">Email</label><input type="email" id="login-email" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required></div><div class="mb-6"><label for="login-password" class="block text-gray-300 mb-2">Mật khẩu</label><input type="password" id="login-password" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required></div><p id="login-error" class="text-red-400 text-sm mb-4 text-center"></p><button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition-colors duration-300">Đăng Nhập</button></form><p class="text-center mt-6 text-gray-400">Chưa có tài khoản? <a href="#" id="show-register" class="text-blue-400 hover:underline">Tạo tài khoản</a></p></div></div>
+        <div id="register-page" class="min-h-screen flex items-center justify-center p-4"><div class="w-full max-w-md bg-gray-800 rounded-2xl shadow-xl p-8"><h2 class="text-3xl font-bold text-center text-white mb-2">Tạo Tài Khoản</h2><p class="text-center text-gray-400 mb-8">Bắt đầu quản lý thiết bị của bạn.</p><form id="register-form"><div class="mb-4"><label for="register-email" class="block text-gray-300 mb-2">Email</label><input type="email" id="register-email" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required></div><div class="mb-6"><label for="register-password" class="block text-gray-300 mb-2">Mật khẩu</label><input type="password" id="register-password" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required></div><p id="register-error" class="text-red-400 text-sm mb-4 text-center"></p><button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md transition-colors duration-300">Đăng Ký</button></form><p class="text-center mt-6 text-gray-400">Đã có tài khoản? <a href="#" id="show-login" class="text-blue-400 hover:underline">Đăng nhập ngay</a></p></div></div>
+    </div>
+
+    <!-- Main App View -->
+    <div id="app-view" class="hidden"><div class="relative md:flex w-full h-screen">
+        <aside id="sidebar" class="bg-gray-800 text-gray-100 w-64 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-40 flex flex-col"><div class="flex items-center justify-center h-20 border-b border-gray-700"><svg class="h-8 w-8 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="text-2xl font-bold">GearHub</span></div><nav id="main-nav" class="flex-grow px-4 py-4"><a href="#dashboard" class="nav-link flex items-center px-4 py-3 rounded-lg"><svg class="h-6 w-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>Dashboard</a><a href="#equipment" class="nav-link flex items-center px-4 py-3 mt-2 rounded-lg"><svg class="h-6 w-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v11.494m-9-5.747h18"></path></svg>Thiết bị</a><a href="#customers" class="nav-link flex items-center px-4 py-3 mt-2 rounded-lg"><svg class="h-6 w-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>Khách hàng</a><a href="#rentals" class="nav-link flex items-center px-4 py-3 mt-2 rounded-lg"><svg class="h-6 w-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>Đơn thuê</a></nav><div class="px-4 py-4 border-t border-gray-700"><button id="logout-button" class="w-full flex items-center justify-center px-4 py-3 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors"><svg class="h-6 w-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>Đăng xuất</button></div></aside>
+        <div class="flex-1 flex flex-col"><header class="bg-gray-800 shadow-md md:hidden flex items-center justify-between p-4"><button id="sidebar-toggle" class="text-gray-300 hover:text-white focus:outline-none"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button><div id="header-title" class="text-xl font-bold">Dashboard</div><div></div></header>
+            <main class="flex-1 p-6 lg:p-8 bg-gray-900 overflow-y-auto">
+                <div id="dashboard-page" class="page-content">
+                    <h1 class="text-3xl font-bold text-white mb-6">Tổng quan</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-gray-800 p-6 rounded-xl shadow-lg"><h3 class="text-gray-400 text-sm font-medium">Doanh thu hôm nay</h3><p id="revenue-today" class="text-3xl font-bold text-green-400 mt-2">0 VNĐ</p></div>
+                        <div class="bg-gray-800 p-6 rounded-xl shadow-lg"><h3 class="text-gray-400 text-sm font-medium">Doanh thu tuần này</h3><p id="revenue-week" class="text-3xl font-bold text-green-400 mt-2">0 VNĐ</p></div>
+                        <div class="bg-gray-800 p-6 rounded-xl shadow-lg"><h3 class="text-gray-400 text-sm font-medium">Doanh thu tháng này</h3><p id="revenue-month" class="text-3xl font-bold text-green-400 mt-2">0 VNĐ</p></div>
+                        <div class="bg-red-900/50 border border-red-700 p-6 rounded-xl shadow-lg"><h3 class="text-red-300 text-sm font-medium">Đơn hàng quá hạn</h3><p id="overdue-count" class="text-3xl font-bold text-red-400 mt-2">0</p></div>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-gray-800 p-6 rounded-xl shadow-lg"><h3 class="text-gray-400 text-sm font-medium">Thiết bị sẵn có</h3><p id="available-count" class="text-3xl font-bold text-white mt-2">0</p></div>
+                        <div class="bg-gray-800 p-6 rounded-xl shadow-lg"><h3 class="text-gray-400 text-sm font-medium">Thiết bị đang thuê</h3><p id="rented-count" class="text-3xl font-bold text-white mt-2">0</p></div>
+                        <div class="bg-gray-800 p-6 rounded-xl shadow-lg"><h3 class="text-gray-400 text-sm font-medium">Tổng số khách hàng</h3><p id="customer-count" class="text-3xl font-bold text-white mt-2">0</p></div>
+                        <div class="bg-gray-800 p-6 rounded-xl shadow-lg"><h3 class="text-gray-400 text-sm font-medium">Tổng số thiết bị</h3><p id="total-count" class="text-3xl font-bold text-white mt-2">0</p></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                        <div class="lg:col-span-2 bg-gray-800 p-6 rounded-xl shadow-lg"><h2 class="text-xl font-semibold text-white mb-4">Cảnh báo: Đơn hàng quá hạn</h2><div id="overdue-orders-list" class="space-y-4"></div></div>
+                        <div class="lg:col-span-1 bg-gray-800 p-6 rounded-xl shadow-lg"><h2 class="text-xl font-semibold text-white mb-4">Đơn sắp đến hạn trả</h2><div id="upcoming-returns-list" class="space-y-4"></div></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 bg-gray-800 p-6 rounded-xl shadow-lg"><h2 class="text-xl font-semibold text-white mb-4">Doanh thu 7 ngày qua</h2><canvas id="revenue-chart"></canvas></div>
+                        <div class="lg:col-span-1 bg-gray-800 p-6 rounded-xl shadow-lg"><h2 class="text-xl font-semibold text-white mb-4">Hoạt động gần đây</h2><div id="recent-activity-list" class="space-y-3"></div></div>
+                    </div>
+                </div>
+                <div id="equipment-page" class="page-content hidden"><div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Thiết bị</h1><button id="add-equipment-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Thêm thiết bị</button></div><div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Tên thiết bị</th><th class="p-4 font-semibold">S/N</th><th class="p-4 font-semibold">Loại</th><th class="p-4 font-semibold">Trạng thái</th><th class="p-4 font-semibold text-right">Giá thuê/ngày</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="equipment-table-body"></tbody></table></div></div>
+                <div id="customers-page" class="page-content hidden"><div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Khách hàng</h1><button id="add-customer-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Thêm khách hàng</button></div><div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Họ và tên</th><th class="p-4 font-semibold">Số điện thoại</th><th class="p-4 font-semibold">Email</th><th class="p-4 font-semibold">Số CCCD</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="customer-table-body"></tbody></table></div></div>
+                <div id="rentals-page" class="page-content hidden"><div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Đơn thuê</h1><button id="add-rental-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Tạo đơn thuê</button></div><div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Mã Đơn</th><th class="p-4 font-semibold">Khách hàng</th><th class="p-4 font-semibold">Ngày thuê</th><th class="p-4 font-semibold">Ngày trả</th><th class="p-4 font-semibold">Trạng thái</th><th class="p-4 font-semibold text-right">Tổng tiền</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="rental-table-body"></tbody></table></div></div>
+            </main>
+        </div><div id="sidebar-overlay" class="fixed inset-0 bg-black opacity-50 z-30 hidden md:hidden"></div>
+    </div></div>
+
+    <!-- Modals (Equipment, Customer, Delete) -->
+    <div id="equipment-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-8 transform transition-all scale-95" id="equipment-modal-content"><div class="flex justify-between items-center mb-6"><h2 id="modal-title" class="text-2xl font-bold text-white"></h2><button id="close-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div><form id="equipment-form"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="eq-name" class="block text-gray-300 mb-2">Tên thiết bị</label><input type="text" id="eq-name" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" required></div><div><label for="eq-brand" class="block text-gray-300 mb-2">Hãng</label><input type="text" id="eq-brand" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" required></div><div><label for="eq-serial" class="block text-gray-300 mb-2">Serial Number (S/N)</label><input type="text" id="eq-serial" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" required></div><div><label for="eq-type" class="block text-gray-300 mb-2">Loại thiết bị</label><select id="eq-type" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600"><option>Máy ảnh</option><option>Ống kính</option><option>Tripod</option><option>Đèn</option><option>Micro</option><option>Thẻ nhớ</option><option>Khác</option></select></div><div class="md:col-span-2"><label for="eq-rate" class="block text-gray-300 mb-2">Giá thuê / ngày (VNĐ)</label><input type="number" id="eq-rate" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" required></div></div><p id="equipment-form-error" class="text-red-400 text-sm mt-4 text-center"></p><div class="mt-8 flex justify-end"><button type="button" id="cancel-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg mr-4">Hủy</button><button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">Lưu</button></div></form></div></div>
+    <div id="customer-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-8 transform transition-all scale-95" id="customer-modal-content"><div class="flex justify-between items-center mb-6"><h2 id="customer-modal-title" class="text-2xl font-bold text-white"></h2><button id="close-customer-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div><form id="customer-form"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="cus-name" class="block text-gray-300 mb-2">Họ và tên</label><input type="text" id="cus-name" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" required></div><div><label for="cus-phone" class="block text-gray-300 mb-2">Số điện thoại</label><input type="tel" id="cus-phone" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" required></div><div><label for="cus-email" class="block text-gray-300 mb-2">Email</label><input type="email" id="cus-email" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600"></div><div><label for="cus-idcard" class="block text-gray-300 mb-2">Số CCCD/CMND</label><input type="text" id="cus-idcard" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600"></div></div><p id="customer-form-error" class="text-red-400 text-sm mt-4 text-center"></p><div class="mt-8 flex justify-end"><button type="button" id="cancel-customer-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg mr-4">Hủy</button><button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">Lưu</button></div></form></div></div>
+    <div id="confirm-delete-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-8 transform transition-all scale-95"><h3 class="text-xl font-bold text-white mb-4">Xác nhận xóa</h3><p class="text-gray-400 mb-6">Bạn có chắc chắn muốn xóa <strong id="item-to-delete-name" class="font-bold text-amber-400"></strong>? Hành động này không thể hoàn tác.</p><div class="flex justify-end gap-4"><button id="cancel-delete-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg">Hủy</button><button id="confirm-delete-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">Xóa</button></div></div></div>
+
+    <!-- Add Rental Modal -->
+    <div id="rental-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-4xl p-8 transform transition-all scale-95 flex flex-col h-[90vh]">
+            <div class="flex justify-between items-center mb-6 flex-shrink-0"><h2 class="text-2xl font-bold text-white">Tạo đơn thuê mới</h2><button id="close-rental-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div>
+            <div class="flex-grow overflow-y-auto pr-2">
+                <form id="rental-form">
+                    <div class="mb-6"><h3 class="text-lg font-semibold text-blue-400 border-b border-gray-700 pb-2 mb-4">1. Thông tin khách hàng</h3><div class="relative"><label for="customer-search" class="block text-gray-300 mb-2">Tìm khách hàng (theo tên hoặc SĐT)</label><input type="text" id="customer-search" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" autocomplete="off"><div id="customer-search-results" class="absolute w-full bg-gray-600 rounded-md mt-1 z-10 max-h-48 overflow-y-auto hidden"></div></div><div id="selected-customer-info" class="mt-4 p-4 bg-gray-700/50 rounded-lg hidden"></div></div>
+                    <div class="mb-6"><h3 class="text-lg font-semibold text-blue-400 border-b border-gray-700 pb-2 mb-4">2. Thêm thiết bị</h3>
+                        <label for="equipment-search" class="block text-gray-300 mb-2">Nhập Serial Number và nhấn Thêm</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="equipment-search" class="flex-grow p-3 bg-gray-700 rounded-md border border-gray-600" autocomplete="off">
+                            <button type="button" id="add-equipment-to-cart-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg">Thêm</button>
+                        </div>
+                        <p id="equipment-search-error" class="text-red-400 text-sm mt-1"></p>
+                        <div id="rental-cart" class="mt-4 space-y-2"></div>
+                    </div>
+                    <div class="mb-6"><h3 class="text-lg font-semibold text-blue-400 border-b border-gray-700 pb-2 mb-4">3. Thời gian & Chi phí</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="start-date" class="block text-gray-300 mb-2">Ngày thuê</label><input type="text" id="start-date" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600 cursor-pointer" readonly></div><div><label for="end-date" class="block text-gray-300 mb-2">Ngày trả</label><input type="text" id="end-date" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600 cursor-pointer" readonly></div></div><div id="rental-summary" class="mt-4 p-4 bg-gray-700/50 rounded-lg hidden"><div class="flex justify-between items-center"><span class="text-gray-400">Tổng số ngày thuê:</span><span id="rental-days" class="font-semibold text-white">0 ngày</span></div><div class="flex justify-between items-center mt-2"><span class="text-gray-400 text-xl">Tổng chi phí:</span><span id="rental-total-cost" class="font-bold text-2xl text-green-400">0 VNĐ</span></div></div></div>
+                </form>
+            </div>
+            <div class="mt-8 flex justify-end flex-shrink-0"><button type="button" id="cancel-rental-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg mr-4">Hủy</button><button type="submit" id="save-rental-btn" form="rental-form" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>Lưu đơn thuê</button></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
     <script type="module">
-        // Wait for Firebase to be initialized
-        function onFirebaseReady(callback) {
-            if (window.db && window.auth) {
-                callback();
-            } else {
-                setTimeout(() => onFirebaseReady(callback), 50);
-            }
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, where, getDocs, doc, getDoc, updateDoc, deleteDoc, writeBatch, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCx5bdVV6suNdO0UcyERAwbNHBFj2xgzwE", authDomain: "lamthuy.firebaseapp.com", projectId: "lamthuy", storageBucket: "lamthuy.appspot.com", messagingSenderId: "326127588046", appId: "1:326127588046:web:040bab99b771b081d9b69f" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- DOM Elements ---
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const authContainer = document.getElementById('auth-container');
+        const appView = document.getElementById('app-view');
+        const loginForm = document.getElementById('login-form'), registerForm = document.getElementById('register-form');
+        const showRegisterLink = document.getElementById('show-register'), showLoginLink = document.getElementById('show-login');
+        const loginErrorEl = document.getElementById('login-error'), registerErrorEl = document.getElementById('register-error');
+        const logoutButton = document.getElementById('logout-button');
+        const sidebarToggle = document.getElementById('sidebar-toggle'), sidebar = document.getElementById('sidebar'), sidebarOverlay = document.getElementById('sidebar-overlay');
+        const mainNav = document.getElementById('main-nav'), headerTitle = document.getElementById('header-title');
+        
+        // Modals
+        const equipmentModal = document.getElementById('equipment-modal'), customerModal = document.getElementById('customer-modal'), confirmDeleteModal = document.getElementById('confirm-delete-modal'), rentalModal = document.getElementById('rental-modal');
+        const equipmentModalContent = document.getElementById('equipment-modal-content'), customerModalContent = document.getElementById('customer-modal-content');
+        
+        // Dashboard
+        const revenueTodayEl = document.getElementById('revenue-today'), revenueWeekEl = document.getElementById('revenue-week'), revenueMonthEl = document.getElementById('revenue-month'), overdueCountEl = document.getElementById('overdue-count');
+        const overdueOrdersList = document.getElementById('overdue-orders-list'), upcomingReturnsList = document.getElementById('upcoming-returns-list');
+        const revenueChartCanvas = document.getElementById('revenue-chart');
+        const recentActivityList = document.getElementById('recent-activity-list');
+        const availableCountEl = document.getElementById('available-count'), rentedCountEl = document.getElementById('rented-count'), customerCountEl = document.getElementById('customer-count'), totalCountEl = document.getElementById('total-count');
+
+
+        // Equipment Elements
+        const addEquipmentBtn = document.getElementById('add-equipment-btn');
+        const modalTitle = document.getElementById('modal-title');
+        const closeModalBtn = document.getElementById('close-modal-btn'), cancelModalBtn = document.getElementById('cancel-modal-btn');
+        const equipmentForm = document.getElementById('equipment-form'), equipmentTableBody = document.getElementById('equipment-table-body'), equipmentFormError = document.getElementById('equipment-form-error');
+        
+        // Customer Elements
+        const addCustomerBtn = document.getElementById('add-customer-btn');
+        const customerModalTitle = document.getElementById('customer-modal-title');
+        const closeCustomerModalBtn = document.getElementById('close-customer-modal-btn'), cancelCustomerModalBtn = document.getElementById('cancel-customer-modal-btn');
+        const customerForm = document.getElementById('customer-form'), customerTableBody = document.getElementById('customer-table-body'), customerFormError = document.getElementById('customer-form-error');
+        
+        // Delete Modal Elements
+        const itemToDeleteName = document.getElementById('item-to-delete-name');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn'), confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+
+        // Rental Page
+        const addRentalBtn = document.getElementById('add-rental-btn');
+        const rentalTableBody = document.getElementById('rental-table-body');
+        const rentalForm = document.getElementById('rental-form');
+        const customerSearchInput = document.getElementById('customer-search'), customerSearchResults = document.getElementById('customer-search-results'), selectedCustomerInfo = document.getElementById('selected-customer-info');
+        const equipmentSearchInput = document.getElementById('equipment-search'), equipmentSearchError = document.getElementById('equipment-search-error'), addEquipmentToCartBtn = document.getElementById('add-equipment-to-cart-btn');
+        const rentalCartDiv = document.getElementById('rental-cart');
+        const startDateInput = document.getElementById('start-date'), endDateInput = document.getElementById('end-date');
+        const rentalSummaryDiv = document.getElementById('rental-summary'), rentalDaysEl = document.getElementById('rental-days'), rentalTotalCostEl = document.getElementById('rental-total-cost');
+        const saveRentalBtn = document.getElementById('save-rental-btn');
+
+        // --- App State ---
+        let listeners = { equipment: null, customer: null, rental: null, dashboardRentals: null, dashboardActivity: null, dashboardEquipment: null, dashboardCustomers: null };
+        let currentEditId = null, currentCustomerEditId = null;
+        let itemToDeleteId = null, itemToDeleteType = '';
+        let rentalState = { customer: null, items: [], startDate: null, endDate: null, totalCost: 0, days: 0 };
+        let datePickerStart, datePickerEnd;
+        let revenueChart = null;
+
+        // --- UI / View Management ---
+        function updateUI(state) {
+            loadingIndicator.classList.add('hidden'); authContainer.classList.add('hidden'); appView.classList.add('hidden'); document.getElementById('login-page').classList.add('hidden'); document.getElementById('register-page').classList.add('hidden');
+            if (state === 'loading') { loadingIndicator.classList.remove('hidden'); } 
+            else if (state === 'login') { authContainer.classList.remove('hidden'); document.getElementById('login-page').classList.remove('hidden'); } 
+            else if (state === 'register') { authContainer.classList.remove('hidden'); document.getElementById('register-page').classList.remove('hidden'); } 
+            else if (state === 'app') { appView.classList.remove('hidden'); }
         }
 
-        onFirebaseReady(() => {
-            const { 
-                onAuthStateChanged, signInWithEmailAndPassword, signOut,
-                collection, onSnapshot, orderBy, query, addDoc, doc, 
-                updateDoc, deleteDoc, Timestamp, writeBatch, where
-            } = window.firebase;
-            const db = window.db;
-            const auth = window.auth;
-
-            const appContainer = document.getElementById('app-container');
-            const modalRoot = document.getElementById('modal-root');
-
-            // --- GLOBAL STATE ---
-            let state = {
-                user: null,
-                view: 'dashboard',
-                productModels: [],
-                inventoryItems: [],
-                bookings: [],
-                customers: [],
-                searchTerm: '',
-                isDataLoading: true,
-                modalStack: [],
-                currentBooking: null,
-            };
-
-            // --- UTILITY FUNCTIONS ---
-            const formatDate = (date) => date ? new Date(date).toLocaleDateString('vi-VN') : '';
-            const formatInputDate = (date) => date ? new Date(date).toISOString().split('T')[0] : '';
-            const formatCurrency = (number) => (typeof number === 'number' ? number : 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
-            const getStatusClass = (status) => {
-                switch (status) {
-                    case 'Sẵn sàng': return 'bg-green-100 text-green-800';
-                    case 'Đang thuê': return 'bg-yellow-100 text-yellow-800';
-                    case 'Bảo trì': return 'bg-red-100 text-red-800';
-                    case 'Chờ lấy máy': return 'bg-blue-100 text-blue-800';
-                    case 'Đã trả': return 'bg-gray-200 text-gray-800';
-                    case 'Đã hủy': return 'bg-pink-100 text-pink-800';
-                    default: return 'bg-gray-100 text-gray-800';
-                }
-            };
-            // Animation for counting numbers
-            function animateValue(obj, start, end, duration, isCurrency) {
-                let startTimestamp = null;
-                const step = (timestamp) => {
-                    if (!startTimestamp) startTimestamp = timestamp;
-                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                    const currentValue = Math.floor(progress * (end - start) + start);
-                     if (isCurrency) {
-                        obj.innerHTML = formatCurrency(currentValue);
-                    } else {
-                        obj.innerHTML = currentValue;
-                    }
-                    if (progress < 1) {
-                        window.requestAnimationFrame(step);
-                    }
-                };
-                window.requestAnimationFrame(step);
-            }
-
-            // --- MODAL MANAGEMENT ---
-            function openModal(modalHtml) {
-                state.modalStack.push(modalHtml);
-                renderModals();
-            }
-
-            function closeModal() {
-                state.modalStack.pop();
-                renderModals();
-            }
-
-            function renderModals() {
-                if (state.modalStack.length === 0) {
-                    modalRoot.innerHTML = '';
-                    return;
-                }
-                modalRoot.innerHTML = state.modalStack[state.modalStack.length - 1];
-                
-                modalRoot.querySelector('.modal-close-btn')?.addEventListener('click', closeModal);
-                modalRoot.querySelector('.modal-overlay')?.addEventListener('click', (e) => {
-                    if (e.target === e.currentTarget) {
-                        closeModal();
-                    }
-                });
-            }
-
-            // --- RENDER FUNCTIONS ---
-            
-            function renderAppShell() {
-                const viewTitles = { dashboard: 'Dashboard', analytics: 'Báo cáo & Phân tích', productModels: 'Quản Lý Mẫu Sản Phẩm', inventory: 'Kho Thiết Bị', bookings: 'Quản Lý Đơn Thuê', customers: 'Quản Lý Khách Hàng' };
-                const icons = {
-                    dashboard: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>`,
-                    analytics: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>`,
-                    productModels: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0l2-2m-2 2l-2-2" /></svg>`,
-                    inventory: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>`,
-                    bookings: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>`,
-                    customers: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197m0 0A5.975 5.975 0 0112 13a5.975 5.975 0 01-3 5.197" /></svg>`
-                };
-                
-                appContainer.innerHTML = `
-                    <div class="flex h-screen bg-gray-50 text-gray-800">
-                        <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-900 text-gray-300 flex flex-col transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-30 shadow-lg">
-                            <div class="px-6 py-4 border-b border-gray-700 flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                <h2 class="text-2xl font-semibold text-white ml-3">Lens Manager</h2>
-                            </div>
-                            <nav id="main-nav" class="flex-1 px-2 py-4 space-y-1">
-                                <a href="#" data-view="dashboard" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 hover:text-white">${icons.dashboard} Dashboard</a>
-                                <a href="#" data-view="analytics" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 hover:text-white">${icons.analytics} Báo cáo</a>
-                                <a href="#" data-view="productModels" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 hover:text-white">${icons.productModels} Mẫu Sản Phẩm</a>
-                                <a href="#" data-view="inventory" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 hover:text-white">${icons.inventory} Kho Thiết Bị</a>
-                                <a href="#" data-view="bookings" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 hover:text-white">${icons.bookings} Đơn Thuê</a>
-                                <a href="#" data-view="customers" class="nav-link flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 hover:text-white">${icons.customers} Khách Hàng</a>
-                            </nav>
-                        </div>
-                        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden hidden"></div>
-
-                        <div class="flex-1 flex flex-col overflow-hidden">
-                            <header class="bg-white shadow-sm z-10">
-                                <div class="w-full mx-auto py-3 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                                    <div class="flex items-center">
-                                        <button id="sidebar-open-btn" class="text-gray-500 focus:outline-none md:hidden">
-                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                                        </button>
-                                        <h1 id="view-title" class="text-2xl font-bold text-gray-800 ml-4 md:ml-0">${viewTitles[state.view]}</h1>
-                                    </div>
-                                    <div class="flex items-center space-x-4">
-                                        <button id="logout-btn" class="btn text-sm font-medium text-red-600 hover:bg-red-100 p-2 rounded-md sm:px-3 sm:py-2">
-                                            <span class="hidden sm:inline">Đăng xuất</span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </header>
-                            <main id="main-content" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                            </main>
-                        </div>
-                    </div>
-                `;
-                renderCurrentView();
-                attachShellEventListeners();
-            }
-
-            function renderCurrentView() {
-                const mainContent = document.getElementById('main-content');
-                if (!mainContent) return;
-
-                mainContent.innerHTML = `<div class="flex justify-center items-center h-full"><p class="text-gray-500 mt-8">Đang tải dữ liệu...</p></div>`;
-
-                if (state.isDataLoading) return;
-                
-                document.querySelectorAll('.nav-link').forEach(link => {
-                    if (link.dataset.view === state.view) {
-                        link.classList.add('bg-gray-800', 'text-white');
-                    } else {
-                        link.classList.remove('bg-gray-800', 'text-white');
-                    }
-                });
-                
-                const viewTitles = { dashboard: 'Dashboard', analytics: 'Báo cáo & Phân tích', productModels: 'Quản Lý Mẫu Sản Phẩm', inventory: 'Kho Thiết Bị', bookings: 'Quản Lý Đơn Thuê', customers: 'Quản Lý Khách Hàng' };
-                document.getElementById('view-title').textContent = viewTitles[state.view];
-
-                switch (state.view) {
-                    case 'dashboard': renderDashboard(); break;
-                    case 'analytics': renderAnalytics(); break;
-                    case 'productModels': renderProductModels(); break;
-                    case 'inventory': renderInventory(); break;
-                    case 'bookings': renderBookings(); break;
-                    case 'customers': renderCustomers(); break;
-                }
-            }
-
-            function renderLoginScreen() {
-                appContainer.innerHTML = `
-                    <div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-                        <div class="w-full max-w-md">
-                            <div class="text-center mb-8">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-indigo-600 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                <h2 class="mt-4 text-3xl font-extrabold text-gray-900">Lens Manager</h2>
-                                <p class="mt-2 text-sm text-gray-600">Đăng nhập vào tài khoản của bạn</p>
-                            </div>
-                            <div class="bg-white p-8 rounded-lg shadow-lg">
-                                <form id="login-form" class="space-y-6">
-                                    <div>
-                                        <label class="block text-gray-700 text-sm font-bold mb-2" for="email">Email</label>
-                                        <input id="email" type="email" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
-                                    </div>
-                                    <div>
-                                        <label class="block text-gray-700 text-sm font-bold mb-2" for="password">Mật khẩu</label>
-                                        <input id="password" type="password" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
-                                    </div>
-                                    <p id="login-error" class="text-red-500 text-xs italic mb-4 hidden"></p>
-                                    <button type="submit" class="btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline w-full">Đăng nhập</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                attachLoginEventListeners();
-            }
-            
-            function renderDashboard() {
-                const mainContent = document.getElementById('main-content');
-                
-                const totalRevenue = state.bookings.filter(b => b.status === 'Đã trả').reduce((acc, b) => acc + b.totalPrice, 0);
-                const itemsRentedCount = state.inventoryItems.filter(item => item.status === 'Đang thuê').length;
-                const totalItems = state.inventoryItems.length;
-                const inventoryUtilization = totalItems > 0 ? (itemsRentedCount / totalItems) * 100 : 0;
-                const pendingBookingsCount = state.bookings.filter(b => b.status === 'Chờ lấy máy').length;
-
-                const todayStart = moment().startOf('day').toDate();
-                const todayEnd = moment().endOf('day').toDate();
-
-                const overdueBookings = state.bookings.filter(b => b.status === 'Đang thuê' && moment(b.endDate).isBefore(todayStart));
-                const pickupsToday = state.bookings.filter(b => b.status === 'Chờ lấy máy' && moment(b.startDate).isBetween(todayStart, todayEnd, null, '[]'));
-                const returnsToday = state.bookings.filter(b => b.status === 'Đang thuê' && moment(b.endDate).isBetween(todayStart, todayEnd, null, '[]'));
-
-                const renderBookingListItem = (booking, type) => {
-                    let dateText = '';
-                    let dateClass = '';
-                    if (type === 'overdue') {
-                        dateText = `Quá hạn từ: ${formatDate(booking.endDate)}`;
-                        dateClass = 'text-red-600 font-medium';
-                    } else if (type === 'pickup') {
-                        dateText = `Lấy máy hôm nay`;
-                        dateClass = 'text-blue-600 font-medium';
-                    } else if (type === 'return') {
-                        dateText = `Trả máy hôm nay`;
-                        dateClass = 'text-yellow-600 font-medium';
-                    }
-
-                    return `
-                        <li class="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center hover:bg-gray-50 rounded-md">
-                            <div>
-                                <p class="font-semibold text-gray-900">${booking.customerName}</p>
-                                <p class="text-sm text-gray-600">${booking.items.map(i => i.productName).join(', ')}</p>
-                            </div>
-                            <p class="text-sm ${dateClass} mt-2 sm:mt-0">${dateText}</p>
-                        </li>
-                    `;
-                };
-
-                mainContent.innerHTML = `
-                    <div class="space-y-8">
-                        <!-- Stats Cards -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <div class="dashboard-card bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg shadow-lg">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <h3 class="text-lg font-medium opacity-80">Tổng Doanh Thu</h3>
-                                        <p id="total-revenue" class="mt-2 text-4xl font-bold">0</p>
-                                    </div>
-                                    <div class="bg-white bg-opacity-20 p-3 rounded-full">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="dashboard-card bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-6 rounded-lg shadow-lg">
-                                 <div class="flex justify-between items-center">
-                                    <div>
-                                        <h3 class="text-lg font-medium opacity-80">Thiết Bị Đang Thuê</h3>
-                                        <p id="items-rented" class="mt-2 text-4xl font-bold">0</p>
-                                    </div>
-                                    <div class="bg-white bg-opacity-20 p-3 rounded-full">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="dashboard-card bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg shadow-lg">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <h3 class="text-lg font-medium opacity-80">Đơn Chờ Lấy Máy</h3>
-                                        <p id="pending-bookings" class="mt-2 text-4xl font-bold">0</p>
-                                    </div>
-                                     <div class="bg-white bg-opacity-20 p-3 rounded-full">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                    </div>
-                                </div>
-                            </div>
-                             <div class="dashboard-card bg-white p-6 rounded-lg shadow-lg">
-                                <h3 class="text-lg font-medium text-gray-600">Hiệu suất Kho</h3>
-                                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-4">
-                                    <div id="inventory-progress" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
-                                </div>
-                                <p class="text-right text-sm text-gray-500 mt-2"><span id="inventory-text">${itemsRentedCount}/${totalItems}</span> đang thuê</p>
-                            </div>
-                        </div>
-
-                        <!-- Action Items & Alerts Grid -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-                            <div class="dashboard-card bg-white rounded-lg shadow-lg p-6">
-                                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    Đơn quá hạn trả
-                                </h2>
-                                <ul class="divide-y divide-gray-200">${overdueBookings.length > 0 ? overdueBookings.map(b => renderBookingListItem(b, 'overdue')).join('') : '<p class="text-gray-500 p-4">Không có đơn nào quá hạn.</p>'}</ul>
-                            </div>
-
-                            <div class="dashboard-card bg-white rounded-lg shadow-lg p-6">
-                                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    Cần lấy hôm nay
-                                </h2>
-                                <ul class="divide-y divide-gray-200">${pickupsToday.length > 0 ? pickupsToday.map(b => renderBookingListItem(b, 'pickup')).join('') : '<p class="text-gray-500 p-4">Không có đơn nào cần lấy hôm nay.</p>'}</ul>
-                            </div>
-                            
-                            <div class="dashboard-card bg-white rounded-lg shadow-lg p-6">
-                                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-                                    Cần trả hôm nay
-                                </h2>
-                                <ul class="divide-y divide-gray-200">${returnsToday.length > 0 ? returnsToday.map(b => renderBookingListItem(b, 'return')).join('') : '<p class="text-gray-500 p-4">Không có đơn nào cần trả hôm nay.</p>'}</ul>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                // Animate the numbers
-                animateValue(document.getElementById('total-revenue'), 0, totalRevenue, 1500, true);
-                animateValue(document.getElementById('items-rented'), 0, itemsRentedCount, 1500, false);
-                animateValue(document.getElementById('pending-bookings'), 0, pendingBookingsCount, 1500, false);
-                document.getElementById('inventory-progress').style.width = `${inventoryUtilization}%`;
-            }
-
-            function renderAnalytics() {
-                const mainContent = document.getElementById('main-content');
-                mainContent.innerHTML = `
-                    <div class="space-y-8">
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h2 class="text-xl font-bold text-gray-800 mb-4">Doanh thu theo tháng (Năm nay)</h2>
-                            <div class="h-80"><canvas id="revenueChart"></canvas></div>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h2 class="text-xl font-bold text-gray-800 mb-4">Top 5 Sản phẩm được thuê nhiều nhất</h2>
-                            <div class="h-80"><canvas id="topProductsChart"></canvas></div>
-                        </div>
-                    </div>
-                `;
-                
-                // --- Data Processing for Charts ---
-                const completedBookings = state.bookings.filter(b => b.status === 'Đã trả');
-
-                // 1. Revenue by Month
-                const revenueByMonth = Array(12).fill(0);
-                completedBookings.forEach(booking => {
-                    const month = moment(booking.endDate).month(); // 0-11
-                    revenueByMonth[month] += booking.totalPrice;
-                });
-
-                // 2. Top 5 Products
-                const productRentals = {};
-                completedBookings.forEach(booking => {
-                    booking.items.forEach(item => {
-                        productRentals[item.productName] = (productRentals[item.productName] || 0) + 1;
-                    });
-                });
-                const topProducts = Object.entries(productRentals)
-                    .sort(([,a],[,b]) => b - a)
-                    .slice(0, 5);
-
-                // --- Render Charts ---
-                const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-                new Chart(revenueCtx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'],
-                        datasets: [{
-                            label: 'Doanh thu',
-                            data: revenueByMonth,
-                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                            borderColor: 'rgba(79, 70, 229, 1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: true,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: { y: { beginAtZero: true } }
-                    }
-                });
-
-                const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
-                new Chart(topProductsCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: topProducts.map(p => p[0]),
-                        datasets: [{
-                            label: 'Số lượt thuê',
-                            data: topProducts.map(p => p[1]),
-                            backgroundColor: [
-                                'rgba(54, 162, 235, 0.6)',
-                                'rgba(255, 99, 132, 0.6)',
-                                'rgba(75, 192, 192, 0.6)',
-                                'rgba(255, 206, 86, 0.6)',
-                                'rgba(153, 102, 255, 0.6)',
-                            ],
-                            borderColor: [
-                                'rgba(54, 162, 235, 1)',
-                                'rgba(255, 99, 132, 1)',
-                                'rgba(75, 192, 192, 1)',
-                                'rgba(255, 206, 86, 1)',
-                                'rgba(153, 102, 255, 1)',
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        indexAxis: 'y',
-                        scales: { x: { beginAtZero: true } }
-                    }
-                });
-            }
-            
-            // --- LIST RENDERERS (FIX FOR SEARCH) ---
-            function renderProductModelList() {
-                const container = document.getElementById('list-container');
-                if (!container) return;
-                const filteredModels = state.productModels.filter(m => m.name.toLowerCase().includes(state.searchTerm.toLowerCase()));
-                const modelsHtml = filteredModels.map(model => `
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
-                        <div class="p-5">
-                            <h3 class="text-xl font-bold text-gray-800">${model.name}</h3>
-                            <p class="text-sm text-gray-600 mt-2">Loại: ${model.type}</p>
-                            <p class="text-lg font-semibold text-indigo-600 mt-3">${formatCurrency(model.pricePerDay)}/ngày</p>
-                        </div>
-                        <div class="bg-gray-50 px-5 py-3 flex justify-end space-x-4">
-                            <button data-action="edit-model" data-id="${model.id}" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">Sửa</button>
-                            <button data-action="delete-model" data-id="${model.id}" class="text-sm font-medium text-red-600 hover:text-red-900">Xóa</button>
-                        </div>
-                    </div>
-                `).join('');
-                container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">${modelsHtml}</div>`;
-                attachProductModelItemEventListeners();
-            }
-
-            function renderBookingList() {
-                const container = document.getElementById('list-container');
-                if (!container) return;
-                const filteredBookings = state.bookings.filter(b => 
-                    b.customerName.toLowerCase().includes(state.searchTerm.toLowerCase()) || 
-                    (b.customerId && b.customerId.toLowerCase().includes(state.searchTerm.toLowerCase()))
-                );
-                const bookingsHtml = filteredBookings.length > 0 ? filteredBookings.map(booking => {
-                    const itemsHtml = booking.items.map(item => `<li>${item.productName} (S/N: ${item.serial})</li>`).join('');
-                    let actionsHtml = '';
-                    if (booking.status === 'Chờ lấy máy') {
-                        actionsHtml += `<button data-action="update-booking-status" data-id="${booking.id}" data-status="Đang thuê" class="text-sm font-medium text-yellow-600 hover:text-yellow-800">Xác nhận lấy máy</button>`;
-                    }
-                    if (booking.status === 'Đang thuê') {
-                        actionsHtml += `<button data-action="update-booking-status" data-id="${booking.id}" data-status="Đã trả" class="text-sm font-medium text-green-600 hover:text-green-800">Xác nhận đã trả</button>`;
-                    }
-                    if (booking.status === 'Chờ lấy máy' || booking.status === 'Đang thuê') {
-                        actionsHtml += `<button data-action="update-booking-status" data-id="${booking.id}" data-status="Đã hủy" class="text-sm font-medium text-pink-600 hover:text-pink-800">Hủy đơn</button>`;
-                    }
-                    return `
-                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                            <div class="p-5">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <p class="text-lg sm:text-xl font-bold text-gray-800">${booking.customerName}</p>
-                                        <p class="text-sm text-gray-500">${booking.customerPhone}</p>
-                                    </div>
-                                    <span class="flex-shrink-0 mt-1 px-3 py-1 text-xs font-semibold rounded-full ${getStatusClass(booking.status)}">${booking.status}</span>
-                                </div>
-                                <div class="mt-4 border-t pt-4">
-                                    <p class="font-semibold">Thiết bị thuê:</p>
-                                    <ul class="list-disc list-inside text-sm text-gray-700">${itemsHtml}</ul>
-                                    <div class="flex flex-col sm:flex-row justify-between mt-3 text-sm">
-                                        <p>Ngày thuê: <span class="font-medium">${formatDate(booking.startDate)}</span></p>
-                                        <p class="mt-1 sm:mt-0">Ngày trả: <span class="font-medium">${formatDate(booking.endDate)}</span></p>
-                                    </div>
-                                    <p class="text-right text-lg font-bold text-cyan-700 mt-2">${formatCurrency(booking.totalPrice)}</p>
-                                </div>
-                            </div>
-                            <div class="bg-gray-50 px-5 py-3 flex justify-end space-x-3">${actionsHtml}</div>
-                        </div>
-                    `;
-                }).join('') : `<p class="text-center text-gray-500 mt-8">Không tìm thấy đơn thuê nào.</p>`;
-                container.innerHTML = `<div class="space-y-6">${bookingsHtml}</div>`;
-                attachBookingItemEventListeners();
-            }
-
-            function renderCustomerList() {
-                const container = document.getElementById('list-container');
-                if (!container) return;
-                const filteredCustomers = state.customers.filter(c => 
-                    c.name.toLowerCase().includes(state.searchTerm.toLowerCase()) || 
-                    c.phone.includes(state.searchTerm) ||
-                    (c.idCardNumber && c.idCardNumber.includes(state.searchTerm))
-                );
-                const customersHtml = filteredCustomers.map(customer => `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${customer.name}</div></td>
-                        <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-500">${customer.phone}</div></td>
-                        <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-500">${customer.idCardNumber || ''}</div></td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">${customer.notes || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                            <button data-action="view-history" data-id="${customer.id}" class="text-cyan-600 hover:text-cyan-900">Xem Lịch sử</button>
-                            <button data-action="edit-customer" data-id="${customer.id}" class="text-indigo-600 hover:text-indigo-900">Sửa</button>
-                            <button data-action="delete-customer" data-id="${customer.id}" class="text-red-600 hover:text-red-900">Xóa</button>
-                        </td>
-                    </tr>
-                `).join('');
-                container.innerHTML = customersHtml;
-                attachCustomerItemEventListeners();
-            }
-
-            // --- MAIN RENDERERS (REFACTORED FOR SEARCH) ---
-            function renderProductModels() {
-                const mainContent = document.getElementById('main-content');
-                mainContent.innerHTML = `
-                    <div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <input type="text" id="search-input" placeholder="Tìm kiếm mẫu sản phẩm..." class="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"/>
-                        <button id="add-model-btn" class="btn w-full sm:w-auto bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">+ Thêm Mẫu Mới</button>
-                    </div>
-                    <div id="list-container"></div>
-                `;
-                document.getElementById('search-input').addEventListener('input', (e) => {
-                    state.searchTerm = e.target.value;
-                    renderProductModelList();
-                });
-                document.getElementById('add-model-btn').addEventListener('click', () => renderProductModelModal());
-                renderProductModelList();
-            }
-            
-            function renderInventory() {
-                const mainContent = document.getElementById('main-content');
-                let inventoryHtml = state.productModels.map(model => {
-                    const itemsForModel = state.inventoryItems.filter(item => item.productModelId === model.id);
-                    const availableItems = itemsForModel.filter(item => item.status === 'Sẵn sàng').length;
-                    
-                    const itemsListHtml = itemsForModel.length > 0 ? itemsForModel.map(item => `
-                        <li class="flex justify-between items-center p-2 rounded-md hover:bg-gray-50">
-                            <div><p class="font-mono text-sm text-gray-800">S/N: ${item.serial}</p></div>
-                            <div class="flex items-center space-x-4">
-                                <span class="px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusClass(item.status)}">${item.status}</span>
-                                <button data-action="edit-item" data-id="${item.id}" class="text-xs font-medium text-indigo-600 hover:text-indigo-800">Sửa</button>
-                                <button data-action="delete-item" data-id="${item.id}" class="text-xs font-medium text-red-600 hover:text-red-800">Xóa</button>
-                            </div>
-                        </li>
-                    `).join('') : `<p class="text-sm text-gray-400">Chưa có thiết bị nào cho mẫu này.</p>`;
-
-                    return `
-                        <div class="bg-white rounded-lg shadow-md">
-                            <div class="p-4 flex justify-between items-center cursor-pointer" data-action="toggle-inventory" data-id="${model.id}">
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-800">${model.name}</h3>
-                                    <p class="text-sm text-gray-500">Sẵn sàng: <span class="font-semibold text-green-600">${availableItems}</span> / Tổng: ${itemsForModel.length}</p>
-                                </div>
-                                <div class="flex items-center space-x-4">
-                                    <button data-action="add-item" data-model-id="${model.id}" data-model-name="${model.name}" class="btn text-sm bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600">+ Thêm S/N</button>
-                                    <svg class="w-6 h-6 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
-                            </div>
-                            <div class="border-t border-gray-200 p-4 hidden" id="inventory-list-${model.id}">
-                                <ul class="space-y-2">${itemsListHtml}</ul>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                mainContent.innerHTML = `<div class="space-y-4">${inventoryHtml}</div>`;
-                attachInventoryEventListeners();
-            }
-
-            function renderBookings() {
-                const mainContent = document.getElementById('main-content');
-                mainContent.innerHTML = `
-                    <div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <input type="text" id="search-input" placeholder="Tìm kiếm theo tên khách hàng..." class="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"/>
-                        <button id="add-booking-btn" class="btn w-full sm:w-auto bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-cyan-700 transition duration-300">+ Tạo Đơn Thuê</button>
-                    </div>
-                    <div id="list-container"></div>
-                `;
-                document.getElementById('search-input').addEventListener('input', (e) => {
-                    state.searchTerm = e.target.value;
-                    renderBookingList();
-                });
-                document.getElementById('add-booking-btn').addEventListener('click', () => renderBookingModal());
-                renderBookingList();
-            }
-
-            function renderCustomers() {
-                const mainContent = document.getElementById('main-content');
-                mainContent.innerHTML = `
-                    <div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <input type="text" id="search-input" placeholder="Tìm kiếm theo tên, SĐT, CCCD..." class="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"/>
-                        <button id="add-customer-btn" class="btn w-full sm:w-auto bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition duration-300">+ Thêm Khách Hàng</button>
-                    </div>
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Khách Hàng</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số CCCD</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Ghi Chú</th>
-                                    <th scope="col" class="relative px-6 py-3"><span class="sr-only">Hành động</span></th>
-                                </tr>
-                            </thead>
-                            <tbody id="list-container" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                `;
-                document.getElementById('search-input').addEventListener('input', (e) => {
-                    state.searchTerm = e.target.value;
-                    renderCustomerList();
-                });
-                document.getElementById('add-customer-btn').addEventListener('click', () => renderCustomerModal());
-                renderCustomerList();
-            }
-
-            function renderCustomerModal(customer = null, fromBooking = false) {
-                const isEditing = customer !== null;
-                const modalHtml = `
-                    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-overlay">
-                        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md modal-container">
-                            <h2 class="text-2xl font-bold mb-6">${isEditing ? 'Sửa Khách Hàng' : 'Thêm Khách Hàng Mới'}</h2>
-                            <form id="customer-form">
-                                <div class="space-y-4">
-                                    <input type="text" name="name" value="${customer?.name || ''}" placeholder="Tên khách hàng" class="w-full px-3 py-2 border rounded-lg" required />
-                                    <input type="tel" name="phone" value="${customer?.phone || ''}" placeholder="Số điện thoại" class="w-full px-3 py-2 border rounded-lg" required />
-                                    <input type="text" name="idCardNumber" value="${customer?.idCardNumber || ''}" placeholder="Số Căn cước công dân" class="w-full px-3 py-2 border rounded-lg" />
-                                    <textarea name="notes" placeholder="Ghi chú" class="w-full px-3 py-2 border rounded-lg h-24">${customer?.notes || ''}</textarea>
-                                </div>
-                                <div class="flex justify-end mt-6 space-x-4">
-                                    <button type="button" class="px-4 py-2 bg-gray-200 rounded-lg modal-close-btn">Hủy</button>
-                                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Lưu</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>`;
-                openModal(modalHtml);
-                document.getElementById('customer-form').addEventListener('submit', (e) => handleCustomerSubmit(e, customer?.id, fromBooking));
-            }
-            
-            async function handleCustomerSubmit(e, id, fromBooking = false) {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const data = {
-                    name: formData.get('name'),
-                    phone: formData.get('phone'),
-                    idCardNumber: formData.get('idCardNumber'),
-                    notes: formData.get('notes')
-                };
-                try {
-                    if (id) {
-                        await updateDoc(doc(db, 'customers', id), data);
-                        closeModal();
-                    } else {
-                        const newDocRef = await addDoc(collection(db, 'customers'), { ...data, createdAt: Timestamp.now() });
-                        if (fromBooking) {
-                            state.currentBooking.customerId = newDocRef.id;
-                            closeModal(); 
-                            renderBookingModal(true); 
-                        } else {
-                            closeModal();
-                        }
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert("Lỗi khi lưu khách hàng!");
-                }
-            }
-
-            // --- ITEM-SPECIFIC EVENT LISTENERS ---
-            function attachProductModelItemEventListeners() {
-                document.querySelectorAll('[data-action="edit-model"]').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = e.currentTarget.dataset.id;
-                        const model = state.productModels.find(m => m.id === id);
-                        if (model) renderProductModelModal(model);
-                    });
-                });
-                document.querySelectorAll('[data-action="delete-model"]').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const id = e.currentTarget.dataset.id;
-                        if (confirm('Bạn có chắc chắn muốn xóa mẫu sản phẩm này? Thao tác này không thể hoàn tác.')) {
-                            await deleteDoc(doc(db, 'productModels', id));
-                        }
-                    });
-                });
-            }
-
-            function attachBookingItemEventListeners() {
-                document.querySelectorAll('[data-action="update-booking-status"]').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const id = e.currentTarget.dataset.id;
-                        const newStatus = e.currentTarget.dataset.status;
-                        const booking = state.bookings.find(b => b.id === id);
-                        if (!booking) return;
-
-                        const batch = writeBatch(db);
-                        const bookingRef = doc(db, 'bookings', id);
-                        batch.update(bookingRef, { status: newStatus });
-
-                        if ((newStatus === 'Đã trả' || newStatus === 'Đã hủy') && booking.items) {
-                            booking.items.forEach(item => {
-                                batch.update(doc(db, 'inventoryItems', item.itemId), { status: 'Sẵn sàng' });
-                            });
-                        }
-
-                        await batch.commit();
-                    });
-                });
-            }
-
-            function attachCustomerItemEventListeners() {
-                 document.querySelectorAll('[data-action="view-history"]').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = e.currentTarget.dataset.id;
-                        state.view = 'bookings';
-                        state.searchTerm = id;
-                        renderCurrentView();
-                    });
-                });
-                 document.querySelectorAll('[data-action="edit-customer"]').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = e.currentTarget.dataset.id;
-                        const customer = state.customers.find(c => c.id === id);
-                        if(customer) renderCustomerModal(customer);
-                    });
-                });
-                document.querySelectorAll('[data-action="delete-customer"]').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const id = e.currentTarget.dataset.id;
-                        if (confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
-                            await deleteDoc(doc(db, 'customers', id));
-                        }
-                    });
-                });
-            }
-
-            // The rest of the functions are unchanged
-            function renderProductModelModal(model = null) {
-                const isEditing = model !== null;
-                const modalHtml = `
-                    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-overlay">
-                        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md modal-container">
-                            <h2 class="text-2xl font-bold mb-6">${isEditing ? 'Sửa Mẫu Sản Phẩm' : 'Thêm Mẫu Mới'}</h2>
-                            <form id="model-form">
-                                <div class="space-y-4">
-                                    <input type="text" name="name" value="${model?.name || ''}" placeholder="Tên mẫu (VD: Sony A7S III)" class="w-full px-3 py-2 border rounded-lg" required />
-                                    <select name="type" class="w-full px-3 py-2 border rounded-lg">
-                                        <option ${model?.type === 'Máy ảnh' ? 'selected' : ''}>Máy ảnh</option>
-                                        <option ${model?.type === 'Ống kính' ? 'selected' : ''}>Ống kính</option>
-                                        <option ${model?.type === 'Phụ kiện khác' ? 'selected' : ''}>Phụ kiện khác</option>
-                                    </select>
-                                    <input type="number" name="pricePerDay" value="${model?.pricePerDay || ''}" placeholder="Giá thuê / ngày" class="w-full px-3 py-2 border rounded-lg" required />
-                                </div>
-                                <div class="flex justify-end mt-6 space-x-4">
-                                    <button type="button" class="px-4 py-2 bg-gray-200 rounded-lg modal-close-btn">Hủy</button>
-                                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Lưu</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>`;
-                openModal(modalHtml);
-                document.getElementById('model-form').addEventListener('submit', (e) => handleModelSubmit(e, model?.id));
-            }
-
-            function renderInventoryItemModal(item = null, modelInfo) {
-                const isEditing = item !== null;
-                const modalHtml = `
-                    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-overlay">
-                        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md modal-container">
-                            <h2 class="text-2xl font-bold mb-6">${isEditing ? 'Sửa Thiết Bị' : `Thêm S/N cho ${modelInfo.name}`}</h2>
-                            <form id="item-form">
-                                <div class="space-y-4">
-                                    <input type="text" name="serial" value="${item?.serial || ''}" placeholder="Số Seri (S/N)" class="w-full px-3 py-2 border rounded-lg" required />
-                                    <select name="status" class="w-full px-3 py-2 border rounded-lg">
-                                        <option ${item?.status === 'Sẵn sàng' ? 'selected' : ''}>Sẵn sàng</option>
-                                        <option ${item?.status === 'Bảo trì' ? 'selected' : ''}>Bảo trì</option>
-                                    </select>
-                                    <textarea name="notes" placeholder="Ghi chú" class="w-full px-3 py-2 border rounded-lg h-24">${item?.notes || ''}</textarea>
-                                </div>
-                                <div class="flex justify-end mt-6 space-x-4">
-                                    <button type="button" class="px-4 py-2 bg-gray-200 rounded-lg modal-close-btn">Hủy</button>
-                                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Lưu</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>`;
-                openModal(modalHtml);
-                document.getElementById('item-form').addEventListener('submit', (e) => handleItemSubmit(e, item?.id, modelInfo));
-            }
-            
-            function renderBookingModal(isRerender = false) {
-                 if (!isRerender) {
-                    state.currentBooking = {
-                        customerId: '', customerName: '', customerPhone: '', 
-                        startDate: '', endDate: '', items: [], totalPrice: 0, 
-                        status: 'Chờ lấy máy'
-                    };
-                 }
-                
-                const customerOptions = state.customers.map(c => `<option value="${c.id}" ${state.currentBooking.customerId === c.id ? 'selected' : ''}>${c.name} - ${c.phone}</option>`).join('');
-                
-                const selectedItemsHtml = state.currentBooking.items.length > 0
-                    ? state.currentBooking.items.map(item => `<span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-1 rounded-full">${item.productName} (S/N: ${item.serial})</span>`).join('')
-                    : `<span class="text-gray-400">Chưa có thiết bị nào</span>`;
-
-                const modalHtml = `
-                    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-overlay">
-                        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-lg modal-container">
-                            <h2 class="text-2xl font-bold mb-6">Tạo Đơn Thuê Mới</h2>
-                            <form id="booking-form">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div class="md:col-span-2">
-                                        <label class="text-sm font-medium text-gray-700">Chọn khách hàng</label>
-                                        <div class="flex items-center space-x-2">
-                                            <select id="customer-select" name="customerId" class="w-full px-3 py-2 border rounded-lg" required>
-                                                <option value="">-- Chọn khách hàng --</option>
-                                                ${customerOptions}
-                                            </select>
-                                            <button type="button" id="booking-add-customer-btn" class="p-2 bg-green-500 text-white rounded-full hover:bg-green-600">+</button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="text-sm font-medium text-gray-700">Ngày thuê</label>
-                                        <input type="date" name="startDate" value="${state.currentBooking.startDate}" class="w-full px-3 py-2 border rounded-lg" required />
-                                    </div>
-                                    <div>
-                                        <label class="text-sm font-medium text-gray-700">Ngày trả</label>
-                                        <input type="date" name="endDate" value="${state.currentBooking.endDate}" class="w-full px-3 py-2 border rounded-lg" required />
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <label class="text-sm font-medium text-gray-700">Thiết bị đã chọn</label>
-                                        <div id="booking-items-list" class="mt-2 p-2 border rounded-lg min-h-[40px] bg-gray-50 flex flex-wrap gap-2">
-                                            ${selectedItemsHtml}
-                                        </div>
-                                        <button type="button" id="open-device-selector-btn" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-semibold">[+] Chọn thiết bị...</button>
-                                    </div>
-                                </div>
-                                <div class="flex justify-end mt-6 space-x-4">
-                                    <button type="button" class="px-4 py-2 bg-gray-200 rounded-lg modal-close-btn">Hủy</button>
-                                    <button type="submit" class="px-4 py-2 bg-cyan-600 text-white rounded-lg">Tạo Đơn</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>`;
-                
-                if (isRerender) {
-                    state.modalStack[state.modalStack.length - 1] = modalHtml;
-                    renderModals();
-                } else {
-                    openModal(modalHtml);
-                }
-                attachBookingModalEventListeners();
-            }
-
-            function renderDeviceSelectorModal() {
-                const previouslySelectedIds = state.currentBooking.items.map(i => i.itemId);
-                let modelsHtml = state.productModels.map(model => {
-                    const availableItems = state.inventoryItems.filter(i => i.productModelId === model.id && (i.status === 'Sẵn sàng' || previouslySelectedIds.includes(i.id)));
-                    if (availableItems.length === 0) return '';
-
-                    const itemsHtml = availableItems.map(item => `
-                        <label class="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
-                            <input type="checkbox" data-item-id="${item.id}" ${previouslySelectedIds.includes(item.id) ? 'checked' : ''} class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 device-checkbox"/>
-                            <p class="ml-4 font-mono text-sm text-gray-800">S/N: ${item.serial}</p>
-                        </label>
-                    `).join('');
-
-                    return `
-                        <div>
-                            <h3 class="font-bold text-lg text-gray-700">${model.name}</h3>
-                            <div class="mt-2 space-y-2 pl-4">${itemsHtml}</div>
-                        </div>`;
-                }).join('');
-
-                const modalHtml = `
-                    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-overlay">
-                        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl flex flex-col modal-container" style="height: 90vh">
-                            <h2 class="text-2xl font-bold p-6 border-b">Chọn Thiết Bị</h2>
-                            <div class="flex-1 overflow-y-auto p-6">
-                                <div class="space-y-4">${modelsHtml || '<p class="text-gray-500">Không có thiết bị nào sẵn sàng.</p>'}</div>
-                            </div>
-                            <div class="p-6 border-t flex justify-end space-x-4">
-                                <button type="button" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 modal-close-btn">Hủy</button>
-                                <button type="button" id="confirm-device-selection-btn" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Xác nhận</button>
-                            </div>
-                        </div>
-                    </div>`;
-                openModal(modalHtml);
-                document.getElementById('confirm-device-selection-btn').addEventListener('click', handleDeviceSelectionConfirm);
-            }
-
-            async function handleModelSubmit(e, id) {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const data = {
-                    name: formData.get('name'),
-                    type: formData.get('type'),
-                    pricePerDay: Number(formData.get('pricePerDay'))
-                };
-                try {
-                    if (id) {
-                        await updateDoc(doc(db, 'productModels', id), data);
-                    } else {
-                        await addDoc(collection(db, 'productModels'), data);
-                    }
-                    closeModal();
-                } catch (err) {
-                    console.error(err);
-                    alert("Lỗi khi lưu mẫu sản phẩm!");
-                }
-            }
-
-            async function handleItemSubmit(e, id, modelInfo) {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const data = {
-                    serial: formData.get('serial'),
-                    status: formData.get('status'),
-                    notes: formData.get('notes'),
-                    productModelId: modelInfo.id,
-                    productName: modelInfo.name
-                };
-                try {
-                    if (id) {
-                        await updateDoc(doc(db, 'inventoryItems', id), data);
-                    } else {
-                        await addDoc(collection(db, 'inventoryItems'), data);
-                    }
-                    closeModal();
-                } catch (err) {
-                    console.error(err);
-                    alert("Lỗi khi lưu thiết bị!");
-                }
-            }
-
-            async function handleCreateBooking(e) {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const bookingData = {
-                    ...state.currentBooking,
-                    customerId: formData.get('customerId'),
-                    startDate: formData.get('startDate'),
-                    endDate: formData.get('endDate'),
-                };
-
-                if (!bookingData.customerId || !bookingData.startDate || !bookingData.endDate || bookingData.items.length === 0) {
-                    alert("Vui lòng điền đủ thông tin: khách hàng, ngày thuê/trả, và chọn ít nhất 1 thiết bị.");
-                    return;
-                }
-
-                const customer = state.customers.find(c => c.id === bookingData.customerId);
-                if (!customer) {
-                    alert("Khách hàng không hợp lệ!");
-                    return;
-                }
-                
-                bookingData.customerName = customer.name;
-                bookingData.customerPhone = customer.phone;
-
-                const days = Math.max(1, moment(bookingData.endDate).diff(moment(bookingData.startDate), 'days') + 1);
-                const totalPrice = bookingData.items.reduce((acc, item) => acc + (item.pricePerDay || 0), 0) * days;
-                bookingData.totalPrice = totalPrice;
-                
-                const batch = writeBatch(db);
-                try {
-                    const bookingRef = doc(collection(db, 'bookings'));
-                    
-                    batch.set(bookingRef, {
-                        ...bookingData,
-                        items: bookingData.items.map(({pricePerDay, ...rest}) => rest), 
-                        startDate: Timestamp.fromDate(new Date(bookingData.startDate)),
-                        endDate: Timestamp.fromDate(new Date(bookingData.endDate)),
-                        createdAt: Timestamp.now()
-                    });
-
-                    bookingData.items.forEach(item => {
-                        batch.update(doc(db, 'inventoryItems', item.itemId), { status: 'Đang thuê' });
-                    });
-
-                    await batch.commit();
-                    state.modalStack = []; 
-                    renderModals();
-                    alert("Tạo đơn thuê thành công!");
-                } catch (err) {
-                    console.error(err);
-                    alert("Lỗi khi tạo đơn thuê!");
-                }
-            }
-            
-            function handleDeviceSelectionConfirm() {
-                const selectedCheckboxes = document.querySelectorAll('.device-checkbox:checked');
-                const selectedItems = Array.from(selectedCheckboxes).map(cb => {
-                    const itemId = cb.dataset.itemId;
-                    const item = state.inventoryItems.find(i => i.id === itemId);
-                    const model = state.productModels.find(m => m.id === item.productModelId);
-                    return {
-                        itemId: item.id,
-                        serial: item.serial,
-                        productName: model.name,
-                        productModelId: model.id,
-                        pricePerDay: model.pricePerDay 
-                    };
-                });
-                state.currentBooking.items = selectedItems;
-                closeModal(); 
-                renderBookingModal(true); 
-            }
-
-            function attachShellEventListeners() {
-                document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
-                document.getElementById('sidebar-open-btn').addEventListener('click', () => {
-                    document.getElementById('sidebar').classList.remove('-translate-x-full');
-                    document.getElementById('sidebar-overlay').classList.remove('hidden');
-                });
-                document.getElementById('sidebar-overlay').addEventListener('click', () => {
-                    document.getElementById('sidebar').classList.add('-translate-x-full');
-                    document.getElementById('sidebar-overlay').classList.add('hidden');
-                });
-                document.querySelectorAll('.nav-link').forEach(link => {
-                    link.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        state.view = e.currentTarget.dataset.view;
-                        state.searchTerm = '';
-                        renderCurrentView();
-                        document.getElementById('sidebar').classList.add('-translate-x-full');
-                        document.getElementById('sidebar-overlay').classList.add('hidden');
-                    });
-                });
-            }
-
-            function attachLoginEventListeners() {
-                const loginForm = document.getElementById('login-form');
-                loginForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const email = document.getElementById('email').value;
-                    const password = document.getElementById('password').value;
-                    const errorEl = document.getElementById('login-error');
-                    errorEl.classList.add('hidden');
-
-                    try {
-                        await signInWithEmailAndPassword(auth, email, password);
-                    } catch (err) {
-                        errorEl.textContent = 'Email hoặc mật khẩu không đúng.';
-                        errorEl.classList.remove('hidden');
-                    }
-                });
-            }
-
-            function attachInventoryEventListeners() {
-                document.querySelectorAll('[data-action="toggle-inventory"]').forEach(header => {
-                    header.addEventListener('click', (e) => {
-                        const id = e.currentTarget.dataset.id;
-                        const list = document.getElementById(`inventory-list-${id}`);
-                        const icon = e.currentTarget.querySelector('svg');
-                        list.classList.toggle('hidden');
-                        icon.classList.toggle('rotate-180');
-                    });
-                });
-                 document.querySelectorAll('[data-action="add-item"]').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const modelId = e.currentTarget.dataset.modelId;
-                        const modelName = e.currentTarget.dataset.modelName;
-                        renderInventoryItemModal(null, { id: modelId, name: modelName });
-                    });
-                });
-                document.querySelectorAll('[data-action="edit-item"]').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const id = e.currentTarget.dataset.id;
-                        const item = state.inventoryItems.find(i => i.id === id);
-                        const model = state.productModels.find(m => m.id === item.productModelId);
-                        if (item && model) renderInventoryItemModal(item, { id: model.id, name: model.name });
-                    });
-                });
-                document.querySelectorAll('[data-action="delete-item"]').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        e.stopPropagation();
-                        const id = e.currentTarget.dataset.id;
-                        if (confirm('Bạn có chắc chắn muốn xóa thiết bị này?')) {
-                             await deleteDoc(doc(db, 'inventoryItems', id));
-                        }
-                    });
-                });
-            }
-
-            function attachBookingEventListeners() {
-                document.getElementById('add-booking-btn').addEventListener('click', () => renderBookingModal());
-                attachBookingItemEventListeners();
-            }
-            
-            function attachCustomerEventListeners() {
-                document.getElementById('add-customer-btn').addEventListener('click', () => renderCustomerModal());
-                attachCustomerItemEventListeners();
-            }
-
-            function attachProductModelEventListeners() {
-                document.getElementById('add-model-btn').addEventListener('click', () => renderProductModelModal());
-                attachProductModelItemEventListeners();
-            }
-
-            function attachBookingModalEventListeners() {
-                const form = document.getElementById('booking-form');
-                form.addEventListener('submit', handleCreateBooking);
-                form.addEventListener('change', (e) => {
-                    if (e.target.name === 'startDate') state.currentBooking.startDate = e.target.value;
-                    if (e.target.name === 'endDate') state.currentBooking.endDate = e.target.value;
-                    if (e.target.name === 'customerId') state.currentBooking.customerId = e.target.value;
-                });
-                document.getElementById('open-device-selector-btn').addEventListener('click', renderDeviceSelectorModal);
-                document.getElementById('booking-add-customer-btn').addEventListener('click', () => {
-                    renderCustomerModal(null, true); 
-                });
-            }
-
-            function startDataListeners() {
-                const unsubProducts = onSnapshot(query(collection(db, 'productModels'), orderBy('name')), snap => {
-                    state.productModels = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    renderCurrentViewIfNeeded(['productModels', 'inventory', 'dashboard', 'analytics']);
-                });
-                const unsubItems = onSnapshot(query(collection(db, 'inventoryItems'), orderBy('serial')), snap => {
-                    state.inventoryItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    renderCurrentViewIfNeeded(['inventory', 'dashboard', 'analytics']);
-                });
-                const unsubBookings = onSnapshot(query(collection(db, 'bookings'), orderBy('createdAt', 'desc')), snap => {
-                    state.bookings = snap.docs.map(d => {
-                        const data = d.data();
-                        return { id: d.id, ...data, startDate: data.startDate.toDate(), endDate: data.endDate.toDate() }
-                    });
-                    renderCurrentViewIfNeeded(['bookings', 'dashboard', 'analytics']);
-                });
-                const unsubCustomers = onSnapshot(query(collection(db, 'customers'), orderBy('name')), snap => {
-                    state.customers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    if (state.isDataLoading) {
-                        state.isDataLoading = false;
-                        renderCurrentView();
-                    } else {
-                        renderCurrentViewIfNeeded(['customers', 'analytics']);
-                    }
-                });
-                
-                function renderCurrentViewIfNeeded(relevantViews) {
-                    if (relevantViews.includes(state.view)) {
-                        renderCurrentView();
-                    }
-                }
-
-                return () => { unsubProducts(); unsubItems(); unsubBookings(); unsubCustomers(); };
-            }
-
-            let unsubscribeFromData;
-
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    state.user = user;
-                    state.isDataLoading = true;
-                    renderAppShell();
-                    if (unsubscribeFromData) unsubscribeFromData();
-                    unsubscribeFromData = startDataListeners();
-                } else {
-                    state.user = null;
-                    state.isDataLoading = true;
-                    if (unsubscribeFromData) {
-                        unsubscribeFromData();
-                        unsubscribeFromData = null;
-                    }
-                    renderLoginScreen();
-                }
-            });
+        function navigateToPage(pageId) {
+            document.querySelectorAll('.page-content').forEach(page => page.classList.add('hidden'));
+            document.getElementById(`${pageId}-page`).classList.remove('hidden');
+            document.querySelectorAll('.nav-link').forEach(link => { link.classList.remove('bg-gray-700', 'text-white'); link.classList.add('text-gray-300', 'hover:bg-gray-700', 'hover:text-white'); if (link.getAttribute('href') === `#${pageId}`) { link.classList.add('bg-gray-700', 'text-white'); link.classList.remove('text-gray-300', 'hover:bg-gray-700', 'hover:text-white'); headerTitle.textContent = link.textContent.trim(); } });
+            Object.keys(listeners).forEach(key => { if (listeners[key]) { listeners[key](); listeners[key] = null; } });
+            if (pageId === 'dashboard') loadDashboardData();
+            else if (pageId === 'equipment') loadEquipment(); 
+            else if (pageId === 'customers') loadCustomers();
+            else if (pageId === 'rentals') loadRentals();
+        }
+        mainNav.addEventListener('click', (e) => { const link = e.target.closest('.nav-link'); if (link) { e.preventDefault(); const pageId = link.getAttribute('href').substring(1); navigateToPage(pageId); if (window.innerWidth < 768) { toggleSidebar(); } } });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) { updateUI('app'); navigateToPage('dashboard'); } 
+            else { updateUI('login'); Object.keys(listeners).forEach(key => { if (listeners[key]) { listeners[key](); listeners[key] = null; } }); }
         });
+        
+        const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
+        const formatDate = (timestamp, includeTime = false) => {
+            if (!timestamp) return 'N/A';
+            const date = timestamp.toDate();
+            const options = includeTime ? { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: '2-digit', year: 'numeric' };
+            return date.toLocaleString('vi-VN', options);
+        }
+        const getStatusClass = (status, type = 'equipment') => {
+            const classes = {
+                equipment: { 'Sẵn có': 'bg-green-500/20 text-green-400', 'Đang được thuê': 'bg-yellow-500/20 text-yellow-400', 'Đã đặt trước': 'bg-orange-500/20 text-orange-400', 'Bảo trì': 'bg-purple-500/20 text-purple-400' },
+                rental: { 'Chờ lấy hàng': 'bg-orange-500/20 text-orange-400', 'Đang thuê': 'bg-yellow-500/20 text-yellow-400', 'Đã trả': 'bg-green-500/20 text-green-400', 'Quá hạn': 'bg-red-500/20 text-red-400' }
+            };
+            return classes[type][status] || 'bg-gray-500/20 text-gray-400';
+        };
+        const renderActionButtons = (id, name) => `<button class="edit-btn p-2 text-blue-400 hover:text-blue-300" data-id="${id}" title="Sửa"><svg class="h-5 w-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"></path></svg></button><button class="delete-btn p-2 text-red-500 hover:text-red-400" data-id="${id}" data-name="${name}" title="Xóa"><svg class="h-5 w-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>`;
+        async function logActivity(text) { try { await addDoc(collection(db, 'activity_logs'), { text, timestamp: serverTimestamp() }); } catch (error) { console.error("Error logging activity: ", error); } }
+
+        // --- Dashboard Management ---
+        function loadDashboardData() {
+            Object.keys(listeners).forEach(key => { if (listeners[key]) { listeners[key](); listeners[key] = null; } });
+
+            // Listener for Rentals (for revenue, overdue, upcoming)
+            const rentalsQuery = query(collection(db, 'rentals'));
+            listeners.dashboardRentals = onSnapshot(rentalsQuery, (snapshot) => {
+                const now = new Date();
+                const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+                const endOfTomorrow = new Date(); endOfTomorrow.setDate(now.getDate() + 1); endOfTomorrow.setHours(23, 59, 59, 999);
+                const startOfWeek = new Date(startOfToday); startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay() + (startOfToday.getDay() === 0 ? -6 : 1));
+                const startOfMonth = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), 1);
+
+                let revenueToday = 0, revenueWeek = 0, revenueMonth = 0;
+                const overdueOrders = [], upcomingReturns = [];
+                const last7DaysRevenue = Array(7).fill(0);
+                const dayLabels = [];
+
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date(); d.setDate(d.getDate() - i);
+                    dayLabels.push(d.toLocaleDateString('vi-VN', { weekday: 'short' }));
+                }
+
+                snapshot.docs.forEach(doc => {
+                    const rental = doc.data(); rental.id = doc.id;
+                    if (rental.status === 'Đã trả' && rental.returnedDate) {
+                        const returnedDate = rental.returnedDate.toDate();
+                        if (returnedDate >= startOfToday) revenueToday += rental.totalCost;
+                        if (returnedDate >= startOfWeek) revenueWeek += rental.totalCost;
+                        if (returnedDate >= startOfMonth) revenueMonth += rental.totalCost;
+                        const diffDays = Math.floor((now - returnedDate) / (1000 * 60 * 60 * 24));
+                        if (diffDays < 7) { last7DaysRevenue[6 - diffDays] += rental.totalCost; }
+                    }
+                    if (rental.status === 'Đang thuê') {
+                        const endDate = rental.endDate.toDate();
+                        if (endDate < now) { rental.daysOverdue = Math.ceil((now - endDate) / (1000 * 60 * 60 * 24)); overdueOrders.push(rental); } 
+                        else if (endDate <= endOfTomorrow) { upcomingReturns.push(rental); }
+                    }
+                });
+
+                revenueTodayEl.textContent = formatCurrency(revenueToday);
+                revenueWeekEl.textContent = formatCurrency(revenueWeek);
+                revenueMonthEl.textContent = formatCurrency(revenueMonth);
+                overdueCountEl.textContent = overdueOrders.length;
+                renderOverdueOrders(overdueOrders);
+                renderUpcomingReturns(upcomingReturns.sort((a,b) => a.endDate.toDate() - b.endDate.toDate()));
+                renderRevenueChart(dayLabels, last7DaysRevenue);
+            });
+
+            // Listener for Equipment Stats
+            listeners.dashboardEquipment = onSnapshot(collection(db, 'equipment'), (snapshot) => {
+                let available = 0, rented = 0;
+                snapshot.docs.forEach(doc => {
+                    const status = doc.data().status;
+                    if (status === 'Sẵn có') available++;
+                    if (status === 'Đang được thuê' || status === 'Đã đặt trước') rented++;
+                });
+                availableCountEl.textContent = available;
+                rentedCountEl.textContent = rented;
+                totalCountEl.textContent = snapshot.size;
+            });
+
+            // Listener for Customer Stats
+            listeners.dashboardCustomers = onSnapshot(collection(db, 'customers'), (snapshot) => {
+                customerCountEl.textContent = snapshot.size;
+            });
+
+            // Listener for Activity Log
+            const activityQuery = query(collection(db, 'activity_logs'), orderBy('timestamp', 'desc'), limit(5));
+            listeners.dashboardActivity = onSnapshot(activityQuery, (snapshot) => {
+                renderRecentActivity(snapshot.docs);
+            });
+        }
+
+        function renderOverdueOrders(orders) {
+            if (orders.length === 0) { overdueOrdersList.innerHTML = `<p class="text-gray-400">Không có đơn hàng nào quá hạn.</p>`; return; }
+            overdueOrdersList.innerHTML = orders.map(order => `<div class="bg-red-900/40 p-3 rounded-lg border border-red-700/50"><div class="flex justify-between items-start"><div><p class="font-bold text-white">${order.customer.name}</p><p class="text-sm text-gray-300">${order.customer.phone}</p></div><div class="text-right"><p class="font-bold text-red-400">Quá hạn ${order.daysOverdue} ngày</p><p class="text-xs text-gray-400">Hạn trả: ${formatDate(order.endDate)}</p></div></div></div>`).join('');
+        }
+
+        function renderUpcomingReturns(orders) {
+            if (orders.length === 0) { upcomingReturnsList.innerHTML = `<p class="text-gray-400">Không có đơn nào sắp đến hạn.</p>`; return; }
+            upcomingReturnsList.innerHTML = orders.map(order => { const endDate = order.endDate.toDate(); const isToday = endDate.toDateString() === new Date().toDateString(); return `<div class="bg-gray-700/50 p-3 rounded-lg"><p class="font-semibold text-white">${order.customer.name}</p><p class="text-sm text-gray-300">Hạn trả: <span class="${isToday ? 'text-amber-400 font-bold' : ''}">${formatDate(order.endDate, true)}</span></p></div>` }).join('');
+        }
+
+        function renderRecentActivity(activities) {
+            if (activities.length === 0) { recentActivityList.innerHTML = `<p class="text-gray-400">Chưa có hoạt động nào.</p>`; return; }
+            recentActivityList.innerHTML = activities.map(actDoc => { const activity = actDoc.data(); return `<div class="border-l-2 border-blue-500 pl-3"><p class="text-sm text-gray-200">${activity.text}</p><p class="text-xs text-gray-500">${formatDate(activity.timestamp, true)}</p></div>`; }).join('');
+        }
+
+        function renderRevenueChart(labels, data) {
+            if (revenueChart) { revenueChart.destroy(); }
+            revenueChart = new Chart(revenueChartCanvas, {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ label: 'Doanh thu', data: data, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }, x: { ticks: { color: '#9ca3af' }, grid: { display: false } } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+
+        // --- Equipment Management ---
+        function renderEquipmentTable(docs) {
+            equipmentTableBody.innerHTML = '';
+            if (docs.length === 0) { equipmentTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Chưa có thiết bị nào.</td></tr>`; return; }
+            docs.forEach(doc => { const eq = doc.data(); const statusClass = getStatusClass(eq.status, 'equipment'); const row = `<tr class="border-b border-gray-700 hover:bg-gray-700/50"><td class="p-4 font-medium">${eq.name}</td><td class="p-4 text-gray-400">${eq.serialNumber}</td><td class="p-4 text-gray-400">${eq.type}</td><td class="p-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${eq.status}</span></td><td class="p-4 text-right text-gray-300">${formatCurrency(eq.dailyRate)}</td><td class="p-4 text-center">${renderActionButtons(doc.id, eq.name)}</td></tr>`; equipmentTableBody.innerHTML += row; });
+        }
+        function loadEquipment() { if (listeners.equipment) return; listeners.equipment = onSnapshot(collection(db, 'equipment'), (snapshot) => renderEquipmentTable(snapshot.docs)); }
+        equipmentTableBody.addEventListener('click', async (e) => { const editBtn = e.target.closest('.edit-btn'); const deleteBtn = e.target.closest('.delete-btn'); if (editBtn) { const docSnap = await getDoc(doc(db, 'equipment', editBtn.dataset.id)); if (docSnap.exists()) openEquipmentModal('edit', docSnap.data(), docSnap.id); } if (deleteBtn) { openDeleteConfirmation(deleteBtn.dataset.id, deleteBtn.dataset.name, 'equipment'); } });
+        equipmentForm.addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('eq-name').value.trim(), brand = document.getElementById('eq-brand').value.trim(), serialNumber = document.getElementById('eq-serial').value.trim().toUpperCase(), type = document.getElementById('eq-type').value, dailyRate = Number(document.getElementById('eq-rate').value); equipmentFormError.textContent = ''; if (!name || !brand || !serialNumber || !dailyRate) { equipmentFormError.textContent = 'Vui lòng điền đủ các trường.'; return; } try { if (currentEditId) { await updateDoc(doc(db, 'equipment', currentEditId), { name, brand, type, dailyRate }); logActivity(`Đã cập nhật thiết bị: ${name}`); } else { const q = query(collection(db, "equipment"), where("serialNumber", "==", serialNumber)); const querySnapshot = await getDocs(q); if (!querySnapshot.empty) { equipmentFormError.textContent = 'Serial Number này đã tồn tại.'; return; } await addDoc(collection(db, 'equipment'), { name, brand, serialNumber, type, dailyRate, status: 'Sẵn có', createdAt: serverTimestamp() }); logActivity(`Đã thêm thiết bị mới: ${name}`); } closeEquipmentModal(); } catch (error) { console.error(error); equipmentFormError.textContent = 'Đã có lỗi xảy ra.'; } });
+        function openEquipmentModal(mode = 'add', data = {}, id = null) { equipmentForm.reset(); equipmentFormError.textContent = ''; currentEditId = null; const serialInput = document.getElementById('eq-serial'); if (mode === 'edit') { modalTitle.textContent = 'Cập nhật thiết bị'; currentEditId = id; document.getElementById('eq-name').value = data.name; document.getElementById('eq-brand').value = data.brand; serialInput.value = data.serialNumber; serialInput.disabled = true; serialInput.classList.add('bg-gray-600', 'cursor-not-allowed'); document.getElementById('eq-type').value = data.type; document.getElementById('eq-rate').value = data.dailyRate; } else { modalTitle.textContent = 'Thêm thiết bị mới'; serialInput.disabled = false; serialInput.classList.remove('bg-gray-600', 'cursor-not-allowed'); } equipmentModal.classList.remove('hidden'); equipmentModal.classList.add('flex'); setTimeout(() => equipmentModalContent.classList.add('scale-100'), 10); }
+        function closeEquipmentModal() { equipmentModalContent.classList.remove('scale-100'); setTimeout(() => { equipmentModal.classList.add('hidden'); equipmentModal.classList.remove('flex'); equipmentModalContent.classList.add('scale-95'); }, 200); }
+        addEquipmentBtn.addEventListener('click', () => openEquipmentModal('add')); closeModalBtn.addEventListener('click', closeEquipmentModal); cancelModalBtn.addEventListener('click', closeEquipmentModal); equipmentModal.addEventListener('click', (e) => { if (e.target === equipmentModal) closeEquipmentModal(); });
+
+        // --- Customer Management ---
+        function renderCustomerTable(docs) {
+            customerTableBody.innerHTML = '';
+            if (docs.length === 0) { customerTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-400">Chưa có khách hàng nào.</td></tr>`; return; }
+            docs.forEach(doc => { const cus = doc.data(); const row = `<tr class="border-b border-gray-700 hover:bg-gray-700/50"><td class="p-4 font-medium">${cus.fullName}</td><td class="p-4 text-gray-400">${cus.phone}</td><td class="p-4 text-gray-400">${cus.email || 'N/A'}</td><td class="p-4 text-gray-400">${cus.idCard || 'N/A'}</td><td class="p-4 text-center">${renderActionButtons(doc.id, cus.fullName)}</td></tr>`; customerTableBody.innerHTML += row; });
+        }
+        function loadCustomers() { if (listeners.customer) return; listeners.customer = onSnapshot(collection(db, 'customers'), (snapshot) => renderCustomerTable(snapshot.docs)); }
+        customerTableBody.addEventListener('click', async (e) => { const editBtn = e.target.closest('.edit-btn'); const deleteBtn = e.target.closest('.delete-btn'); if (editBtn) { const docSnap = await getDoc(doc(db, 'customers', editBtn.dataset.id)); if (docSnap.exists()) openCustomerModal('edit', docSnap.data(), docSnap.id); } if (deleteBtn) { openDeleteConfirmation(deleteBtn.dataset.id, deleteBtn.dataset.name, 'customers'); } });
+        customerForm.addEventListener('submit', async (e) => { e.preventDefault(); const fullName = document.getElementById('cus-name').value.trim(), phone = document.getElementById('cus-phone').value.trim(), email = document.getElementById('cus-email').value.trim(), idCard = document.getElementById('cus-idcard').value.trim(); customerFormError.textContent = ''; if (!fullName || !phone) { customerFormError.textContent = 'Vui lòng nhập Họ tên và Số điện thoại.'; return; } try { if (currentCustomerEditId) { await updateDoc(doc(db, 'customers', currentCustomerEditId), { fullName, email, idCard }); logActivity(`Đã cập nhật khách hàng: ${fullName}`); } else { const q = query(collection(db, "customers"), where("phone", "==", phone)); const querySnapshot = await getDocs(q); if (!querySnapshot.empty) { customerFormError.textContent = 'Số điện thoại này đã tồn tại.'; return; } await addDoc(collection(db, 'customers'), { fullName, phone, email, idCard, createdAt: serverTimestamp() }); logActivity(`Đã thêm khách hàng: ${fullName}`); } closeCustomerModal(); } catch (error) { console.error(error); customerFormError.textContent = 'Đã có lỗi xảy ra.'; } });
+        function openCustomerModal(mode = 'add', data = {}, id = null) { customerForm.reset(); customerFormError.textContent = ''; currentCustomerEditId = null; const phoneInput = document.getElementById('cus-phone'); if (mode === 'edit') { customerModalTitle.textContent = 'Cập nhật khách hàng'; currentCustomerEditId = id; document.getElementById('cus-name').value = data.fullName; phoneInput.value = data.phone; phoneInput.disabled = true; phoneInput.classList.add('bg-gray-600', 'cursor-not-allowed'); document.getElementById('cus-email').value = data.email || ''; document.getElementById('cus-idcard').value = data.idCard || ''; } else { customerModalTitle.textContent = 'Thêm khách hàng mới'; phoneInput.disabled = false; phoneInput.classList.remove('bg-gray-600', 'cursor-not-allowed'); } customerModal.classList.remove('hidden'); customerModal.classList.add('flex'); setTimeout(() => customerModalContent.classList.add('scale-100'), 10); }
+        function closeCustomerModal() { customerModalContent.classList.remove('scale-100'); setTimeout(() => { customerModal.classList.add('hidden'); customerModal.classList.remove('flex'); customerModalContent.classList.add('scale-95'); }, 200); }
+        addCustomerBtn.addEventListener('click', () => openCustomerModal('add')); closeCustomerModalBtn.addEventListener('click', closeCustomerModal); cancelCustomerModalBtn.addEventListener('click', closeCustomerModal); customerModal.addEventListener('click', (e) => { if (e.target === customerModal) closeCustomerModal(); });
+
+        // --- Delete Confirmation Logic ---
+        function openDeleteConfirmation(id, name, type) {
+            itemToDeleteId = id; itemToDeleteType = type;
+            itemToDeleteName.textContent = name;
+            confirmDeleteModal.classList.remove('hidden'); confirmDeleteModal.classList.add('flex');
+            setTimeout(() => confirmDeleteModal.querySelector('div').classList.add('scale-100'), 10);
+        }
+        function closeDeleteConfirmation() { confirmDeleteModal.querySelector('div').classList.remove('scale-100'); setTimeout(() => { confirmDeleteModal.classList.add('hidden'); confirmDeleteModal.classList.remove('flex'); confirmDeleteModal.querySelector('div').classList.add('scale-95'); }, 200); }
+        cancelDeleteBtn.addEventListener('click', closeDeleteConfirmation);
+        confirmDeleteModal.addEventListener('click', (e) => { if (e.target === confirmDeleteModal) closeDeleteConfirmation(); });
+        confirmDeleteBtn.addEventListener('click', async () => {
+            if (itemToDeleteId && itemToDeleteType) {
+                try {
+                    const docToDelete = await getDoc(doc(db, itemToDeleteType, itemToDeleteId));
+                    const docName = docToDelete.data().name || docToDelete.data().fullName;
+                    await deleteDoc(doc(db, itemToDeleteType, itemToDeleteId));
+                    logActivity(`Đã xóa ${itemToDeleteType === 'equipment' ? 'thiết bị' : 'khách hàng'}: ${docName}`);
+                    closeDeleteConfirmation();
+                } catch (error) { console.error("Error deleting document:", error); alert("Có lỗi xảy ra khi xóa."); }
+            }
+        });
+
+        // --- RENTAL MANAGEMENT ---
+        function renderRentalTable(docs) {
+            rentalTableBody.innerHTML = '';
+            if (docs.length === 0) { rentalTableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-gray-400">Chưa có đơn thuê nào.</td></tr>`; return; }
+            docs.forEach(doc => {
+                const rental = doc.data();
+                const statusClass = getStatusClass(rental.status, 'rental');
+                let actions = '';
+                if (rental.status === 'Chờ lấy hàng') {
+                    actions = `<button class="rental-action-btn bg-blue-600/80 hover:bg-blue-600 text-white text-xs font-bold py-1 px-2 rounded" data-id="${doc.id}" data-action="handover">Bàn giao</button>
+                               <button class="rental-action-btn bg-red-600/80 hover:bg-red-600 text-white text-xs font-bold py-1 px-2 rounded ml-2" data-id="${doc.id}" data-action="cancel">Hủy</button>`;
+                } else if (rental.status === 'Đang thuê') {
+                    actions = `<button class="rental-action-btn bg-green-600/80 hover:bg-green-600 text-white text-xs font-bold py-1 px-2 rounded" data-id="${doc.id}" data-action="return">Nhận lại</button>`;
+                }
+                const row = `<tr class="border-b border-gray-700 hover:bg-gray-700/50">
+                    <td class="p-4 text-gray-400 text-xs">${doc.id.substring(0,8)}...</td>
+                    <td class="p-4 font-medium">${rental.customer.name}</td>
+                    <td class="p-4 text-gray-400">${formatDate(rental.startDate)}</td>
+                    <td class="p-4 text-gray-400">${formatDate(rental.endDate)}</td>
+                    <td class="p-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${rental.status}</span></td>
+                    <td class="p-4 text-right font-semibold text-green-400">${formatCurrency(rental.totalCost)}</td>
+                    <td class="p-4 text-center">${actions}</td>
+                </tr>`;
+                rentalTableBody.innerHTML += row;
+            });
+        }
+        function loadRentals() { if (listeners.rental) return; const q = query(collection(db, 'rentals')); listeners.rental = onSnapshot(q, (snapshot) => renderRentalTable(snapshot.docs)); }
+        async function handleRentalAction(rentalId, action) {
+            const rentalRef = doc(db, 'rentals', rentalId);
+            const rentalSnap = await getDoc(rentalRef);
+            if (!rentalSnap.exists()) return;
+            const rentalData = rentalSnap.data();
+            const batch = writeBatch(db);
+            if (action === 'handover') {
+                batch.update(rentalRef, { status: 'Đang thuê' });
+                rentalData.items.forEach(item => batch.update(doc(db, 'equipment', item.id), { status: 'Đang được thuê' }));
+                logActivity(`Đã bàn giao đơn cho ${rentalData.customer.name}`);
+            } else if (action === 'return') {
+                batch.update(rentalRef, { status: 'Đã trả', returnedDate: serverTimestamp() });
+                rentalData.items.forEach(item => batch.update(doc(db, 'equipment', item.id), { status: 'Sẵn có' }));
+                logActivity(`Đã nhận lại đơn từ ${rentalData.customer.name}`);
+            } else if (action === 'cancel') {
+                 if (!confirm('Bạn có chắc muốn hủy đơn thuê này? Các thiết bị sẽ được trả về trạng thái "Sẵn có".')) return;
+                batch.delete(rentalRef);
+                rentalData.items.forEach(item => batch.update(doc(db, 'equipment', item.id), { status: 'Sẵn có' }));
+                logActivity(`Đã hủy đơn thuê của ${rentalData.customer.name}`);
+            }
+            await batch.commit();
+        }
+        rentalTableBody.addEventListener('click', (e) => { const btn = e.target.closest('.rental-action-btn'); if (btn) handleRentalAction(btn.dataset.id, btn.dataset.action); });
+
+        // --- Rental Modal Logic ---
+        function resetRentalState() { rentalState = { customer: null, items: [], startDate: null, endDate: null, totalCost: 0, days: 0 }; }
+        function updateRentalUI() {
+            if (rentalState.customer) { selectedCustomerInfo.innerHTML = `<p class="font-bold">${rentalState.customer.name} - ${rentalState.customer.phone}</p>`; selectedCustomerInfo.classList.remove('hidden'); } else { selectedCustomerInfo.classList.add('hidden'); }
+            rentalCartDiv.innerHTML = rentalState.items.map((item, index) => `<div class="flex justify-between items-center p-2 bg-gray-700 rounded-md"><div><p class="font-semibold">${item.name}</p><p class="text-xs text-gray-400">S/N: ${item.serialNumber}</p></div><div class="text-right"><p class="font-semibold">${formatCurrency(item.dailyRate)}</p><button class="remove-cart-item-btn text-red-400 text-xs" data-index="${index}">Xóa</button></div></div>`).join('');
+            if (rentalState.days > 0 && rentalState.items.length > 0) { rentalSummaryDiv.classList.remove('hidden'); rentalDaysEl.textContent = `${rentalState.days} ngày`; rentalTotalCostEl.textContent = formatCurrency(rentalState.totalCost); } else { rentalSummaryDiv.classList.add('hidden'); }
+            saveRentalBtn.disabled = !(rentalState.customer && rentalState.items.length > 0 && rentalState.days > 0);
+        }
+        function calculateTotal() {
+            if (!rentalState.startDate || !rentalState.endDate || rentalState.items.length === 0) { rentalState.days = 0; rentalState.totalCost = 0; } else {
+                const start = new Date(rentalState.startDate); const end = new Date(rentalState.endDate);
+                const diffTime = Math.abs(end - start); const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                rentalState.days = diffDays === 0 ? 1 : diffDays;
+                const dailyTotal = rentalState.items.reduce((sum, item) => sum + item.dailyRate, 0);
+                rentalState.totalCost = dailyTotal * rentalState.days;
+            }
+            updateRentalUI();
+        }
+        customerSearchInput.addEventListener('input', async (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            if (searchTerm.length < 2) { customerSearchResults.classList.add('hidden'); return; }
+            const customersRef = collection(db, "customers");
+            const nameQuery = query(customersRef, where('fullName', '>=', searchTerm), where('fullName', '<=', searchTerm + '\uf8ff'));
+            const phoneQuery = query(customersRef, where('phone', '>=', searchTerm), where('phone', '<=', searchTerm + '\uf8ff'));
+            const [nameSnapshot, phoneSnapshot] = await Promise.all([getDocs(nameQuery), getDocs(phoneQuery)]);
+            const results = {};
+            nameSnapshot.forEach(doc => results[doc.id] = { id: doc.id, ...doc.data() }); phoneSnapshot.forEach(doc => results[doc.id] = { id: doc.id, ...doc.data() });
+            customerSearchResults.innerHTML = Object.values(results).map(cus => `<div class="p-2 hover:bg-gray-500 cursor-pointer" data-id="${cus.id}">${cus.fullName} - ${cus.phone}</div>`).join('');
+            customerSearchResults.classList.remove('hidden');
+        });
+        customerSearchResults.addEventListener('click', (e) => {
+            const target = e.target.closest('div'); if (!target) return;
+            const customerId = target.dataset.id; const customerName = target.textContent.split(' - ')[0]; const customerPhone = target.textContent.split(' - ')[1];
+            rentalState.customer = { id: customerId, name: customerName, phone: customerPhone };
+            customerSearchInput.value = ''; customerSearchResults.classList.add('hidden'); updateRentalUI();
+        });
+        
+        async function findAndAddEquipment() {
+            const sn = equipmentSearchInput.value.trim().toUpperCase(); if (!sn) return; equipmentSearchError.textContent = '';
+            if (rentalState.items.some(item => item.serialNumber === sn)) { equipmentSearchError.textContent = 'Thiết bị này đã có trong đơn.'; return; }
+            const q = query(collection(db, "equipment"), where("serialNumber", "==", sn));
+            const querySnapshot = await getDocs(q);
+            if (querySnapshot.empty) { equipmentSearchError.textContent = 'Không tìm thấy thiết bị với S/N này.'; return; }
+            const doc = querySnapshot.docs[0]; const eq = { id: doc.id, ...doc.data() };
+            if (eq.status !== 'Sẵn có') { equipmentSearchError.textContent = `Thiết bị này đang ${eq.status}. Không thể cho thuê.`; return; }
+            rentalState.items.push(eq); equipmentSearchInput.value = ''; calculateTotal(); equipmentSearchInput.focus();
+        }
+        equipmentSearchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); findAndAddEquipment(); } });
+        addEquipmentToCartBtn.addEventListener('click', findAndAddEquipment);
+
+        rentalCartDiv.addEventListener('click', (e) => { if (e.target.classList.contains('remove-cart-item-btn')) { const index = parseInt(e.target.dataset.index); rentalState.items.splice(index, 1); calculateTotal(); } });
+        rentalForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); if (!rentalState.customer || rentalState.items.length === 0 || rentalState.days <= 0) return;
+            const batch = writeBatch(db);
+            const rentalRef = doc(collection(db, 'rentals'));
+            batch.set(rentalRef, { customer: { id: rentalState.customer.id, name: rentalState.customer.name, phone: rentalState.customer.phone }, items: rentalState.items.map(({ id, serialNumber, name, dailyRate }) => ({ id, serialNumber, name, dailyRate })), startDate: new Date(rentalState.startDate), endDate: new Date(rentalState.endDate), totalCost: rentalState.totalCost, status: 'Chờ lấy hàng', createdAt: serverTimestamp() });
+            rentalState.items.forEach(item => { const eqRef = doc(db, 'equipment', item.id); batch.update(eqRef, { status: 'Đã đặt trước' }); });
+            await batch.commit();
+            logActivity(`Đã tạo đơn thuê cho ${rentalState.customer.name}`);
+            closeRentalModal();
+        });
+        function openRentalModal() {
+            resetRentalState(); rentalForm.reset(); updateRentalUI(); rentalModal.classList.remove('hidden'); rentalModal.classList.add('flex');
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            datePickerStart = flatpickr(startDateInput, { enableTime: true, dateFormat: "Y-m-d H:i", defaultDate: new Date(), onChange: (selectedDates) => { rentalState.startDate = selectedDates[0]; datePickerEnd.set('minDate', selectedDates[0]); calculateTotal(); } });
+            datePickerEnd = flatpickr(endDateInput, { enableTime: true, dateFormat: "Y-m-d H:i", defaultDate: tomorrow, onChange: (selectedDates) => { rentalState.endDate = selectedDates[0]; calculateTotal(); } });
+            rentalState.startDate = new Date();
+            rentalState.endDate = tomorrow;
+            datePickerEnd.set('minDate', new Date());
+            calculateTotal();
+        }
+        function closeRentalModal() { rentalModal.classList.add('hidden'); rentalModal.classList.remove('flex'); if(datePickerStart) datePickerStart.destroy(); if(datePickerEnd) datePickerEnd.destroy(); }
+        addRentalBtn.addEventListener('click', openRentalModal);
+        document.getElementById('close-rental-modal-btn').addEventListener('click', closeRentalModal);
+        document.getElementById('cancel-rental-modal-btn').addEventListener('click', closeRentalModal);
+
+        // --- Auth & Mobile UI Event Listeners ---
+        document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); signInWithEmailAndPassword(auth, loginForm['login-email'].value, loginForm['login-password'].value).catch(err => loginErrorEl.textContent = 'Email hoặc mật khẩu không đúng.'); });
+        document.getElementById('register-form').addEventListener('submit', (e) => { e.preventDefault(); if(registerForm['register-password'].value.length < 6) { registerErrorEl.textContent = 'Mật khẩu phải có ít nhất 6 ký tự.'; return; } createUserWithEmailAndPassword(auth, registerForm['register-email'].value, registerForm['register-password'].value).catch(err => registerErrorEl.textContent = 'Email này đã tồn tại hoặc không hợp lệ.');});
+        logoutButton.addEventListener('click', () => signOut(auth));
+        showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); updateUI('register'); });
+        showLoginLink.addEventListener('click', (e) => { e.preventDefault(); updateUI('login'); });
+        function toggleSidebar() { sidebar.classList.toggle('-translate-x-full'); sidebar.classList.toggle('translate-x-0'); sidebarOverlay.classList.toggle('hidden'); }
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        // --- Initial Load ---
+        updateUI('loading');
     </script>
 </body>
 </html>
