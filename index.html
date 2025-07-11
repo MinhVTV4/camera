@@ -437,6 +437,7 @@
         function calculateTotal() {
             if (!rentalState.startDate || !rentalState.endDate || rentalState.items.length === 0) { rentalState.days = 0; rentalState.totalCost = 0; } else {
                 const start = new Date(rentalState.startDate); const end = new Date(rentalState.endDate);
+                if (end < start) { rentalState.days = 0; rentalState.totalCost = 0; updateRentalUI(); return; }
                 const diffTime = Math.abs(end - start); const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 rentalState.days = diffDays === 0 ? 1 : diffDays;
                 const dailyTotal = rentalState.items.reduce((sum, item) => sum + item.dailyRate, 0);
@@ -488,15 +489,47 @@
             closeRentalModal();
         });
         function openRentalModal() {
-            resetRentalState(); rentalForm.reset(); updateRentalUI(); rentalModal.classList.remove('hidden'); rentalModal.classList.add('flex');
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            datePickerStart = flatpickr(startDateInput, { enableTime: true, dateFormat: "Y-m-d H:i", defaultDate: new Date(), onChange: (selectedDates) => { rentalState.startDate = selectedDates[0]; datePickerEnd.set('minDate', selectedDates[0]); calculateTotal(); } });
-            datePickerEnd = flatpickr(endDateInput, { enableTime: true, dateFormat: "Y-m-d H:i", defaultDate: tomorrow, onChange: (selectedDates) => { rentalState.endDate = selectedDates[0]; calculateTotal(); } });
-            rentalState.startDate = new Date();
-            rentalState.endDate = tomorrow;
-            datePickerEnd.set('minDate', new Date());
-            calculateTotal();
+            resetRentalState(); 
+            rentalForm.reset(); 
+            updateRentalUI(); 
+            rentalModal.classList.remove('hidden'); 
+            rentalModal.classList.add('flex');
+            
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(now.getDate() + 1);
+
+            datePickerEnd = flatpickr(endDateInput, {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                onChange: function(selectedDates) {
+                    rentalState.endDate = selectedDates[0];
+                    if (datePickerStart) {
+                        datePickerStart.set('maxDate', selectedDates[0]);
+                    }
+                    calculateTotal();
+                }
+            });
+
+            datePickerStart = flatpickr(startDateInput, {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                onChange: function(selectedDates) {
+                    const newStartDate = selectedDates[0];
+                    rentalState.startDate = newStartDate;
+                    datePickerEnd.set('minDate', newStartDate);
+                    if (rentalState.endDate < newStartDate) {
+                        const adjustedEndDate = new Date(newStartDate);
+                        adjustedEndDate.setDate(adjustedEndDate.getDate() + 1);
+                        datePickerEnd.setDate(adjustedEndDate, true);
+                    } else {
+                        calculateTotal();
+                    }
+                }
+            });
+
+            datePickerStart.setDate(now, true);
+            datePickerEnd.setDate(tomorrow, true);
         }
         function closeRentalModal() { rentalModal.classList.add('hidden'); rentalModal.classList.remove('flex'); if(datePickerStart) datePickerStart.destroy(); if(datePickerEnd) datePickerEnd.destroy(); }
         addRentalBtn.addEventListener('click', openRentalModal);
