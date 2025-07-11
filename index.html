@@ -190,7 +190,7 @@
             document.querySelectorAll('.nav-link').forEach(link => { link.classList.remove('bg-gray-700', 'text-white'); link.classList.add('text-gray-300', 'hover:bg-gray-700', 'hover:text-white'); if (link.getAttribute('href') === `#${pageId}`) { link.classList.add('bg-gray-700', 'text-white'); link.classList.remove('text-gray-300', 'hover:bg-gray-700', 'hover:text-white'); headerTitle.textContent = link.textContent.trim(); } });
             Object.keys(listeners).forEach(key => { if (listeners[key]) { listeners[key](); listeners[key] = null; } });
             if (pageId === 'dashboard') loadDashboardData();
-            else if (pageId === 'equipment') loadEquipment(); 
+            else if (pageId === 'equipment') loadEquipmentPageData(); 
             else if (pageId === 'customers') loadCustomers();
             else if (pageId === 'rentals') loadRentals();
         }
@@ -222,7 +222,6 @@
         function loadDashboardData() {
             Object.keys(listeners).forEach(key => { if (listeners[key]) { listeners[key](); listeners[key] = null; } });
 
-            // Listener for Rentals (for revenue, overdue, upcoming)
             listeners.dashboardRentals = onSnapshot(query(collection(db, 'rentals')), (snapshot) => {
                 const now = new Date();
                 const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
@@ -256,7 +255,6 @@
                 renderUpcomingReturns(upcomingReturns.sort((a,b) => a.endDate.toDate() - b.endDate.toDate()));
             });
 
-            // Listener for Equipment Stats
             listeners.dashboardEquipment = onSnapshot(collection(db, 'equipment'), (snapshot) => {
                 let available = 0, rented = 0;
                 snapshot.docs.forEach(doc => {
@@ -269,16 +267,8 @@
                 totalCountEl.textContent = snapshot.size;
             });
 
-            // Listener for Customer Stats
-            listeners.dashboardCustomers = onSnapshot(collection(db, 'customers'), (snapshot) => {
-                customerCountEl.textContent = snapshot.size;
-            });
-
-            // Listener for Activity Log
-            const activityQuery = query(collection(db, 'activity_logs'), orderBy('timestamp', 'desc'), limit(5));
-            listeners.dashboardActivity = onSnapshot(activityQuery, (snapshot) => {
-                renderRecentActivity(snapshot.docs);
-            });
+            listeners.dashboardCustomers = onSnapshot(collection(db, 'customers'), (snapshot) => { customerCountEl.textContent = snapshot.size; });
+            listeners.dashboardActivity = onSnapshot(query(collection(db, 'activity_logs'), orderBy('timestamp', 'desc'), limit(5)), (snapshot) => renderRecentActivity(snapshot.docs));
         }
 
         function renderOverdueOrders(orders) {
@@ -297,12 +287,54 @@
         }
 
         // --- Equipment Management ---
-        function renderEquipmentTable(docs) {
+        let equipmentData = [];
+        let activeRentalsMap = new Map();
+
+        function loadEquipmentPageData() {
+            if (listeners.equipment) listeners.equipment();
+            if (listeners.rental) listeners.rental();
+
+            listeners.rental = onSnapshot(query(collection(db, 'rentals'), where('status', 'in', ['Đang thuê', 'Chờ lấy hàng'])), (snapshot) => {
+                activeRentalsMap.clear();
+                snapshot.forEach(doc => {
+                    const rental = doc.data();
+                    rental.items.forEach(item => {
+                        activeRentalsMap.set(item.serialNumber, rental.endDate);
+                    });
+                });
+                renderEquipmentTable(equipmentData, activeRentalsMap);
+            });
+
+            listeners.equipment = onSnapshot(collection(db, 'equipment'), (snapshot) => {
+                equipmentData = snapshot.docs;
+                renderEquipmentTable(equipmentData, activeRentalsMap);
+            });
+        }
+
+        function renderEquipmentTable(docs, rentalsMap) {
             equipmentTableBody.innerHTML = '';
             if (docs.length === 0) { equipmentTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Chưa có thiết bị nào.</td></tr>`; return; }
-            docs.forEach(doc => { const eq = doc.data(); const statusClass = getStatusClass(eq.status, 'equipment'); const row = `<tr class="border-b border-gray-700 hover:bg-gray-700/50"><td class="p-4 font-medium">${eq.name}</td><td class="p-4 text-gray-400">${eq.serialNumber}</td><td class="p-4 text-gray-400">${eq.type}</td><td class="p-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${eq.status}</span></td><td class="p-4 text-right text-gray-300">${formatCurrency(eq.dailyRate)}</td><td class="p-4 text-center">${renderActionButtons(doc.id, eq.name)}</td></tr>`; equipmentTableBody.innerHTML += row; });
+            
+            docs.forEach(doc => {
+                const eq = doc.data();
+                const statusClass = getStatusClass(eq.status, 'equipment');
+                let statusHTML = `<span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${eq.status}</span>`;
+                
+                if ((eq.status === 'Đang được thuê' || eq.status === 'Đã đặt trước') && rentalsMap.has(eq.serialNumber)) {
+                    statusHTML += `<p class="text-xs text-gray-400 mt-1">Trả: ${formatDate(rentalsMap.get(eq.serialNumber))}</p>`;
+                }
+
+                const row = `<tr class="border-b border-gray-700 hover:bg-gray-700/50">
+                    <td class="p-4 font-medium">${eq.name}</td>
+                    <td class="p-4 text-gray-400">${eq.serialNumber}</td>
+                    <td class="p-4 text-gray-400">${eq.type}</td>
+                    <td class="p-4">${statusHTML}</td>
+                    <td class="p-4 text-right text-gray-300">${formatCurrency(eq.dailyRate)}</td>
+                    <td class="p-4 text-center">${renderActionButtons(doc.id, eq.name)}</td>
+                </tr>`;
+                equipmentTableBody.innerHTML += row;
+            });
         }
-        function loadEquipment() { if (listeners.equipment) return; listeners.equipment = onSnapshot(collection(db, 'equipment'), (snapshot) => renderEquipmentTable(snapshot.docs)); }
         equipmentTableBody.addEventListener('click', async (e) => { const editBtn = e.target.closest('.edit-btn'); const deleteBtn = e.target.closest('.delete-btn'); if (editBtn) { const docSnap = await getDoc(doc(db, 'equipment', editBtn.dataset.id)); if (docSnap.exists()) openEquipmentModal('edit', docSnap.data(), docSnap.id); } if (deleteBtn) { openDeleteConfirmation(deleteBtn.dataset.id, deleteBtn.dataset.name, 'equipment'); } });
         equipmentForm.addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('eq-name').value.trim(), brand = document.getElementById('eq-brand').value.trim(), serialNumber = document.getElementById('eq-serial').value.trim().toUpperCase(), type = document.getElementById('eq-type').value, dailyRate = Number(document.getElementById('eq-rate').value); equipmentFormError.textContent = ''; if (!name || !brand || !serialNumber || !dailyRate) { equipmentFormError.textContent = 'Vui lòng điền đủ các trường.'; return; } try { if (currentEditId) { await updateDoc(doc(db, 'equipment', currentEditId), { name, brand, type, dailyRate }); logActivity(`Đã cập nhật thiết bị: ${name}`); } else { const q = query(collection(db, "equipment"), where("serialNumber", "==", serialNumber)); const querySnapshot = await getDocs(q); if (!querySnapshot.empty) { equipmentFormError.textContent = 'Serial Number này đã tồn tại.'; return; } await addDoc(collection(db, 'equipment'), { name, brand, serialNumber, type, dailyRate, status: 'Sẵn có', createdAt: serverTimestamp() }); logActivity(`Đã thêm thiết bị mới: ${name}`); } closeEquipmentModal(); } catch (error) { console.error(error); equipmentFormError.textContent = 'Đã có lỗi xảy ra.'; } });
         function openEquipmentModal(mode = 'add', data = {}, id = null) { equipmentForm.reset(); equipmentFormError.textContent = ''; currentEditId = null; const serialInput = document.getElementById('eq-serial'); if (mode === 'edit') { modalTitle.textContent = 'Cập nhật thiết bị'; currentEditId = id; document.getElementById('eq-name').value = data.name; document.getElementById('eq-brand').value = data.brand; serialInput.value = data.serialNumber; serialInput.disabled = true; serialInput.classList.add('bg-gray-600', 'cursor-not-allowed'); document.getElementById('eq-type').value = data.type; document.getElementById('eq-rate').value = data.dailyRate; } else { modalTitle.textContent = 'Thêm thiết bị mới'; serialInput.disabled = false; serialInput.classList.remove('bg-gray-600', 'cursor-not-allowed'); } equipmentModal.classList.remove('hidden'); equipmentModal.classList.add('flex'); setTimeout(() => equipmentModalContent.classList.add('scale-100'), 10); }
