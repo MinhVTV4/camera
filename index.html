@@ -75,19 +75,27 @@
                 </div>
                 <div id="equipment-page" class="page-content hidden">
                     <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Thiết bị</h1><button id="add-equipment-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Thêm thiết bị</button></div>
-                    <div class="bg-gray-800 p-4 rounded-xl shadow-lg mb-6"><div id="equipment-filters" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div></div>
+                    <div class="bg-gray-800 p-4 rounded-xl shadow-lg mb-6"><div id="equipment-filters" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <input type="text" id="equipment-search-filter" placeholder="Tìm theo tên hoặc S/N..." class="w-full p-2 bg-gray-700 rounded-md border border-gray-600">
+                        <select id="equipment-type-filter" class="w-full p-2 bg-gray-700 rounded-md border border-gray-600"><option value="">Tất cả loại</option><option>Máy ảnh</option><option>Ống kính</option><option>Tripod</option><option>Đèn</option><option>Micro</option><option>Thẻ nhớ</option><option>Khác</option></select>
+                        <select id="equipment-status-filter" class="w-full p-2 bg-gray-700 rounded-md border border-gray-600"><option value="">Tất cả trạng thái</option><option>Sẵn có</option><option>Đang được thuê</option><option>Đã đặt trước</option><option>Bảo trì</option></select>
+                    </div></div>
                     <div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto hidden md:block"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Tên thiết bị</th><th class="p-4 font-semibold">S/N</th><th class="p-4 font-semibold">Loại</th><th class="p-4 font-semibold">Trạng thái</th><th class="p-4 font-semibold text-right">Giá thuê/ngày</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="equipment-table-body"></tbody></table></div>
                     <div id="equipment-list-mobile" class="md:hidden space-y-4"></div>
                 </div>
                 <div id="customers-page" class="page-content hidden">
                     <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Khách hàng</h1><button id="add-customer-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Thêm khách hàng</button></div>
-                    <div class="bg-gray-800 p-4 rounded-xl shadow-lg mb-6"><div id="customer-filters" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div></div>
+                    <div class="bg-gray-800 p-4 rounded-xl shadow-lg mb-6"><div id="customer-filters" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <input type="text" id="customer-search-filter" placeholder="Tìm theo tên hoặc SĐT..." class="w-full p-2 bg-gray-700 rounded-md border border-gray-600 sm:col-span-2">
+                    </div></div>
                     <div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto hidden md:block"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Họ và tên</th><th class="p-4 font-semibold">Số điện thoại</th><th class="p-4 font-semibold">Email</th><th class="p-4 font-semibold">Số CCCD</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="customer-table-body"></tbody></table></div>
                     <div id="customer-list-mobile" class="md:hidden space-y-4"></div>
                 </div>
                 <div id="rentals-page" class="page-content hidden">
                     <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Đơn thuê</h1><button id="add-rental-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Tạo đơn thuê</button></div>
-                    <div class="bg-gray-800 p-4 rounded-xl shadow-lg mb-6"><div id="rental-filters" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div></div>
+                    <div class="bg-gray-800 p-4 rounded-xl shadow-lg mb-6"><div id="rental-filters" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <select id="rental-status-filter" class="w-full p-2 bg-gray-700 rounded-md border border-gray-600"><option value="">Tất cả trạng thái</option><option>Chờ lấy hàng</option><option>Đang thuê</option><option>Đã trả</option><option>Quá hạn</option></select>
+                    </div></div>
                     <div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto hidden md:block"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Khách hàng</th><th class="p-4 font-semibold">Ngày thuê</th><th class="p-4 font-semibold">Ngày trả</th><th class="p-4 font-semibold">Trạng thái</th><th class="p-4 font-semibold text-right">Tổng tiền</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="rental-table-body"></tbody></table></div>
                     <div id="rental-list-mobile" class="md:hidden space-y-4"></div>
                 </div>
@@ -141,13 +149,15 @@
         const closeModalBtn = document.getElementById('close-modal-btn'), cancelModalBtn = document.getElementById('cancel-modal-btn');
         const equipmentForm = document.getElementById('equipment-form'), equipmentTableBody = document.getElementById('equipment-table-body'), equipmentFormError = document.getElementById('equipment-form-error');
         const equipmentListMobile = document.getElementById('equipment-list-mobile');
-        
+        const equipmentSearchFilter = document.getElementById('equipment-search-filter'), equipmentTypeFilter = document.getElementById('equipment-type-filter'), equipmentStatusFilter = document.getElementById('equipment-status-filter');
+
         // Customer Elements
         const addCustomerBtn = document.getElementById('add-customer-btn');
         const customerModalTitle = document.getElementById('customer-modal-title');
         const closeCustomerModalBtn = document.getElementById('close-customer-modal-btn'), cancelCustomerModalBtn = document.getElementById('cancel-customer-modal-btn');
         const customerForm = document.getElementById('customer-form'), customerTableBody = document.getElementById('customer-table-body'), customerFormError = document.getElementById('customer-form-error');
         const customerListMobile = document.getElementById('customer-list-mobile');
+        const customerSearchFilter = document.getElementById('customer-search-filter');
 
         // Delete Modal Elements
         const itemToDeleteName = document.getElementById('item-to-delete-name');
@@ -157,6 +167,7 @@
         const addRentalBtn = document.getElementById('add-rental-btn');
         const rentalTableBody = document.getElementById('rental-table-body');
         const rentalListMobile = document.getElementById('rental-list-mobile');
+        const rentalStatusFilter = document.getElementById('rental-status-filter');
         const rentalForm = document.getElementById('rental-form');
         const customerSearchInput = document.getElementById('customer-search'), customerSearchResults = document.getElementById('customer-search-results'), selectedCustomerInfo = document.getElementById('selected-customer-info');
         const equipmentSearchInput = document.getElementById('equipment-search'), equipmentSearchError = document.getElementById('equipment-search-error'), addEquipmentToCartBtn = document.getElementById('add-equipment-to-cart-btn');
@@ -180,6 +191,7 @@
         let rentalState = { customer: null, items: [], startDate: null, endDate: null, totalCost: 0, days: 0 };
         let datePickerStart, datePickerEnd;
         let activeReturnData = null;
+        let allData = { equipment: [], customers: [], rentals: [] };
 
         // --- UI / View Management ---
         function updateUI(state) {
@@ -320,17 +332,30 @@
         }
 
         function renderEquipmentViews(docs, rentalsMap) {
+            const searchTerm = equipmentSearchFilter.value.toLowerCase();
+            const type = equipmentTypeFilter.value;
+            const status = equipmentStatusFilter.value;
+
+            const filteredDocs = docs.filter(doc => {
+                const data = doc.data();
+                const nameMatch = data.name.toLowerCase().includes(searchTerm);
+                const serialMatch = data.serialNumber.toLowerCase().includes(searchTerm);
+                const typeMatch = !type || data.type === type;
+                const statusMatch = !status || data.status === status;
+                return (nameMatch || serialMatch) && typeMatch && statusMatch;
+            });
+
             let tableHTML = '';
             let mobileHTML = '';
 
-            if (docs.length === 0) {
-                const emptyRow = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Chưa có thiết bị nào.</td></tr>`;
+            if (filteredDocs.length === 0) {
+                const emptyRow = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Không tìm thấy thiết bị nào.</td></tr>`;
                 equipmentTableBody.innerHTML = emptyRow;
-                equipmentListMobile.innerHTML = `<div class="text-center p-8 text-gray-400">Chưa có thiết bị nào.</div>`;
+                equipmentListMobile.innerHTML = `<div class="text-center p-8 text-gray-400">Không tìm thấy thiết bị nào.</div>`;
                 return;
             }
             
-            docs.forEach(doc => {
+            filteredDocs.forEach(doc => {
                 const eq = doc.data();
                 const statusClass = getStatusClass(eq.status, 'equipment');
                 let statusText = `<span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${eq.status}</span>`;
@@ -349,6 +374,10 @@
             equipmentTableBody.innerHTML = tableHTML;
             equipmentListMobile.innerHTML = mobileHTML;
         }
+
+        equipmentSearchFilter.addEventListener('input', () => renderEquipmentViews(equipmentData, activeRentalsMap));
+        equipmentTypeFilter.addEventListener('change', () => renderEquipmentViews(equipmentData, activeRentalsMap));
+        equipmentStatusFilter.addEventListener('change', () => renderEquipmentViews(equipmentData, activeRentalsMap));
 
         equipmentListMobile.addEventListener('click', async (e) => {
             const card = e.target.closest('.list-card');
@@ -372,7 +401,7 @@
                         <div class="flex justify-between py-2 border-b border-gray-700"><span>Trạng thái:</span><span class="font-semibold">${eq.status}</span></div>
                         ${returnDateHTML}
                     `;
-                    openDetailsModal('Chi tiết thiết bị', content);
+                    openDetailsModal('Chi tiết thiết bị', content, 'equipment', id, eq.name);
                 }
             }
         });
@@ -384,16 +413,23 @@
         addEquipmentBtn.addEventListener('click', () => openEquipmentModal('add')); closeModalBtn.addEventListener('click', closeEquipmentModal); cancelModalBtn.addEventListener('click', closeEquipmentModal); equipmentModal.addEventListener('click', (e) => { if (e.target === equipmentModal) closeEquipmentModal(); });
 
         // --- Customer Management ---
-        function loadCustomers() { if (listeners.customer) return; listeners.customer = onSnapshot(collection(db, 'customers'), (snapshot) => renderCustomerViews(snapshot.docs)); }
+        let allCustomers = [];
+        function loadCustomers() { if (listeners.customer) return; listeners.customer = onSnapshot(collection(db, 'customers'), (snapshot) => { allCustomers = snapshot.docs; renderCustomerViews(allCustomers); }); }
         function renderCustomerViews(docs) {
+            const searchTerm = customerSearchFilter.value.toLowerCase();
+            const filteredDocs = docs.filter(doc => {
+                const data = doc.data();
+                return data.fullName.toLowerCase().includes(searchTerm) || data.phone.includes(searchTerm);
+            });
+
             let tableHTML = '';
             let mobileHTML = '';
-            if (docs.length === 0) {
-                customerTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-400">Chưa có khách hàng nào.</td></tr>`;
-                customerListMobile.innerHTML = `<div class="text-center p-8 text-gray-400">Chưa có khách hàng nào.</div>`;
+            if (filteredDocs.length === 0) {
+                customerTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-400">Không tìm thấy khách hàng nào.</td></tr>`;
+                customerListMobile.innerHTML = `<div class="text-center p-8 text-gray-400">Không tìm thấy khách hàng nào.</div>`;
                 return;
             }
-            docs.forEach(doc => {
+            filteredDocs.forEach(doc => {
                 const cus = doc.data();
                 tableHTML += `<tr class="border-b border-gray-700 hover:bg-gray-700/50"><td class="p-4 font-medium">${cus.fullName}</td><td class="p-4 text-gray-400">${cus.phone}</td><td class="p-4 text-gray-400">${cus.email || 'N/A'}</td><td class="p-4 text-gray-400">${cus.idCard || 'N/A'}</td><td class="p-4 text-center">${renderActionButtons(doc.id, cus.fullName)}</td></tr>`;
                 mobileHTML += `<div class="bg-gray-800 rounded-lg shadow-md p-4 list-card" data-type="customer" data-id="${doc.id}"><div class="flex justify-between items-start"><div class="flex-grow"><p class="font-bold text-white">${cus.fullName}</p><p class="text-sm text-gray-400">${cus.phone}${cus.email ? ` | ${cus.email}` : ''}</p></div><div class="flex-shrink-0 ml-2 flex items-center space-x-2">${renderActionButtons(doc.id, cus.fullName)}</div></div></div>`;
@@ -401,6 +437,7 @@
             customerTableBody.innerHTML = tableHTML;
             customerListMobile.innerHTML = mobileHTML;
         }
+        customerSearchFilter.addEventListener('input', () => renderCustomerViews(allCustomers));
         customerListMobile.addEventListener('click', async (e) => {
             const card = e.target.closest('.list-card');
             const isActionButton = e.target.closest('.edit-btn') || e.target.closest('.delete-btn');
@@ -449,17 +486,24 @@
         });
 
         // --- RENTAL MANAGEMENT ---
-        function loadRentals() { if (listeners.rental) return; const q = query(collection(db, 'rentals')); listeners.rental = onSnapshot(q, (snapshot) => renderRentalViews(snapshot.docs)); }
+        let allRentals = [];
+        function loadRentals() { if (listeners.rental) return; listeners.rental = onSnapshot(query(collection(db, 'rentals'), orderBy('createdAt', 'desc')), (snapshot) => { allRentals = snapshot.docs; renderRentalViews(allRentals); }); }
         function renderRentalViews(docs) {
+            const status = rentalStatusFilter.value;
+            const filteredDocs = docs.filter(doc => {
+                const data = doc.data();
+                return !status || data.status === status;
+            });
+
             let tableHTML = '';
             let mobileHTML = '';
-            if (docs.length === 0) {
-                const emptyRow = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Chưa có đơn thuê nào.</td></tr>`;
+            if (filteredDocs.length === 0) {
+                const emptyRow = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Không tìm thấy đơn thuê nào.</td></tr>`;
                 rentalTableBody.innerHTML = emptyRow;
-                rentalListMobile.innerHTML = `<div class="text-center p-8 text-gray-400">Chưa có đơn thuê nào.</div>`;
+                rentalListMobile.innerHTML = `<div class="text-center p-8 text-gray-400">Không tìm thấy đơn thuê nào.</div>`;
                 return;
             }
-            docs.forEach(doc => {
+            filteredDocs.forEach(doc => {
                 const rental = doc.data();
                 const statusClass = getStatusClass(rental.status, 'rental');
                 let actions = '';
@@ -477,6 +521,7 @@
             rentalTableBody.innerHTML = tableHTML;
             rentalListMobile.innerHTML = mobileHTML;
         }
+        rentalStatusFilter.addEventListener('change', () => renderRentalViews(allRentals));
         rentalListMobile.addEventListener('click', async (e) => {
             const card = e.target.closest('.list-card');
             const isActionButton = e.target.closest('.rental-action-btn');
@@ -712,9 +757,7 @@
             if (type === 'customer') {
                 historyQuery = query(collection(db, 'rentals'), where('customer.id', '==', id), orderBy('createdAt', 'desc'));
             } else if (type === 'equipment') {
-                // This query is more complex. We'll fetch all and filter client-side for simplicity in this MVP.
-                // For production with large data, consider a different data structure.
-                historyQuery = query(collection(db, 'rentals'), orderBy('createdAt', 'desc'));
+                historyQuery = query(collection(db, 'rentals'), where('items', 'array-contains', { id: id }), orderBy('createdAt', 'desc'));
             }
 
             const snapshot = await getDocs(historyQuery);
@@ -722,7 +765,7 @@
             if (type === 'customer') {
                 snapshot.forEach(doc => rentals.push(doc.data()));
             } else {
-                snapshot.forEach(doc => {
+                 snapshot.forEach(doc => {
                     const rental = doc.data();
                     if (rental.items.some(item => item.id === id)) {
                         rentals.push(rental);
