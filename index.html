@@ -15,9 +15,13 @@
 
     <!-- Flatpickr Date Picker CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- FullCalendar CSS -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
     
     <!-- JS Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+
 
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -33,6 +37,17 @@
         .flatpickr-day.selected { background-color: #3b82f6; border-color: #3b82f6; }
         .flatpickr-time input.flatpickr-hour, .flatpickr-time input.flatpickr-minute { color: #d1d5db !important; }
         .numInputWrapper span { border-color: #d1d5db !important; }
+
+        /* FullCalendar Dark Theme */
+        .fc { color: #d1d5db; }
+        .fc .fc-toolbar-title { color: #fff; }
+        .fc .fc-button-primary { background-color: #374151; border-color: #4b5563; }
+        .fc .fc-button-primary:hover { background-color: #4b5563; }
+        .fc-daygrid-day.fc-day-today { background-color: rgba(59, 130, 246, 0.15); }
+        .fc-day-header { color: #9ca3af; }
+        .fc-col-header-cell { border-color: #374151 !important; }
+        .fc-daygrid-day, .fc-timegrid-slot-lane, .fc-timegrid-slot-label, .fc-scrollgrid-sync-table { border-color: #374151 !important; }
+        .fc-event { border-width: 2px !important; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200">
@@ -754,18 +769,17 @@
         async function openHistoryModal(type, id, name) {
             closeDetailsModal(); // Close the current details modal
             let historyQuery;
+            let rentals = [];
+
             if (type === 'customer') {
                 historyQuery = query(collection(db, 'rentals'), where('customer.id', '==', id), orderBy('createdAt', 'desc'));
-            } else if (type === 'equipment') {
-                historyQuery = query(collection(db, 'rentals'), where('items', 'array-contains', { id: id }), orderBy('createdAt', 'desc'));
-            }
-
-            const snapshot = await getDocs(historyQuery);
-            let rentals = [];
-            if (type === 'customer') {
+                const snapshot = await getDocs(historyQuery);
                 snapshot.forEach(doc => rentals.push(doc.data()));
-            } else {
-                 snapshot.forEach(doc => {
+            } else if (type === 'equipment') {
+                // This query is more complex. We'll fetch all and filter client-side for simplicity in this MVP.
+                // For production with large data, consider a different data structure.
+                const allRentalsSnapshot = await getDocs(query(collection(db, 'rentals'), orderBy('createdAt', 'desc')));
+                allRentalsSnapshot.forEach(doc => {
                     const rental = doc.data();
                     if (rental.items.some(item => item.id === id)) {
                         rentals.push(rental);
