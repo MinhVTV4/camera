@@ -73,7 +73,13 @@
                         <div class="lg:col-span-1 bg-gray-800 p-6 rounded-xl shadow-lg"><h2 class="text-xl font-semibold text-white mb-4">Hoạt động gần đây</h2><div id="recent-activity-list" class="space-y-3"></div></div>
                     </div>
                 </div>
-                <div id="equipment-page" class="page-content hidden"><div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Thiết bị</h1><button id="add-equipment-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Thêm thiết bị</button></div><div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Tên thiết bị</th><th class="p-4 font-semibold">S/N</th><th class="p-4 font-semibold">Loại</th><th class="p-4 font-semibold">Trạng thái</th><th class="p-4 font-semibold text-right">Giá thuê/ngày</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="equipment-table-body"></tbody></table></div></div>
+                <div id="equipment-page" class="page-content hidden">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Thiết bị</h1><button id="add-equipment-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Thêm thiết bị</button></div>
+                    <!-- Desktop Table -->
+                    <div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto hidden md:block"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Tên thiết bị</th><th class="p-4 font-semibold">S/N</th><th class="p-4 font-semibold">Loại</th><th class="p-4 font-semibold">Trạng thái</th><th class="p-4 font-semibold text-right">Giá thuê/ngày</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="equipment-table-body"></tbody></table></div>
+                    <!-- Mobile List -->
+                    <div id="equipment-list-mobile" class="md:hidden space-y-4"></div>
+                </div>
                 <div id="customers-page" class="page-content hidden"><div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Khách hàng</h1><button id="add-customer-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Thêm khách hàng</button></div><div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Họ và tên</th><th class="p-4 font-semibold">Số điện thoại</th><th class="p-4 font-semibold">Email</th><th class="p-4 font-semibold">Số CCCD</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="customer-table-body"></tbody></table></div></div>
                 <div id="rentals-page" class="page-content hidden"><div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Đơn thuê</h1><button id="add-rental-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Tạo đơn thuê</button></div><div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Khách hàng</th><th class="p-4 font-semibold">Ngày thuê</th><th class="p-4 font-semibold">Ngày trả</th><th class="p-4 font-semibold">Trạng thái</th><th class="p-4 font-semibold text-right">Tổng tiền</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="rental-table-body"></tbody></table></div></div>
             </main>
@@ -108,6 +114,38 @@
         </div>
     </div>
 
+    <!-- Confirm Return Modal -->
+    <div id="confirm-return-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl p-8 transform transition-all scale-95">
+            <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-white">Xác nhận trả hàng</h2><button id="close-return-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div>
+            <form id="return-form">
+                <div id="return-info" class="space-y-4"></div>
+                <div class="mt-6 border-t border-gray-700 pt-6 space-y-4">
+                    <h3 class="text-lg font-semibold text-blue-400">Điều chỉnh chi phí (nếu có)</h3>
+                    <div><label for="adjustment-amount" class="block text-gray-300 mb-2">Giảm giá (-)/ Phụ thu (+)</label><input type="number" id="adjustment-amount" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" placeholder="VD: -50000 hoặc 100000"></div>
+                    <div><label for="adjustment-notes" class="block text-gray-300 mb-2">Ghi chú điều chỉnh</label><textarea id="adjustment-notes" rows="2" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600"></textarea></div>
+                    <div class="p-4 bg-gray-900 rounded-lg">
+                        <label for="final-cost" class="block text-green-400 mb-2 font-semibold">TỔNG THU CUỐI CÙNG (VNĐ)</label>
+                        <input type="number" id="final-cost" class="w-full p-3 bg-gray-700 text-2xl font-bold text-green-300 rounded-md border border-gray-600">
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end">
+                    <button type="button" id="cancel-return-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg mr-4">Hủy</button>
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">Xác nhận & Hoàn tất</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Equipment Details Modal -->
+    <div id="equipment-details-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-8 transform transition-all scale-95">
+             <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-white">Chi tiết thiết bị</h2><button id="close-details-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div>
+             <div id="equipment-details-content" class="space-y-3 text-gray-300"></div>
+        </div>
+    </div>
+
+
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
@@ -131,7 +169,7 @@
         const mainNav = document.getElementById('main-nav'), headerTitle = document.getElementById('header-title');
         
         // Modals
-        const equipmentModal = document.getElementById('equipment-modal'), customerModal = document.getElementById('customer-modal'), confirmDeleteModal = document.getElementById('confirm-delete-modal'), rentalModal = document.getElementById('rental-modal');
+        const equipmentModal = document.getElementById('equipment-modal'), customerModal = document.getElementById('customer-modal'), confirmDeleteModal = document.getElementById('confirm-delete-modal'), rentalModal = document.getElementById('rental-modal'), confirmReturnModal = document.getElementById('confirm-return-modal'), equipmentDetailsModal = document.getElementById('equipment-details-modal');
         const equipmentModalContent = document.getElementById('equipment-modal-content'), customerModalContent = document.getElementById('customer-modal-content');
         
         // Dashboard
@@ -140,12 +178,12 @@
         const recentActivityList = document.getElementById('recent-activity-list');
         const availableCountEl = document.getElementById('available-count'), rentedCountEl = document.getElementById('rented-count'), customerCountEl = document.getElementById('customer-count'), totalCountEl = document.getElementById('total-count');
 
-
         // Equipment Elements
         const addEquipmentBtn = document.getElementById('add-equipment-btn');
         const modalTitle = document.getElementById('modal-title');
         const closeModalBtn = document.getElementById('close-modal-btn'), cancelModalBtn = document.getElementById('cancel-modal-btn');
         const equipmentForm = document.getElementById('equipment-form'), equipmentTableBody = document.getElementById('equipment-table-body'), equipmentFormError = document.getElementById('equipment-form-error');
+        const equipmentListMobile = document.getElementById('equipment-list-mobile');
         
         // Customer Elements
         const addCustomerBtn = document.getElementById('add-customer-btn');
@@ -168,12 +206,20 @@
         const rentalSummaryDiv = document.getElementById('rental-summary'), rentalDaysEl = document.getElementById('rental-days'), rentalTotalCostEl = document.getElementById('rental-total-cost');
         const saveRentalBtn = document.getElementById('save-rental-btn');
 
+        // Return Modal Elements
+        const returnInfoDiv = document.getElementById('return-info');
+        const returnForm = document.getElementById('return-form');
+        const adjustmentAmountInput = document.getElementById('adjustment-amount');
+        const adjustmentNotesInput = document.getElementById('adjustment-notes');
+        const finalCostInput = document.getElementById('final-cost');
+
         // --- App State ---
         let listeners = { equipment: null, customer: null, rental: null, dashboardRentals: null, dashboardActivity: null, dashboardEquipment: null, dashboardCustomers: null };
         let currentEditId = null, currentCustomerEditId = null;
         let itemToDeleteId = null, itemToDeleteType = '';
         let rentalState = { customer: null, items: [], startDate: null, endDate: null, totalCost: 0, days: 0 };
         let datePickerStart, datePickerEnd;
+        let activeReturnData = null;
 
         // --- UI / View Management ---
         function updateUI(state) {
@@ -236,9 +282,10 @@
                     const rental = doc.data(); rental.id = doc.id;
                     if (rental.status === 'Đã trả' && rental.returnedDate) {
                         const returnedDate = rental.returnedDate.toDate();
-                        if (returnedDate >= startOfToday) revenueToday += rental.totalCost;
-                        if (returnedDate >= startOfWeek) revenueWeek += rental.totalCost;
-                        if (returnedDate >= startOfMonth) revenueMonth += rental.totalCost;
+                        const cost = rental.actualCost !== undefined ? rental.actualCost : rental.totalCost;
+                        if (returnedDate >= startOfToday) revenueToday += cost;
+                        if (returnedDate >= startOfWeek) revenueWeek += cost;
+                        if (returnedDate >= startOfMonth) revenueMonth += cost;
                     }
                     if (rental.status === 'Đang thuê') {
                         const endDate = rental.endDate.toDate();
@@ -302,39 +349,97 @@
                         activeRentalsMap.set(item.serialNumber, rental.endDate);
                     });
                 });
-                renderEquipmentTable(equipmentData, activeRentalsMap);
+                renderEquipmentViews(equipmentData, activeRentalsMap);
             });
 
             listeners.equipment = onSnapshot(collection(db, 'equipment'), (snapshot) => {
                 equipmentData = snapshot.docs;
-                renderEquipmentTable(equipmentData, activeRentalsMap);
+                renderEquipmentViews(equipmentData, activeRentalsMap);
             });
         }
 
-        function renderEquipmentTable(docs, rentalsMap) {
-            equipmentTableBody.innerHTML = '';
-            if (docs.length === 0) { equipmentTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Chưa có thiết bị nào.</td></tr>`; return; }
+        function renderEquipmentViews(docs, rentalsMap) {
+            let tableHTML = '';
+            let mobileHTML = '';
+
+            if (docs.length === 0) {
+                const emptyRow = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Chưa có thiết bị nào.</td></tr>`;
+                equipmentTableBody.innerHTML = emptyRow;
+                equipmentListMobile.innerHTML = `<div class="text-center p-8 text-gray-400">Chưa có thiết bị nào.</div>`;
+                return;
+            }
             
             docs.forEach(doc => {
                 const eq = doc.data();
                 const statusClass = getStatusClass(eq.status, 'equipment');
-                let statusHTML = `<span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${eq.status}</span>`;
+                let statusText = `<span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${eq.status}</span>`;
+                let returnDateText = '';
                 
                 if ((eq.status === 'Đang được thuê' || eq.status === 'Đã đặt trước') && rentalsMap.has(eq.serialNumber)) {
-                    statusHTML += `<p class="text-xs text-gray-400 mt-1">Trả: ${formatDate(rentalsMap.get(eq.serialNumber))}</p>`;
+                    returnDateText = `<p class="text-xs text-gray-400 mt-1">Trả: ${formatDate(rentalsMap.get(eq.serialNumber))}</p>`;
                 }
+                const statusHTML = statusText + returnDateText;
 
-                const row = `<tr class="border-b border-gray-700 hover:bg-gray-700/50">
-                    <td class="p-4 font-medium">${eq.name}</td>
-                    <td class="p-4 text-gray-400">${eq.serialNumber}</td>
-                    <td class="p-4 text-gray-400">${eq.type}</td>
-                    <td class="p-4">${statusHTML}</td>
-                    <td class="p-4 text-right text-gray-300">${formatCurrency(eq.dailyRate)}</td>
-                    <td class="p-4 text-center">${renderActionButtons(doc.id, eq.name)}</td>
-                </tr>`;
-                equipmentTableBody.innerHTML += row;
+                // Desktop View
+                tableHTML += `<tr class="border-b border-gray-700 hover:bg-gray-700/50"><td class="p-4 font-medium">${eq.name}</td><td class="p-4 text-gray-400">${eq.serialNumber}</td><td class="p-4 text-gray-400">${eq.type}</td><td class="p-4">${statusHTML}</td><td class="p-4 text-right text-gray-300">${formatCurrency(eq.dailyRate)}</td><td class="p-4 text-center">${renderActionButtons(doc.id, eq.name)}</td></tr>`;
+
+                // Mobile View
+                mobileHTML += `
+                    <div class="bg-gray-800 rounded-lg shadow-md p-4 equipment-card" data-id="${doc.id}">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-grow">
+                                <p class="font-bold text-white">${eq.name}</p>
+                                <p class="text-sm text-gray-400">S/N: ${eq.serialNumber}</p>
+                            </div>
+                            <div class="flex-shrink-0 ml-4">${statusText}</div>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">${returnDateText}</div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <p class="text-green-400 font-semibold">${formatCurrency(eq.dailyRate)}<span class="text-gray-400 font-normal">/ngày</span></p>
+                            <div class="flex items-center space-x-2">
+                                ${renderActionButtons(doc.id, eq.name)}
+                            </div>
+                        </div>
+                    </div>`;
             });
+
+            equipmentTableBody.innerHTML = tableHTML;
+            equipmentListMobile.innerHTML = mobileHTML;
         }
+
+        equipmentListMobile.addEventListener('click', async (e) => {
+            const card = e.target.closest('.equipment-card');
+            const isActionButton = e.target.closest('.edit-btn') || e.target.closest('.delete-btn');
+            if (card && !isActionButton) {
+                const id = card.dataset.id;
+                const docRef = doc(db, 'equipment', id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const eq = docSnap.data();
+                    const detailsContent = document.getElementById('equipment-details-content');
+                    let returnDateHTML = '';
+                    if ((eq.status === 'Đang được thuê' || eq.status === 'Đã đặt trước') && activeRentalsMap.has(eq.serialNumber)) {
+                         returnDateHTML = `<div class="flex justify-between py-2 border-b border-gray-700"><span>Ngày trả dự kiến:</span><span class="font-semibold">${formatDate(activeRentalsMap.get(eq.serialNumber))}</span></div>`;
+                    }
+                    detailsContent.innerHTML = `
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Tên thiết bị:</span><span class="font-semibold">${eq.name}</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Hãng:</span><span class="font-semibold">${eq.brand}</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Serial Number:</span><span class="font-semibold">${eq.serialNumber}</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Loại:</span><span class="font-semibold">${eq.type}</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Giá thuê/ngày:</span><span class="font-semibold">${formatCurrency(eq.dailyRate)}</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Trạng thái:</span><span class="font-semibold">${eq.status}</span></div>
+                        ${returnDateHTML}
+                    `;
+                    equipmentDetailsModal.classList.remove('hidden');
+                    equipmentDetailsModal.classList.add('flex');
+                }
+            }
+        });
+        document.getElementById('close-details-modal-btn').addEventListener('click', () => {
+            equipmentDetailsModal.classList.add('hidden');
+            equipmentDetailsModal.classList.remove('flex');
+        });
+
         equipmentTableBody.addEventListener('click', async (e) => { const editBtn = e.target.closest('.edit-btn'); const deleteBtn = e.target.closest('.delete-btn'); if (editBtn) { const docSnap = await getDoc(doc(db, 'equipment', editBtn.dataset.id)); if (docSnap.exists()) openEquipmentModal('edit', docSnap.data(), docSnap.id); } if (deleteBtn) { openDeleteConfirmation(deleteBtn.dataset.id, deleteBtn.dataset.name, 'equipment'); } });
         equipmentForm.addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('eq-name').value.trim(), brand = document.getElementById('eq-brand').value.trim(), serialNumber = document.getElementById('eq-serial').value.trim().toUpperCase(), type = document.getElementById('eq-type').value, dailyRate = Number(document.getElementById('eq-rate').value); equipmentFormError.textContent = ''; if (!name || !brand || !serialNumber || !dailyRate) { equipmentFormError.textContent = 'Vui lòng điền đủ các trường.'; return; } try { if (currentEditId) { await updateDoc(doc(db, 'equipment', currentEditId), { name, brand, type, dailyRate }); logActivity(`Đã cập nhật thiết bị: ${name}`); } else { const q = query(collection(db, "equipment"), where("serialNumber", "==", serialNumber)); const querySnapshot = await getDocs(q); if (!querySnapshot.empty) { equipmentFormError.textContent = 'Serial Number này đã tồn tại.'; return; } await addDoc(collection(db, 'equipment'), { name, brand, serialNumber, type, dailyRate, status: 'Sẵn có', createdAt: serverTimestamp() }); logActivity(`Đã thêm thiết bị mới: ${name}`); } closeEquipmentModal(); } catch (error) { console.error(error); equipmentFormError.textContent = 'Đã có lỗi xảy ra.'; } });
         function openEquipmentModal(mode = 'add', data = {}, id = null) { equipmentForm.reset(); equipmentFormError.textContent = ''; currentEditId = null; const serialInput = document.getElementById('eq-serial'); if (mode === 'edit') { modalTitle.textContent = 'Cập nhật thiết bị'; currentEditId = id; document.getElementById('eq-name').value = data.name; document.getElementById('eq-brand').value = data.brand; serialInput.value = data.serialNumber; serialInput.disabled = true; serialInput.classList.add('bg-gray-600', 'cursor-not-allowed'); document.getElementById('eq-type').value = data.type; document.getElementById('eq-rate').value = data.dailyRate; } else { modalTitle.textContent = 'Thêm thiết bị mới'; serialInput.disabled = false; serialInput.classList.remove('bg-gray-600', 'cursor-not-allowed'); } equipmentModal.classList.remove('hidden'); equipmentModal.classList.add('flex'); setTimeout(() => equipmentModalContent.classList.add('scale-100'), 10); }
@@ -395,7 +500,7 @@
                     <td class="p-4 text-gray-400">${formatDate(rental.startDate)}</td>
                     <td class="p-4 text-gray-400">${formatDate(rental.endDate)}</td>
                     <td class="p-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${rental.status}</span></td>
-                    <td class="p-4 text-right font-semibold text-green-400">${formatCurrency(rental.totalCost)}</td>
+                    <td class="p-4 text-right font-semibold text-green-400">${formatCurrency(rental.actualCost !== undefined ? rental.actualCost : rental.totalCost)}</td>
                     <td class="p-4 text-center">${actions}</td>
                 </tr>`;
                 rentalTableBody.innerHTML += row;
@@ -407,15 +512,18 @@
             const rentalSnap = await getDoc(rentalRef);
             if (!rentalSnap.exists()) return;
             const rentalData = rentalSnap.data();
+            rentalData.id = rentalId;
+
+            if (action === 'return') {
+                openReturnModal(rentalData);
+                return;
+            }
+
             const batch = writeBatch(db);
             if (action === 'handover') {
                 batch.update(rentalRef, { status: 'Đang thuê' });
                 rentalData.items.forEach(item => batch.update(doc(db, 'equipment', item.id), { status: 'Đang được thuê' }));
                 logActivity(`Đã bàn giao đơn cho ${rentalData.customer.name}`);
-            } else if (action === 'return') {
-                batch.update(rentalRef, { status: 'Đã trả', returnedDate: serverTimestamp() });
-                rentalData.items.forEach(item => batch.update(doc(db, 'equipment', item.id), { status: 'Sẵn có' }));
-                logActivity(`Đã nhận lại đơn từ ${rentalData.customer.name}`);
             } else if (action === 'cancel') {
                  if (!confirm('Bạn có chắc muốn hủy đơn thuê này? Các thiết bị sẽ được trả về trạng thái "Sẵn có".')) return;
                 batch.delete(rentalRef);
@@ -426,6 +534,89 @@
         }
         rentalTableBody.addEventListener('click', (e) => { const btn = e.target.closest('.rental-action-btn'); if (btn) handleRentalAction(btn.dataset.id, btn.dataset.action); });
 
+        // --- Return Modal Logic ---
+        function openReturnModal(rentalData) {
+            activeReturnData = rentalData;
+            returnForm.reset();
+            
+            const startDate = rentalData.startDate.toDate();
+            const actualReturnDate = new Date();
+
+            const dailyRateTotal = rentalData.items.reduce((sum, item) => sum + item.dailyRate, 0);
+            
+            const diffTime = Math.abs(actualReturnDate - startDate);
+            const actualDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+            
+            const systemCalculatedCost = dailyRateTotal * actualDays;
+            const difference = systemCalculatedCost - rentalData.totalCost;
+
+            let differenceHTML = '';
+            if (difference > 0) {
+                differenceHTML = `<div class="flex justify-between text-red-400"><p>Phí trả muộn:</p><p class="font-semibold">${formatCurrency(difference)}</p></div>`;
+            } else if (difference < 0) {
+                differenceHTML = `<div class="flex justify-between text-green-400"><p>Giảm giá trả sớm:</p><p class="font-semibold">${formatCurrency(difference)}</p></div>`;
+            }
+
+            returnInfoDiv.innerHTML = `
+                <p class="font-bold text-lg">${rentalData.customer.name}</p>
+                <div class="p-3 bg-gray-700/50 rounded-lg space-y-2 text-sm">
+                    <div class="flex justify-between"><p>Ngày thuê:</p><p class="font-semibold">${formatDate(rentalData.startDate, true)}</p></div>
+                    <div class="flex justify-between"><p>Ngày trả dự kiến:</p><p class="font-semibold">${formatDate(rentalData.endDate, true)}</p></div>
+                    <div class="flex justify-between"><p>Ngày trả thực tế:</p><p class="font-semibold">${actualReturnDate.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p></div>
+                    <hr class="border-gray-600">
+                    <div class="flex justify-between"><p>Chi phí dự kiến:</p><p class="font-semibold">${formatCurrency(rentalData.totalCost)}</p></div>
+                    <div class="flex justify-between"><p>Số ngày thuê thực tế:</p><p class="font-semibold">${actualDays} ngày</p></div>
+                    ${differenceHTML}
+                    <hr class="border-gray-600">
+                    <div class="flex justify-between font-bold text-lg"><p>Tổng tiền (hệ thống):</p><p>${formatCurrency(systemCalculatedCost)}</p></div>
+                </div>
+            `;
+
+            finalCostInput.value = systemCalculatedCost;
+            adjustmentAmountInput.value = '';
+            adjustmentNotesInput.value = '';
+
+            confirmReturnModal.classList.remove('hidden');
+            confirmReturnModal.classList.add('flex');
+        }
+
+        function calculateFinalCost() {
+            const systemCost = parseFloat(finalCostInput.dataset.systemCost);
+            const adjustment = parseFloat(adjustmentAmountInput.value) || 0;
+            finalCostInput.value = systemCost + adjustment;
+        }
+        adjustmentAmountInput.addEventListener('input', calculateFinalCost);
+
+        function closeReturnModal() { confirmReturnModal.classList.add('hidden'); confirmReturnModal.classList.remove('flex'); activeReturnData = null; }
+        document.getElementById('close-return-modal-btn').addEventListener('click', closeReturnModal);
+        document.getElementById('cancel-return-modal-btn').addEventListener('click', closeReturnModal);
+        
+        returnForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!activeReturnData) return;
+
+            const batch = writeBatch(db);
+            const rentalRef = doc(db, 'rentals', activeReturnData.id);
+            
+            batch.update(rentalRef, {
+                status: 'Đã trả',
+                returnedDate: serverTimestamp(),
+                actualCost: parseFloat(finalCostInput.value),
+                adjustmentAmount: parseFloat(adjustmentAmountInput.value) || 0,
+                adjustmentNotes: adjustmentNotesInput.value.trim()
+            });
+
+            activeReturnData.items.forEach(item => {
+                const eqRef = doc(db, 'equipment', item.id);
+                batch.update(eqRef, { status: 'Sẵn có' });
+            });
+
+            await batch.commit();
+            logActivity(`Đã nhận lại đơn từ ${activeReturnData.customer.name} với tổng thu ${formatCurrency(finalCostInput.value)}`);
+            closeReturnModal();
+        });
+
+
         // --- Rental Modal Logic ---
         function resetRentalState() { rentalState = { customer: null, items: [], startDate: null, endDate: null, totalCost: 0, days: 0 }; }
         function updateRentalUI() {
@@ -435,7 +626,7 @@
             saveRentalBtn.disabled = !(rentalState.customer && rentalState.items.length > 0 && rentalState.days > 0);
         }
         function calculateTotal() {
-            if (!rentalState.startDate || !rentalState.endDate || rentalState.items.length === 0) { rentalState.days = 0; rentalState.totalCost = 0; } else {
+            if (!rentalState.startDate || !rentalState.endDate) { rentalState.days = 0; rentalState.totalCost = 0; } else {
                 const start = new Date(rentalState.startDate); const end = new Date(rentalState.endDate);
                 if (end < start) { rentalState.days = 0; rentalState.totalCost = 0; updateRentalUI(); return; }
                 const diffTime = Math.abs(end - start); const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -489,45 +680,13 @@
             closeRentalModal();
         });
         function openRentalModal() {
-            resetRentalState(); 
-            rentalForm.reset(); 
-            updateRentalUI(); 
-            rentalModal.classList.remove('hidden'); 
-            rentalModal.classList.add('flex');
+            resetRentalState(); rentalForm.reset(); updateRentalUI(); rentalModal.classList.remove('hidden'); rentalModal.classList.add('flex');
+            
+            datePickerEnd = flatpickr(endDateInput, { enableTime: true, dateFormat: "Y-m-d H:i", onChange: (selectedDates) => { rentalState.endDate = selectedDates[0]; if (datePickerStart) { datePickerStart.set('maxDate', selectedDates[0]); } calculateTotal(); } });
+            datePickerStart = flatpickr(startDateInput, { enableTime: true, dateFormat: "Y-m-d H:i", onChange: (selectedDates) => { const newStartDate = selectedDates[0]; rentalState.startDate = newStartDate; datePickerEnd.set('minDate', newStartDate); if (rentalState.endDate < newStartDate) { const adjustedEndDate = new Date(newStartDate); adjustedEndDate.setDate(adjustedEndDate.getDate() + 1); datePickerEnd.setDate(adjustedEndDate, true); } else { calculateTotal(); } } });
             
             const now = new Date();
-            const tomorrow = new Date(now);
-            tomorrow.setDate(now.getDate() + 1);
-
-            datePickerEnd = flatpickr(endDateInput, {
-                enableTime: true,
-                dateFormat: "Y-m-d H:i",
-                onChange: function(selectedDates) {
-                    rentalState.endDate = selectedDates[0];
-                    if (datePickerStart) {
-                        datePickerStart.set('maxDate', selectedDates[0]);
-                    }
-                    calculateTotal();
-                }
-            });
-
-            datePickerStart = flatpickr(startDateInput, {
-                enableTime: true,
-                dateFormat: "Y-m-d H:i",
-                onChange: function(selectedDates) {
-                    const newStartDate = selectedDates[0];
-                    rentalState.startDate = newStartDate;
-                    datePickerEnd.set('minDate', newStartDate);
-                    if (rentalState.endDate < newStartDate) {
-                        const adjustedEndDate = new Date(newStartDate);
-                        adjustedEndDate.setDate(adjustedEndDate.getDate() + 1);
-                        datePickerEnd.setDate(adjustedEndDate, true);
-                    } else {
-                        calculateTotal();
-                    }
-                }
-            });
-
+            const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
             datePickerStart.setDate(now, true);
             datePickerEnd.setDate(tomorrow, true);
         }
