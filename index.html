@@ -253,6 +253,7 @@
         };
         const renderActionButtons = (id, name) => `<button class="edit-btn p-2 text-blue-400 hover:text-blue-300" data-id="${id}" title="Sửa"><svg class="h-5 w-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"></path></svg></button><button class="delete-btn p-2 text-red-500 hover:text-red-400" data-id="${id}" data-name="${name}" title="Xóa"><svg class="h-5 w-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>`;
         async function logActivity(text) { try { await addDoc(collection(db, 'activity_logs'), { text, timestamp: serverTimestamp() }); } catch (error) { console.error("Error logging activity: ", error); } }
+        const normalizeString = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
         // --- Dashboard Management ---
         function loadDashboardData() {
@@ -690,10 +691,10 @@
             updateRentalUI();
         }
         customerSearchInput.addEventListener('input', async (e) => {
-            const searchTerm = e.target.value.toLowerCase();
+            const searchTerm = normalizeString(e.target.value);
             if (searchTerm.length < 2) { customerSearchResults.classList.add('hidden'); return; }
             const customersRef = collection(db, "customers");
-            const nameQuery = query(customersRef, where('fullName', '>=', searchTerm), where('fullName', '<=', searchTerm + '\uf8ff'));
+            const nameQuery = query(customersRef, where('searchableName', '>=', searchTerm), where('searchableName', '<=', searchTerm + '\uf8ff'));
             const phoneQuery = query(customersRef, where('phone', '>=', searchTerm), where('phone', '<=', searchTerm + '\uf8ff'));
             const [nameSnapshot, phoneSnapshot] = await Promise.all([getDocs(nameQuery), getDocs(phoneQuery)]);
             const results = {};
@@ -753,15 +754,14 @@
             document.getElementById('details-modal-title').textContent = title;
             document.getElementById('details-modal-content').innerHTML = content;
             const actionsDiv = document.getElementById('details-modal-actions');
+            actionsDiv.innerHTML = '';
             if (type === 'equipment' || type === 'customer') {
                 actionsDiv.innerHTML = `<button id="view-history-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg w-full mb-2">Xem lịch sử thuê</button>`;
                 document.getElementById('view-history-btn').onclick = () => openHistoryModal(type, id, name);
-                if (type === 'equipment') {
-                    actionsDiv.innerHTML += `<button id="view-schedule-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full">Xem lịch trình</button>`;
-                    document.getElementById('view-schedule-btn').onclick = () => openScheduleModal(id, name);
-                }
-            } else {
-                actionsDiv.innerHTML = '';
+            }
+            if (type === 'equipment') {
+                 actionsDiv.innerHTML += `<button id="view-schedule-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full">Xem lịch trình</button>`;
+                 document.getElementById('view-schedule-btn').onclick = () => openScheduleModal(id, name);
             }
             detailsModal.classList.remove('hidden');
             detailsModal.classList.add('flex');
@@ -775,11 +775,10 @@
 
         async function openHistoryModal(type, id, name) {
             closeDetailsModal();
-            let historyQuery;
             let rentals = [];
 
             if (type === 'customer') {
-                historyQuery = query(collection(db, 'rentals'), where('customer.id', '==', id), orderBy('createdAt', 'desc'));
+                const historyQuery = query(collection(db, 'rentals'), where('customer.id', '==', id), orderBy('createdAt', 'desc'));
                 const snapshot = await getDocs(historyQuery);
                 snapshot.forEach(doc => rentals.push(doc.data()));
             } else if (type === 'equipment') {
