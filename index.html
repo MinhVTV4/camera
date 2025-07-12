@@ -21,6 +21,7 @@
     <!-- JS Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/vi.js'></script>
 
 
     <style>
@@ -125,6 +126,7 @@
     <div id="rental-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-4xl p-8 transform transition-all scale-95 flex flex-col h-[90vh]"><div class="flex justify-between items-center mb-6 flex-shrink-0"><h2 class="text-2xl font-bold text-white">Tạo đơn thuê mới</h2><button id="close-rental-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div><div class="flex-grow overflow-y-auto pr-2"><form id="rental-form"><div class="mb-6"><h3 class="text-lg font-semibold text-blue-400 border-b border-gray-700 pb-2 mb-4">1. Thông tin khách hàng</h3><div class="relative"><label for="customer-search" class="block text-gray-300 mb-2">Tìm khách hàng (theo tên hoặc SĐT)</label><input type="text" id="customer-search" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" autocomplete="off"><div id="customer-search-results" class="absolute w-full bg-gray-600 rounded-md mt-1 z-10 max-h-48 overflow-y-auto hidden"></div></div><div id="selected-customer-info" class="mt-4 p-4 bg-gray-700/50 rounded-lg hidden"></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-blue-400 border-b border-gray-700 pb-2 mb-4">2. Thêm thiết bị</h3><label for="equipment-search" class="block text-gray-300 mb-2">Nhập Serial Number và nhấn Thêm</label><div class="flex gap-2"><input type="text" id="equipment-search" class="flex-grow p-3 bg-gray-700 rounded-md border border-gray-600" autocomplete="off"><button type="button" id="add-equipment-to-cart-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg">Thêm</button></div><p id="equipment-search-error" class="text-red-400 text-sm mt-1"></p><div id="rental-cart" class="mt-4 space-y-2"></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-blue-400 border-b border-gray-700 pb-2 mb-4">3. Thời gian & Chi phí</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="start-date" class="block text-gray-300 mb-2">Ngày thuê</label><input type="text" id="start-date" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600 cursor-pointer" readonly></div><div><label for="end-date" class="block text-gray-300 mb-2">Ngày trả</label><input type="text" id="end-date" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600 cursor-pointer" readonly></div></div><div id="rental-summary" class="mt-4 p-4 bg-gray-700/50 rounded-lg hidden"><div class="flex justify-between items-center"><span class="text-gray-400">Tổng số ngày thuê:</span><span id="rental-days" class="font-semibold text-white">0 ngày</span></div><div class="flex justify-between items-center mt-2"><span class="text-gray-400 text-xl">Tổng chi phí:</span><span id="rental-total-cost" class="font-bold text-2xl text-green-400">0 VNĐ</span></div></div></div></form></div><div class="mt-8 flex justify-end flex-shrink-0"><button type="button" id="cancel-rental-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg mr-4">Hủy</button><button type="submit" id="save-rental-btn" form="rental-form" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>Lưu đơn thuê</button></div></div></div>
     <div id="confirm-return-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl p-8 transform transition-all scale-95"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-white">Xác nhận trả hàng</h2><button id="close-return-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div><form id="return-form"><div id="return-info" class="space-y-4"></div><div class="mt-6 border-t border-gray-700 pt-6 space-y-4"><h3 class="text-lg font-semibold text-blue-400">Điều chỉnh chi phí (nếu có)</h3><div><label for="adjustment-amount" class="block text-gray-300 mb-2">Giảm giá (-)/ Phụ thu (+)</label><input type="number" id="adjustment-amount" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" placeholder="VD: -50000 hoặc 100000"></div><div><label for="adjustment-notes" class="block text-gray-300 mb-2">Ghi chú điều chỉnh</label><textarea id="adjustment-notes" rows="2" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600"></textarea></div><div class="p-4 bg-gray-900 rounded-lg"><label for="final-cost" class="block text-green-400 mb-2 font-semibold">TỔNG THU CUỐI CÙNG (VNĐ)</label><input type="number" id="final-cost" class="w-full p-3 bg-gray-700 text-2xl font-bold text-green-300 rounded-md border border-gray-600"></div></div><p id="return-form-error" class="text-red-400 text-sm mt-4 text-center"></p><div class="mt-8 flex justify-end"><button type="button" id="cancel-return-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg mr-4">Hủy</button><button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">Xác nhận & Hoàn tất</button></div></form></div></div>
     <div id="details-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-8 transform transition-all scale-95"><div class="flex justify-between items-center mb-6"><h2 id="details-modal-title" class="text-2xl font-bold text-white"></h2><button id="close-details-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div><div id="details-modal-content" class="space-y-3 text-gray-300"></div><div id="details-modal-actions" class="mt-6 border-t border-gray-700 pt-4"></div></div></div>
+    <div id="calendar-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-4xl p-8 transform transition-all scale-95 flex flex-col h-[90vh]"><div class="flex justify-between items-center mb-6 flex-shrink-0"><h2 id="calendar-modal-title" class="text-2xl font-bold text-white"></h2><button id="close-calendar-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div><div id="calendar" class="flex-grow"></div></div></div>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -149,7 +151,7 @@
         const mainNav = document.getElementById('main-nav'), headerTitle = document.getElementById('header-title');
         
         // Modals
-        const equipmentModal = document.getElementById('equipment-modal'), customerModal = document.getElementById('customer-modal'), confirmDeleteModal = document.getElementById('confirm-delete-modal'), rentalModal = document.getElementById('rental-modal'), confirmReturnModal = document.getElementById('confirm-return-modal'), detailsModal = document.getElementById('details-modal');
+        const equipmentModal = document.getElementById('equipment-modal'), customerModal = document.getElementById('customer-modal'), confirmDeleteModal = document.getElementById('confirm-delete-modal'), rentalModal = document.getElementById('rental-modal'), confirmReturnModal = document.getElementById('confirm-return-modal'), detailsModal = document.getElementById('details-modal'), calendarModal = document.getElementById('calendar-modal');
         const equipmentModalContent = document.getElementById('equipment-modal-content'), customerModalContent = document.getElementById('customer-modal-content');
         
         // Dashboard
@@ -207,6 +209,7 @@
         let datePickerStart, datePickerEnd;
         let activeReturnData = null;
         let allData = { equipment: [], customers: [], rentals: [] };
+        let calendar = null;
 
         // --- UI / View Management ---
         function updateUI(state) {
@@ -750,9 +753,13 @@
             document.getElementById('details-modal-title').textContent = title;
             document.getElementById('details-modal-content').innerHTML = content;
             const actionsDiv = document.getElementById('details-modal-actions');
-            if (type && id) {
-                actionsDiv.innerHTML = `<button id="view-history-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg w-full">Xem lịch sử thuê</button>`;
+            if (type === 'equipment' || type === 'customer') {
+                actionsDiv.innerHTML = `<button id="view-history-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg w-full mb-2">Xem lịch sử thuê</button>`;
                 document.getElementById('view-history-btn').onclick = () => openHistoryModal(type, id, name);
+                if (type === 'equipment') {
+                    actionsDiv.innerHTML += `<button id="view-schedule-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full">Xem lịch trình</button>`;
+                    document.getElementById('view-schedule-btn').onclick = () => openScheduleModal(id, name);
+                }
             } else {
                 actionsDiv.innerHTML = '';
             }
@@ -767,7 +774,7 @@
         detailsModal.addEventListener('click', (e) => { if(e.target === detailsModal) closeDetailsModal(); });
 
         async function openHistoryModal(type, id, name) {
-            closeDetailsModal(); // Close the current details modal
+            closeDetailsModal();
             let historyQuery;
             let rentals = [];
 
@@ -776,8 +783,6 @@
                 const snapshot = await getDocs(historyQuery);
                 snapshot.forEach(doc => rentals.push(doc.data()));
             } else if (type === 'equipment') {
-                // This query is more complex. We'll fetch all and filter client-side for simplicity in this MVP.
-                // For production with large data, consider a different data structure.
                 const allRentalsSnapshot = await getDocs(query(collection(db, 'rentals'), orderBy('createdAt', 'desc')));
                 allRentalsSnapshot.forEach(doc => {
                     const rental = doc.data();
@@ -802,6 +807,50 @@
             }
             openDetailsModal(`Lịch sử thuê của ${type === 'customer' ? name : `thiết bị ${name}`}`, content);
         }
+
+        async function openScheduleModal(equipmentId, equipmentName) {
+            closeDetailsModal();
+            document.getElementById('calendar-modal-title').textContent = `Lịch trình của: ${equipmentName}`;
+            
+            const allRentalsSnapshot = await getDocs(query(collection(db, 'rentals'), where('status', 'in', ['Đang thuê', 'Chờ lấy hàng'])));
+            const events = [];
+            allRentalsSnapshot.forEach(doc => {
+                const rental = doc.data();
+                if (rental.items.some(item => item.id === equipmentId)) {
+                    events.push({
+                        title: rental.customer.name,
+                        start: rental.startDate.toDate(),
+                        end: rental.endDate.toDate(),
+                        backgroundColor: rental.status === 'Đang thuê' ? '#d97706' : '#ca8a04', // Orange/Amber
+                        borderColor: rental.status === 'Đang thuê' ? '#d97706' : '#ca8a04'
+                    });
+                }
+            });
+
+            const calendarEl = document.getElementById('calendar');
+            if (calendar) {
+                calendar.destroy();
+            }
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'vi',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek'
+                },
+                events: events
+            });
+            calendar.render();
+            calendarModal.classList.remove('hidden');
+            calendarModal.classList.add('flex');
+        }
+        document.getElementById('close-calendar-modal-btn').addEventListener('click', () => {
+             calendarModal.classList.add('hidden');
+             calendarModal.classList.remove('flex');
+             if(calendar) calendar.destroy();
+        });
+
 
         // --- Auth & Mobile UI Event Listeners ---
         document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); signInWithEmailAndPassword(auth, loginForm['login-email'].value, loginForm['login-password'].value).catch(err => loginErrorEl.textContent = 'Email hoặc mật khẩu không đúng.'); });
