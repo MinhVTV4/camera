@@ -75,76 +75,30 @@
                 </div>
                 <div id="equipment-page" class="page-content hidden">
                     <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Thiết bị</h1><button id="add-equipment-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Thêm thiết bị</button></div>
-                    <!-- Desktop Table -->
                     <div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto hidden md:block"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Tên thiết bị</th><th class="p-4 font-semibold">S/N</th><th class="p-4 font-semibold">Loại</th><th class="p-4 font-semibold">Trạng thái</th><th class="p-4 font-semibold text-right">Giá thuê/ngày</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="equipment-table-body"></tbody></table></div>
-                    <!-- Mobile List -->
                     <div id="equipment-list-mobile" class="md:hidden space-y-4"></div>
                 </div>
-                <div id="customers-page" class="page-content hidden"><div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Khách hàng</h1><button id="add-customer-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Thêm khách hàng</button></div><div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Họ và tên</th><th class="p-4 font-semibold">Số điện thoại</th><th class="p-4 font-semibold">Email</th><th class="p-4 font-semibold">Số CCCD</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="customer-table-body"></tbody></table></div></div>
-                <div id="rentals-page" class="page-content hidden"><div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Đơn thuê</h1><button id="add-rental-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Tạo đơn thuê</button></div><div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Khách hàng</th><th class="p-4 font-semibold">Ngày thuê</th><th class="p-4 font-semibold">Ngày trả</th><th class="p-4 font-semibold">Trạng thái</th><th class="p-4 font-semibold text-right">Tổng tiền</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="rental-table-body"></tbody></table></div></div>
+                <div id="customers-page" class="page-content hidden">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Khách hàng</h1><button id="add-customer-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Thêm khách hàng</button></div>
+                    <div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto hidden md:block"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Họ và tên</th><th class="p-4 font-semibold">Số điện thoại</th><th class="p-4 font-semibold">Email</th><th class="p-4 font-semibold">Số CCCD</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="customer-table-body"></tbody></table></div>
+                    <div id="customer-list-mobile" class="md:hidden space-y-4"></div>
+                </div>
+                <div id="rentals-page" class="page-content hidden">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-white">Quản lý Đơn thuê</h1><button id="add-rental-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center sm:w-auto w-full"><svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Tạo đơn thuê</button></div>
+                    <div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto hidden md:block"><table class="w-full text-left min-w-[720px]"><thead class="bg-gray-700"><tr><th class="p-4 font-semibold">Khách hàng</th><th class="p-4 font-semibold">Ngày thuê</th><th class="p-4 font-semibold">Ngày trả</th><th class="p-4 font-semibold">Trạng thái</th><th class="p-4 font-semibold text-right">Tổng tiền</th><th class="p-4 font-semibold text-center">Hành động</th></tr></thead><tbody id="rental-table-body"></tbody></table></div>
+                    <div id="rental-list-mobile" class="md:hidden space-y-4"></div>
+                </div>
             </main>
         </div><div id="sidebar-overlay" class="fixed inset-0 bg-black opacity-50 z-30 hidden md:hidden"></div>
     </div></div>
 
-    <!-- Modals (Equipment, Customer, Delete) -->
+    <!-- Modals -->
     <div id="equipment-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-8 transform transition-all scale-95" id="equipment-modal-content"><div class="flex justify-between items-center mb-6"><h2 id="modal-title" class="text-2xl font-bold text-white"></h2><button id="close-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div><form id="equipment-form"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="eq-name" class="block text-gray-300 mb-2">Tên thiết bị</label><input type="text" id="eq-name" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" required></div><div><label for="eq-brand" class="block text-gray-300 mb-2">Hãng</label><input type="text" id="eq-brand" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" required></div><div><label for="eq-serial" class="block text-gray-300 mb-2">Serial Number (S/N)</label><input type="text" id="eq-serial" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" required></div><div><label for="eq-type" class="block text-gray-300 mb-2">Loại thiết bị</label><select id="eq-type" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600"><option>Máy ảnh</option><option>Ống kính</option><option>Tripod</option><option>Đèn</option><option>Micro</option><option>Thẻ nhớ</option><option>Khác</option></select></div><div class="md:col-span-2"><label for="eq-rate" class="block text-gray-300 mb-2">Giá thuê / ngày (VNĐ)</label><input type="number" id="eq-rate" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" required></div></div><p id="equipment-form-error" class="text-red-400 text-sm mt-4 text-center"></p><div class="mt-8 flex justify-end"><button type="button" id="cancel-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg mr-4">Hủy</button><button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">Lưu</button></div></form></div></div>
     <div id="customer-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-8 transform transition-all scale-95" id="customer-modal-content"><div class="flex justify-between items-center mb-6"><h2 id="customer-modal-title" class="text-2xl font-bold text-white"></h2><button id="close-customer-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div><form id="customer-form"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="cus-name" class="block text-gray-300 mb-2">Họ và tên</label><input type="text" id="cus-name" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" required></div><div><label for="cus-phone" class="block text-gray-300 mb-2">Số điện thoại</label><input type="tel" id="cus-phone" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" required></div><div><label for="cus-email" class="block text-gray-300 mb-2">Email</label><input type="email" id="cus-email" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600"></div><div><label for="cus-idcard" class="block text-gray-300 mb-2">Số CCCD/CMND</label><input type="text" id="cus-idcard" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600"></div></div><p id="customer-form-error" class="text-red-400 text-sm mt-4 text-center"></p><div class="mt-8 flex justify-end"><button type="button" id="cancel-customer-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg mr-4">Hủy</button><button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">Lưu</button></div></form></div></div>
     <div id="confirm-delete-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-8 transform transition-all scale-95"><h3 class="text-xl font-bold text-white mb-4">Xác nhận xóa</h3><p class="text-gray-400 mb-6">Bạn có chắc chắn muốn xóa <strong id="item-to-delete-name" class="font-bold text-amber-400"></strong>? Hành động này không thể hoàn tác.</p><div class="flex justify-end gap-4"><button id="cancel-delete-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg">Hủy</button><button id="confirm-delete-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">Xóa</button></div></div></div>
-
-    <!-- Add Rental Modal -->
-    <div id="rental-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4">
-        <div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-4xl p-8 transform transition-all scale-95 flex flex-col h-[90vh]">
-            <div class="flex justify-between items-center mb-6 flex-shrink-0"><h2 class="text-2xl font-bold text-white">Tạo đơn thuê mới</h2><button id="close-rental-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div>
-            <div class="flex-grow overflow-y-auto pr-2">
-                <form id="rental-form">
-                    <div class="mb-6"><h3 class="text-lg font-semibold text-blue-400 border-b border-gray-700 pb-2 mb-4">1. Thông tin khách hàng</h3><div class="relative"><label for="customer-search" class="block text-gray-300 mb-2">Tìm khách hàng (theo tên hoặc SĐT)</label><input type="text" id="customer-search" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" autocomplete="off"><div id="customer-search-results" class="absolute w-full bg-gray-600 rounded-md mt-1 z-10 max-h-48 overflow-y-auto hidden"></div></div><div id="selected-customer-info" class="mt-4 p-4 bg-gray-700/50 rounded-lg hidden"></div></div>
-                    <div class="mb-6"><h3 class="text-lg font-semibold text-blue-400 border-b border-gray-700 pb-2 mb-4">2. Thêm thiết bị</h3>
-                        <label for="equipment-search" class="block text-gray-300 mb-2">Nhập Serial Number và nhấn Thêm</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="equipment-search" class="flex-grow p-3 bg-gray-700 rounded-md border border-gray-600" autocomplete="off">
-                            <button type="button" id="add-equipment-to-cart-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg">Thêm</button>
-                        </div>
-                        <p id="equipment-search-error" class="text-red-400 text-sm mt-1"></p>
-                        <div id="rental-cart" class="mt-4 space-y-2"></div>
-                    </div>
-                    <div class="mb-6"><h3 class="text-lg font-semibold text-blue-400 border-b border-gray-700 pb-2 mb-4">3. Thời gian & Chi phí</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="start-date" class="block text-gray-300 mb-2">Ngày thuê</label><input type="text" id="start-date" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600 cursor-pointer" readonly></div><div><label for="end-date" class="block text-gray-300 mb-2">Ngày trả</label><input type="text" id="end-date" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600 cursor-pointer" readonly></div></div><div id="rental-summary" class="mt-4 p-4 bg-gray-700/50 rounded-lg hidden"><div class="flex justify-between items-center"><span class="text-gray-400">Tổng số ngày thuê:</span><span id="rental-days" class="font-semibold text-white">0 ngày</span></div><div class="flex justify-between items-center mt-2"><span class="text-gray-400 text-xl">Tổng chi phí:</span><span id="rental-total-cost" class="font-bold text-2xl text-green-400">0 VNĐ</span></div></div></div>
-                </form>
-            </div>
-            <div class="mt-8 flex justify-end flex-shrink-0"><button type="button" id="cancel-rental-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg mr-4">Hủy</button><button type="submit" id="save-rental-btn" form="rental-form" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>Lưu đơn thuê</button></div>
-        </div>
-    </div>
-
-    <!-- Confirm Return Modal -->
-    <div id="confirm-return-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4">
-        <div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl p-8 transform transition-all scale-95">
-            <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-white">Xác nhận trả hàng</h2><button id="close-return-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div>
-            <form id="return-form">
-                <div id="return-info" class="space-y-4"></div>
-                <div class="mt-6 border-t border-gray-700 pt-6 space-y-4">
-                    <h3 class="text-lg font-semibold text-blue-400">Điều chỉnh chi phí (nếu có)</h3>
-                    <div><label for="adjustment-amount" class="block text-gray-300 mb-2">Giảm giá (-)/ Phụ thu (+)</label><input type="number" id="adjustment-amount" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" placeholder="VD: -50000 hoặc 100000"></div>
-                    <div><label for="adjustment-notes" class="block text-gray-300 mb-2">Ghi chú điều chỉnh</label><textarea id="adjustment-notes" rows="2" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600"></textarea></div>
-                    <div class="p-4 bg-gray-900 rounded-lg">
-                        <label for="final-cost" class="block text-green-400 mb-2 font-semibold">TỔNG THU CUỐI CÙNG (VNĐ)</label>
-                        <input type="number" id="final-cost" class="w-full p-3 bg-gray-700 text-2xl font-bold text-green-300 rounded-md border border-gray-600">
-                    </div>
-                </div>
-                <div class="mt-8 flex justify-end">
-                    <button type="button" id="cancel-return-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg mr-4">Hủy</button>
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">Xác nhận & Hoàn tất</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Equipment Details Modal -->
-    <div id="equipment-details-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4">
-        <div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-8 transform transition-all scale-95">
-             <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-white">Chi tiết thiết bị</h2><button id="close-details-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div>
-             <div id="equipment-details-content" class="space-y-3 text-gray-300"></div>
-        </div>
-    </div>
-
+    <div id="rental-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-4xl p-8 transform transition-all scale-95 flex flex-col h-[90vh]"><div class="flex justify-between items-center mb-6 flex-shrink-0"><h2 class="text-2xl font-bold text-white">Tạo đơn thuê mới</h2><button id="close-rental-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div><div class="flex-grow overflow-y-auto pr-2"><form id="rental-form"><div class="mb-6"><h3 class="text-lg font-semibold text-blue-400 border-b border-gray-700 pb-2 mb-4">1. Thông tin khách hàng</h3><div class="relative"><label for="customer-search" class="block text-gray-300 mb-2">Tìm khách hàng (theo tên hoặc SĐT)</label><input type="text" id="customer-search" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" autocomplete="off"><div id="customer-search-results" class="absolute w-full bg-gray-600 rounded-md mt-1 z-10 max-h-48 overflow-y-auto hidden"></div></div><div id="selected-customer-info" class="mt-4 p-4 bg-gray-700/50 rounded-lg hidden"></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-blue-400 border-b border-gray-700 pb-2 mb-4">2. Thêm thiết bị</h3><label for="equipment-search" class="block text-gray-300 mb-2">Nhập Serial Number và nhấn Thêm</label><div class="flex gap-2"><input type="text" id="equipment-search" class="flex-grow p-3 bg-gray-700 rounded-md border border-gray-600" autocomplete="off"><button type="button" id="add-equipment-to-cart-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg">Thêm</button></div><p id="equipment-search-error" class="text-red-400 text-sm mt-1"></p><div id="rental-cart" class="mt-4 space-y-2"></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-blue-400 border-b border-gray-700 pb-2 mb-4">3. Thời gian & Chi phí</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="start-date" class="block text-gray-300 mb-2">Ngày thuê</label><input type="text" id="start-date" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600 cursor-pointer" readonly></div><div><label for="end-date" class="block text-gray-300 mb-2">Ngày trả</label><input type="text" id="end-date" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600 cursor-pointer" readonly></div></div><div id="rental-summary" class="mt-4 p-4 bg-gray-700/50 rounded-lg hidden"><div class="flex justify-between items-center"><span class="text-gray-400">Tổng số ngày thuê:</span><span id="rental-days" class="font-semibold text-white">0 ngày</span></div><div class="flex justify-between items-center mt-2"><span class="text-gray-400 text-xl">Tổng chi phí:</span><span id="rental-total-cost" class="font-bold text-2xl text-green-400">0 VNĐ</span></div></div></div></form></div><div class="mt-8 flex justify-end flex-shrink-0"><button type="button" id="cancel-rental-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg mr-4">Hủy</button><button type="submit" id="save-rental-btn" form="rental-form" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>Lưu đơn thuê</button></div></div></div>
+    <div id="confirm-return-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl p-8 transform transition-all scale-95"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-white">Xác nhận trả hàng</h2><button id="close-return-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div><form id="return-form"><div id="return-info" class="space-y-4"></div><div class="mt-6 border-t border-gray-700 pt-6 space-y-4"><h3 class="text-lg font-semibold text-blue-400">Điều chỉnh chi phí (nếu có)</h3><div><label for="adjustment-amount" class="block text-gray-300 mb-2">Giảm giá (-)/ Phụ thu (+)</label><input type="number" id="adjustment-amount" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600" placeholder="VD: -50000 hoặc 100000"></div><div><label for="adjustment-notes" class="block text-gray-300 mb-2">Ghi chú điều chỉnh</label><textarea id="adjustment-notes" rows="2" class="w-full p-3 bg-gray-700 rounded-md border border-gray-600"></textarea></div><div class="p-4 bg-gray-900 rounded-lg"><label for="final-cost" class="block text-green-400 mb-2 font-semibold">TỔNG THU CUỐI CÙNG (VNĐ)</label><input type="number" id="final-cost" class="w-full p-3 bg-gray-700 text-2xl font-bold text-green-300 rounded-md border border-gray-600"></div></div><div class="mt-8 flex justify-end"><button type="button" id="cancel-return-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg mr-4">Hủy</button><button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">Xác nhận & Hoàn tất</button></div></form></div></div>
+    <div id="details-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-8 transform transition-all scale-95"><div class="flex justify-between items-center mb-6"><h2 id="details-modal-title" class="text-2xl font-bold text-white"></h2><button id="close-details-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div><div id="details-modal-content" class="space-y-3 text-gray-300"></div></div></div>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -169,7 +123,7 @@
         const mainNav = document.getElementById('main-nav'), headerTitle = document.getElementById('header-title');
         
         // Modals
-        const equipmentModal = document.getElementById('equipment-modal'), customerModal = document.getElementById('customer-modal'), confirmDeleteModal = document.getElementById('confirm-delete-modal'), rentalModal = document.getElementById('rental-modal'), confirmReturnModal = document.getElementById('confirm-return-modal'), equipmentDetailsModal = document.getElementById('equipment-details-modal');
+        const equipmentModal = document.getElementById('equipment-modal'), customerModal = document.getElementById('customer-modal'), confirmDeleteModal = document.getElementById('confirm-delete-modal'), rentalModal = document.getElementById('rental-modal'), confirmReturnModal = document.getElementById('confirm-return-modal'), detailsModal = document.getElementById('details-modal');
         const equipmentModalContent = document.getElementById('equipment-modal-content'), customerModalContent = document.getElementById('customer-modal-content');
         
         // Dashboard
@@ -190,7 +144,8 @@
         const customerModalTitle = document.getElementById('customer-modal-title');
         const closeCustomerModalBtn = document.getElementById('close-customer-modal-btn'), cancelCustomerModalBtn = document.getElementById('cancel-customer-modal-btn');
         const customerForm = document.getElementById('customer-form'), customerTableBody = document.getElementById('customer-table-body'), customerFormError = document.getElementById('customer-form-error');
-        
+        const customerListMobile = document.getElementById('customer-list-mobile');
+
         // Delete Modal Elements
         const itemToDeleteName = document.getElementById('item-to-delete-name');
         const cancelDeleteBtn = document.getElementById('cancel-delete-btn'), confirmDeleteBtn = document.getElementById('confirm-delete-btn');
@@ -198,6 +153,7 @@
         // Rental Page
         const addRentalBtn = document.getElementById('add-rental-btn');
         const rentalTableBody = document.getElementById('rental-table-body');
+        const rentalListMobile = document.getElementById('rental-list-mobile');
         const rentalForm = document.getElementById('rental-form');
         const customerSearchInput = document.getElementById('customer-search'), customerSearchResults = document.getElementById('customer-search-results'), selectedCustomerInfo = document.getElementById('selected-customer-info');
         const equipmentSearchInput = document.getElementById('equipment-search'), equipmentSearchError = document.getElementById('equipment-search-error'), addEquipmentToCartBtn = document.getElementById('add-equipment-to-cart-btn');
@@ -380,27 +336,9 @@
                 }
                 const statusHTML = statusText + returnDateText;
 
-                // Desktop View
                 tableHTML += `<tr class="border-b border-gray-700 hover:bg-gray-700/50"><td class="p-4 font-medium">${eq.name}</td><td class="p-4 text-gray-400">${eq.serialNumber}</td><td class="p-4 text-gray-400">${eq.type}</td><td class="p-4">${statusHTML}</td><td class="p-4 text-right text-gray-300">${formatCurrency(eq.dailyRate)}</td><td class="p-4 text-center">${renderActionButtons(doc.id, eq.name)}</td></tr>`;
 
-                // Mobile View
-                mobileHTML += `
-                    <div class="bg-gray-800 rounded-lg shadow-md p-4 equipment-card" data-id="${doc.id}">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-grow">
-                                <p class="font-bold text-white">${eq.name}</p>
-                                <p class="text-sm text-gray-400">S/N: ${eq.serialNumber}</p>
-                            </div>
-                            <div class="flex-shrink-0 ml-4">${statusText}</div>
-                        </div>
-                        <div class="mt-2 text-xs text-gray-400">${returnDateText}</div>
-                        <div class="mt-4 flex justify-between items-center">
-                            <p class="text-green-400 font-semibold">${formatCurrency(eq.dailyRate)}<span class="text-gray-400 font-normal">/ngày</span></p>
-                            <div class="flex items-center space-x-2">
-                                ${renderActionButtons(doc.id, eq.name)}
-                            </div>
-                        </div>
-                    </div>`;
+                mobileHTML += `<div class="bg-gray-800 rounded-lg shadow-md p-4 list-card" data-type="equipment" data-id="${doc.id}"><div class="flex justify-between items-start"><div class="flex-grow"><p class="font-bold text-white">${eq.name}</p><p class="text-sm text-gray-400">S/N: ${eq.serialNumber}</p></div><div class="flex-shrink-0 ml-4">${statusText}</div></div><div class="mt-2 text-xs text-gray-400">${returnDateText}</div><div class="mt-4 flex justify-between items-center"><p class="text-green-400 font-semibold">${formatCurrency(eq.dailyRate)}<span class="text-gray-400 font-normal">/ngày</span></p><div class="flex items-center space-x-2">${renderActionButtons(doc.id, eq.name)}</div></div></div>`;
             });
 
             equipmentTableBody.innerHTML = tableHTML;
@@ -408,7 +346,7 @@
         }
 
         equipmentListMobile.addEventListener('click', async (e) => {
-            const card = e.target.closest('.equipment-card');
+            const card = e.target.closest('.list-card');
             const isActionButton = e.target.closest('.edit-btn') || e.target.closest('.delete-btn');
             if (card && !isActionButton) {
                 const id = card.dataset.id;
@@ -416,12 +354,11 @@
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const eq = docSnap.data();
-                    const detailsContent = document.getElementById('equipment-details-content');
                     let returnDateHTML = '';
                     if ((eq.status === 'Đang được thuê' || eq.status === 'Đã đặt trước') && activeRentalsMap.has(eq.serialNumber)) {
                          returnDateHTML = `<div class="flex justify-between py-2 border-b border-gray-700"><span>Ngày trả dự kiến:</span><span class="font-semibold">${formatDate(activeRentalsMap.get(eq.serialNumber))}</span></div>`;
                     }
-                    detailsContent.innerHTML = `
+                    const content = `
                         <div class="flex justify-between py-2 border-b border-gray-700"><span>Tên thiết bị:</span><span class="font-semibold">${eq.name}</span></div>
                         <div class="flex justify-between py-2 border-b border-gray-700"><span>Hãng:</span><span class="font-semibold">${eq.brand}</span></div>
                         <div class="flex justify-between py-2 border-b border-gray-700"><span>Serial Number:</span><span class="font-semibold">${eq.serialNumber}</span></div>
@@ -430,16 +367,11 @@
                         <div class="flex justify-between py-2 border-b border-gray-700"><span>Trạng thái:</span><span class="font-semibold">${eq.status}</span></div>
                         ${returnDateHTML}
                     `;
-                    equipmentDetailsModal.classList.remove('hidden');
-                    equipmentDetailsModal.classList.add('flex');
+                    openDetailsModal('Chi tiết thiết bị', content);
                 }
             }
         });
-        document.getElementById('close-details-modal-btn').addEventListener('click', () => {
-            equipmentDetailsModal.classList.add('hidden');
-            equipmentDetailsModal.classList.remove('flex');
-        });
-
+        
         equipmentTableBody.addEventListener('click', async (e) => { const editBtn = e.target.closest('.edit-btn'); const deleteBtn = e.target.closest('.delete-btn'); if (editBtn) { const docSnap = await getDoc(doc(db, 'equipment', editBtn.dataset.id)); if (docSnap.exists()) openEquipmentModal('edit', docSnap.data(), docSnap.id); } if (deleteBtn) { openDeleteConfirmation(deleteBtn.dataset.id, deleteBtn.dataset.name, 'equipment'); } });
         equipmentForm.addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('eq-name').value.trim(), brand = document.getElementById('eq-brand').value.trim(), serialNumber = document.getElementById('eq-serial').value.trim().toUpperCase(), type = document.getElementById('eq-type').value, dailyRate = Number(document.getElementById('eq-rate').value); equipmentFormError.textContent = ''; if (!name || !brand || !serialNumber || !dailyRate) { equipmentFormError.textContent = 'Vui lòng điền đủ các trường.'; return; } try { if (currentEditId) { await updateDoc(doc(db, 'equipment', currentEditId), { name, brand, type, dailyRate }); logActivity(`Đã cập nhật thiết bị: ${name}`); } else { const q = query(collection(db, "equipment"), where("serialNumber", "==", serialNumber)); const querySnapshot = await getDocs(q); if (!querySnapshot.empty) { equipmentFormError.textContent = 'Serial Number này đã tồn tại.'; return; } await addDoc(collection(db, 'equipment'), { name, brand, serialNumber, type, dailyRate, status: 'Sẵn có', createdAt: serverTimestamp() }); logActivity(`Đã thêm thiết bị mới: ${name}`); } closeEquipmentModal(); } catch (error) { console.error(error); equipmentFormError.textContent = 'Đã có lỗi xảy ra.'; } });
         function openEquipmentModal(mode = 'add', data = {}, id = null) { equipmentForm.reset(); equipmentFormError.textContent = ''; currentEditId = null; const serialInput = document.getElementById('eq-serial'); if (mode === 'edit') { modalTitle.textContent = 'Cập nhật thiết bị'; currentEditId = id; document.getElementById('eq-name').value = data.name; document.getElementById('eq-brand').value = data.brand; serialInput.value = data.serialNumber; serialInput.disabled = true; serialInput.classList.add('bg-gray-600', 'cursor-not-allowed'); document.getElementById('eq-type').value = data.type; document.getElementById('eq-rate').value = data.dailyRate; } else { modalTitle.textContent = 'Thêm thiết bị mới'; serialInput.disabled = false; serialInput.classList.remove('bg-gray-600', 'cursor-not-allowed'); } equipmentModal.classList.remove('hidden'); equipmentModal.classList.add('flex'); setTimeout(() => equipmentModalContent.classList.add('scale-100'), 10); }
@@ -447,12 +379,42 @@
         addEquipmentBtn.addEventListener('click', () => openEquipmentModal('add')); closeModalBtn.addEventListener('click', closeEquipmentModal); cancelModalBtn.addEventListener('click', closeEquipmentModal); equipmentModal.addEventListener('click', (e) => { if (e.target === equipmentModal) closeEquipmentModal(); });
 
         // --- Customer Management ---
-        function renderCustomerTable(docs) {
-            customerTableBody.innerHTML = '';
-            if (docs.length === 0) { customerTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-400">Chưa có khách hàng nào.</td></tr>`; return; }
-            docs.forEach(doc => { const cus = doc.data(); const row = `<tr class="border-b border-gray-700 hover:bg-gray-700/50"><td class="p-4 font-medium">${cus.fullName}</td><td class="p-4 text-gray-400">${cus.phone}</td><td class="p-4 text-gray-400">${cus.email || 'N/A'}</td><td class="p-4 text-gray-400">${cus.idCard || 'N/A'}</td><td class="p-4 text-center">${renderActionButtons(doc.id, cus.fullName)}</td></tr>`; customerTableBody.innerHTML += row; });
+        function loadCustomers() { if (listeners.customer) return; listeners.customer = onSnapshot(collection(db, 'customers'), (snapshot) => renderCustomerViews(snapshot.docs)); }
+        function renderCustomerViews(docs) {
+            let tableHTML = '';
+            let mobileHTML = '';
+            if (docs.length === 0) {
+                customerTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-400">Chưa có khách hàng nào.</td></tr>`;
+                customerListMobile.innerHTML = `<div class="text-center p-8 text-gray-400">Chưa có khách hàng nào.</div>`;
+                return;
+            }
+            docs.forEach(doc => {
+                const cus = doc.data();
+                tableHTML += `<tr class="border-b border-gray-700 hover:bg-gray-700/50"><td class="p-4 font-medium">${cus.fullName}</td><td class="p-4 text-gray-400">${cus.phone}</td><td class="p-4 text-gray-400">${cus.email || 'N/A'}</td><td class="p-4 text-gray-400">${cus.idCard || 'N/A'}</td><td class="p-4 text-center">${renderActionButtons(doc.id, cus.fullName)}</td></tr>`;
+                mobileHTML += `<div class="bg-gray-800 rounded-lg shadow-md p-4 list-card" data-type="customer" data-id="${doc.id}"><div class="flex justify-between items-start"><div class="flex-grow"><p class="font-bold text-white">${cus.fullName}</p><p class="text-sm text-gray-400">${cus.phone}${cus.email ? ` | ${cus.email}` : ''}</p></div><div class="flex-shrink-0 ml-2 flex items-center space-x-2">${renderActionButtons(doc.id, cus.fullName)}</div></div></div>`;
+            });
+            customerTableBody.innerHTML = tableHTML;
+            customerListMobile.innerHTML = mobileHTML;
         }
-        function loadCustomers() { if (listeners.customer) return; listeners.customer = onSnapshot(collection(db, 'customers'), (snapshot) => renderCustomerTable(snapshot.docs)); }
+        customerListMobile.addEventListener('click', async (e) => {
+            const card = e.target.closest('.list-card');
+            const isActionButton = e.target.closest('.edit-btn') || e.target.closest('.delete-btn');
+            if (card && !isActionButton) {
+                const id = card.dataset.id;
+                const docRef = doc(db, 'customers', id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const cus = docSnap.data();
+                    const content = `
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Họ và tên:</span><span class="font-semibold">${cus.fullName}</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Số điện thoại:</span><span class="font-semibold">${cus.phone}</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Email:</span><span class="font-semibold">${cus.email || 'N/A'}</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Số CCCD:</span><span class="font-semibold">${cus.idCard || 'N/A'}</span></div>
+                    `;
+                    openDetailsModal('Chi tiết khách hàng', content);
+                }
+            }
+        });
         customerTableBody.addEventListener('click', async (e) => { const editBtn = e.target.closest('.edit-btn'); const deleteBtn = e.target.closest('.delete-btn'); if (editBtn) { const docSnap = await getDoc(doc(db, 'customers', editBtn.dataset.id)); if (docSnap.exists()) openCustomerModal('edit', docSnap.data(), docSnap.id); } if (deleteBtn) { openDeleteConfirmation(deleteBtn.dataset.id, deleteBtn.dataset.name, 'customers'); } });
         customerForm.addEventListener('submit', async (e) => { e.preventDefault(); const fullName = document.getElementById('cus-name').value.trim(), phone = document.getElementById('cus-phone').value.trim(), email = document.getElementById('cus-email').value.trim(), idCard = document.getElementById('cus-idcard').value.trim(); customerFormError.textContent = ''; if (!fullName || !phone) { customerFormError.textContent = 'Vui lòng nhập Họ tên và Số điện thoại.'; return; } try { if (currentCustomerEditId) { await updateDoc(doc(db, 'customers', currentCustomerEditId), { fullName, email, idCard }); logActivity(`Đã cập nhật khách hàng: ${fullName}`); } else { const q = query(collection(db, "customers"), where("phone", "==", phone)); const querySnapshot = await getDocs(q); if (!querySnapshot.empty) { customerFormError.textContent = 'Số điện thoại này đã tồn tại.'; return; } await addDoc(collection(db, 'customers'), { fullName, phone, email, idCard, createdAt: serverTimestamp() }); logActivity(`Đã thêm khách hàng: ${fullName}`); } closeCustomerModal(); } catch (error) { console.error(error); customerFormError.textContent = 'Đã có lỗi xảy ra.'; } });
         function openCustomerModal(mode = 'add', data = {}, id = null) { customerForm.reset(); customerFormError.textContent = ''; currentCustomerEditId = null; const phoneInput = document.getElementById('cus-phone'); if (mode === 'edit') { customerModalTitle.textContent = 'Cập nhật khách hàng'; currentCustomerEditId = id; document.getElementById('cus-name').value = data.fullName; phoneInput.value = data.phone; phoneInput.disabled = true; phoneInput.classList.add('bg-gray-600', 'cursor-not-allowed'); document.getElementById('cus-email').value = data.email || ''; document.getElementById('cus-idcard').value = data.idCard || ''; } else { customerModalTitle.textContent = 'Thêm khách hàng mới'; phoneInput.disabled = false; phoneInput.classList.remove('bg-gray-600', 'cursor-not-allowed'); } customerModal.classList.remove('hidden'); customerModal.classList.add('flex'); setTimeout(() => customerModalContent.classList.add('scale-100'), 10); }
@@ -482,9 +444,16 @@
         });
 
         // --- RENTAL MANAGEMENT ---
-        function renderRentalTable(docs) {
-            rentalTableBody.innerHTML = '';
-            if (docs.length === 0) { rentalTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Chưa có đơn thuê nào.</td></tr>`; return; }
+        function loadRentals() { if (listeners.rental) return; const q = query(collection(db, 'rentals')); listeners.rental = onSnapshot(q, (snapshot) => renderRentalViews(snapshot.docs)); }
+        function renderRentalViews(docs) {
+            let tableHTML = '';
+            let mobileHTML = '';
+            if (docs.length === 0) {
+                const emptyRow = `<tr><td colspan="6" class="text-center p-8 text-gray-400">Chưa có đơn thuê nào.</td></tr>`;
+                rentalTableBody.innerHTML = emptyRow;
+                rentalListMobile.innerHTML = `<div class="text-center p-8 text-gray-400">Chưa có đơn thuê nào.</div>`;
+                return;
+            }
             docs.forEach(doc => {
                 const rental = doc.data();
                 const statusClass = getStatusClass(rental.status, 'rental');
@@ -495,18 +464,38 @@
                 } else if (rental.status === 'Đang thuê') {
                     actions = `<button class="rental-action-btn bg-green-600/80 hover:bg-green-600 text-white text-xs font-bold py-1 px-2 rounded" data-id="${doc.id}" data-action="return">Nhận lại</button>`;
                 }
-                const row = `<tr class="border-b border-gray-700 hover:bg-gray-700/50">
-                    <td class="p-4 font-medium">${rental.customer.name}</td>
-                    <td class="p-4 text-gray-400">${formatDate(rental.startDate)}</td>
-                    <td class="p-4 text-gray-400">${formatDate(rental.endDate)}</td>
-                    <td class="p-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${rental.status}</span></td>
-                    <td class="p-4 text-right font-semibold text-green-400">${formatCurrency(rental.actualCost !== undefined ? rental.actualCost : rental.totalCost)}</td>
-                    <td class="p-4 text-center">${actions}</td>
-                </tr>`;
-                rentalTableBody.innerHTML += row;
+                
+                tableHTML += `<tr class="border-b border-gray-700 hover:bg-gray-700/50"><td class="p-4 font-medium">${rental.customer.name}</td><td class="p-4 text-gray-400">${formatDate(rental.startDate)}</td><td class="p-4 text-gray-400">${formatDate(rental.endDate)}</td><td class="p-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${rental.status}</span></td><td class="p-4 text-right font-semibold text-green-400">${formatCurrency(rental.actualCost !== undefined ? rental.actualCost : rental.totalCost)}</td><td class="p-4 text-center">${actions}</td></tr>`;
+                
+                mobileHTML += `<div class="bg-gray-800 rounded-lg shadow-md p-4 list-card" data-type="rental" data-id="${doc.id}"><div class="flex justify-between items-start"><div class="flex-grow"><p class="font-bold text-white">${rental.customer.name}</p><p class="text-sm text-gray-400">Trả: ${formatDate(rental.endDate)}</p></div><div class="flex-shrink-0 ml-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${rental.status}</span></div></div><div class="mt-4 flex justify-between items-center"><p class="text-green-400 font-semibold">${formatCurrency(rental.actualCost !== undefined ? rental.actualCost : rental.totalCost)}</p><div class="flex items-center space-x-2">${actions}</div></div></div>`;
             });
+            rentalTableBody.innerHTML = tableHTML;
+            rentalListMobile.innerHTML = mobileHTML;
         }
-        function loadRentals() { if (listeners.rental) return; const q = query(collection(db, 'rentals')); listeners.rental = onSnapshot(q, (snapshot) => renderRentalTable(snapshot.docs)); }
+        rentalListMobile.addEventListener('click', async (e) => {
+            const card = e.target.closest('.list-card');
+            const isActionButton = e.target.closest('.rental-action-btn');
+            if (card && !isActionButton) {
+                const id = card.dataset.id;
+                const docRef = doc(db, 'rentals', id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const rental = docSnap.data();
+                    let itemsHTML = rental.items.map(item => `<p class="pl-4">- ${item.name} (S/N: ${item.serialNumber})</p>`).join('');
+                    const content = `
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Khách hàng:</span><span class="font-semibold">${rental.customer.name} (${rental.customer.phone})</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Ngày thuê:</span><span class="font-semibold">${formatDate(rental.startDate, true)}</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Ngày trả:</span><span class="font-semibold">${formatDate(rental.endDate, true)}</span></div>
+                        <div class="py-2 border-b border-gray-700"><span>Thiết bị thuê:</span><div class="text-sm mt-1">${itemsHTML}</div></div>
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Chi phí dự kiến:</span><span class="font-semibold">${formatCurrency(rental.totalCost)}</span></div>
+                        <div class="flex justify-between py-2 border-b border-gray-700"><span>Trạng thái:</span><span class="font-semibold">${rental.status}</span></div>
+                        ${rental.actualCost !== undefined ? `<div class="flex justify-between py-2 border-b border-gray-700"><span>Thực thu:</span><span class="font-bold text-green-400">${formatCurrency(rental.actualCost)}</span></div>` : ''}
+                        ${rental.adjustmentNotes ? `<div class="py-2"><span>Ghi chú:</span><p class="text-sm italic text-gray-400">${rental.adjustmentNotes}</p></div>` : ''}
+                    `;
+                    openDetailsModal('Chi tiết đơn thuê', content);
+                }
+            }
+        });
         async function handleRentalAction(rentalId, action) {
             const rentalRef = doc(db, 'rentals', rentalId);
             const rentalSnap = await getDoc(rentalRef);
@@ -533,6 +522,7 @@
             await batch.commit();
         }
         rentalTableBody.addEventListener('click', (e) => { const btn = e.target.closest('.rental-action-btn'); if (btn) handleRentalAction(btn.dataset.id, btn.dataset.action); });
+        rentalListMobile.addEventListener('click', (e) => { const btn = e.target.closest('.rental-action-btn'); if (btn) handleRentalAction(btn.dataset.id, btn.dataset.action); });
 
         // --- Return Modal Logic ---
         function openReturnModal(rentalData) {
@@ -557,22 +547,10 @@
                 differenceHTML = `<div class="flex justify-between text-green-400"><p>Giảm giá trả sớm:</p><p class="font-semibold">${formatCurrency(difference)}</p></div>`;
             }
 
-            returnInfoDiv.innerHTML = `
-                <p class="font-bold text-lg">${rentalData.customer.name}</p>
-                <div class="p-3 bg-gray-700/50 rounded-lg space-y-2 text-sm">
-                    <div class="flex justify-between"><p>Ngày thuê:</p><p class="font-semibold">${formatDate(rentalData.startDate, true)}</p></div>
-                    <div class="flex justify-between"><p>Ngày trả dự kiến:</p><p class="font-semibold">${formatDate(rentalData.endDate, true)}</p></div>
-                    <div class="flex justify-between"><p>Ngày trả thực tế:</p><p class="font-semibold">${actualReturnDate.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p></div>
-                    <hr class="border-gray-600">
-                    <div class="flex justify-between"><p>Chi phí dự kiến:</p><p class="font-semibold">${formatCurrency(rentalData.totalCost)}</p></div>
-                    <div class="flex justify-between"><p>Số ngày thuê thực tế:</p><p class="font-semibold">${actualDays} ngày</p></div>
-                    ${differenceHTML}
-                    <hr class="border-gray-600">
-                    <div class="flex justify-between font-bold text-lg"><p>Tổng tiền (hệ thống):</p><p>${formatCurrency(systemCalculatedCost)}</p></div>
-                </div>
-            `;
+            returnInfoDiv.innerHTML = `<p class="font-bold text-lg">${rentalData.customer.name}</p><div class="p-3 bg-gray-700/50 rounded-lg space-y-2 text-sm"><div class="flex justify-between"><p>Ngày thuê:</p><p class="font-semibold">${formatDate(rentalData.startDate, true)}</p></div><div class="flex justify-between"><p>Ngày trả dự kiến:</p><p class="font-semibold">${formatDate(rentalData.endDate, true)}</p></div><div class="flex justify-between"><p>Ngày trả thực tế:</p><p class="font-semibold">${actualReturnDate.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p></div><hr class="border-gray-600"><div class="flex justify-between"><p>Chi phí dự kiến:</p><p class="font-semibold">${formatCurrency(rentalData.totalCost)}</p></div><div class="flex justify-between"><p>Số ngày thuê thực tế:</p><p class="font-semibold">${actualDays} ngày</p></div>${differenceHTML}<hr class="border-gray-600"><div class="flex justify-between font-bold text-lg"><p>Tổng tiền (hệ thống):</p><p>${formatCurrency(systemCalculatedCost)}</p></div></div>`;
 
             finalCostInput.value = systemCalculatedCost;
+            finalCostInput.dataset.systemCost = systemCalculatedCost;
             adjustmentAmountInput.value = '';
             adjustmentNotesInput.value = '';
 
@@ -694,6 +672,18 @@
         addRentalBtn.addEventListener('click', openRentalModal);
         document.getElementById('close-rental-modal-btn').addEventListener('click', closeRentalModal);
         document.getElementById('cancel-rental-modal-btn').addEventListener('click', closeRentalModal);
+
+        // --- Details Modal ---
+        function openDetailsModal(title, content) {
+            document.getElementById('details-modal-title').textContent = title;
+            document.getElementById('details-modal-content').innerHTML = content;
+            detailsModal.classList.remove('hidden');
+            detailsModal.classList.add('flex');
+        }
+        document.getElementById('close-details-modal-btn').addEventListener('click', () => {
+            detailsModal.classList.add('hidden');
+            detailsModal.classList.remove('flex');
+        });
 
         // --- Auth & Mobile UI Event Listeners ---
         document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); signInWithEmailAndPassword(auth, loginForm['login-email'].value, loginForm['login-password'].value).catch(err => loginErrorEl.textContent = 'Email hoặc mật khẩu không đúng.'); });
